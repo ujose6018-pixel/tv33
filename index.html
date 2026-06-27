@@ -1270,6 +1270,7 @@
       let _pipMainIdx = 0;       // stream principal en PiP
       const _CHANNEL_KEY = 'channel-active-idx';
       let _channelIdx = parseInt(localStorage.getItem(_CHANNEL_KEY) || '0') || 0;
+      let _barsShow = null; // función pública para revelar barras desde fuera del closure
       let _pipFloatIdx = 1;      // stream flotante en PiP
       const _PIP_POS_KEY = 'pip-win-pos';
       const _PIP_AUDIO_KEY = 'pip-only-main-audio';
@@ -1501,14 +1502,16 @@
         const bar = document.createElement('div');
         bar.id = 'channel-bar';
         bar.style.cssText = [
-          'position:absolute;top:44px;left:50%;transform:translateX(-50%);z-index:59;',
-          'display:flex;align-items:center;gap:5px;',
-          'padding:4px 8px;border-radius:0.9rem;',
-          'background:rgba(0,0,0,0.65);',
-          'backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);',
-          'border:1.5px solid rgba(255,255,255,0.09);',
-          'box-shadow:0 4px 20px rgba(0,0,0,0.45);',
+          'position:absolute;top:34px;left:50%;transform:translateX(-50%);z-index:59;',
+          'display:flex;align-items:center;gap:4px;',
+          'padding:3px 6px;border-radius:8px;',
+          'background:rgba(2,6,23,0.48);',
+          'backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);',
+          'border:1px solid rgba(255,255,255,0.06);',
+          'box-shadow:0 2px 10px rgba(0,0,0,0.3);',
           'white-space:nowrap;',
+          'opacity:0;pointer-events:none;',
+          'transition:opacity 0.3s ease;',
         ].join('');
 
         streams.forEach((_, i) => {
@@ -1516,8 +1519,8 @@
           btn.id = 'ch-btn-' + i;
           btn.textContent = 'S' + (i + 1);
           btn.style.cssText = [
-            'padding:4px 11px;border-radius:7px;font-size:0.68rem;font-weight:700;',
-            'border:1.5px solid rgba(255,255,255,0.12);cursor:pointer;',
+            'padding:3px 9px;border-radius:6px;font-size:0.62rem;font-weight:700;',
+            'border:1px solid rgba(255,255,255,0.09);cursor:pointer;',
             'transition:background 0.18s,color 0.18s,border-color 0.18s;',
             i === _channelIdx
               ? 'background:rgba(16,185,129,0.88);color:#fff;border-color:rgba(16,185,129,0.5);box-shadow:0 0 14px rgba(16,185,129,0.4);'
@@ -1671,6 +1674,53 @@
         });
       }
 
+      // ── Auto-hide: las barras se desvanecen cuando el cursor se aleja ─
+      function _setupBarVisibility() {
+        let hideTimer = null;
+
+        function show() {
+          clearTimeout(hideTimer);
+          ['pip-mode-bar', 'channel-bar'].forEach(id => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.style.opacity = '1';
+            el.style.pointerEvents = 'auto';
+          });
+          hideTimer = setTimeout(hide, 2600);
+        }
+
+        function hide() {
+          ['pip-mode-bar', 'channel-bar'].forEach(id => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.style.opacity = '0';
+            el.style.pointerEvents = 'none';
+          });
+        }
+
+        _barsShow = show;
+
+        // Revelar al mover el mouse hacia la zona superior
+        viewerView.addEventListener('mousemove', e => {
+          if (e.clientY < 90) show();
+          else { clearTimeout(hideTimer); hideTimer = setTimeout(hide, 2600); }
+        }, { passive: true });
+
+        // Revelar al interactuar con la barra directamente
+        viewerView.addEventListener('mouseover', e => {
+          if (e.target?.closest?.('#pip-mode-bar, #channel-bar')) show();
+        }, { passive: true });
+
+        // Touch: revelar al tocar la zona superior
+        viewerView.addEventListener('touchstart', e => {
+          const t = e.touches?.[0];
+          if (t && t.clientY < 90) show();
+        }, { passive: true });
+
+        // Mostrar al cargar durante 3s
+        show();
+      }
+
       // ── Barra de modo (Split / PiP + selectores) ──────────────────────
       function _buildModeSelector(streams) {
         document.getElementById('pip-mode-bar')?.remove();
@@ -1687,21 +1737,23 @@
         const bar = document.createElement('div');
         bar.id = 'pip-mode-bar';
         bar.style.cssText = [
-          'position:absolute;top:4px;left:50%;transform:translateX(-50%);z-index:60;',
-          'display:flex;align-items:center;gap:6px;',
-          'padding:5px 8px;border-radius:1rem;',
-          'background:rgba(0,0,0,0.72);',
-          'backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);',
-          'border:1.5px solid rgba(255,255,255,0.10);',
-          'box-shadow:0 4px 24px rgba(0,0,0,0.5);',
+          'position:absolute;top:6px;left:50%;transform:translateX(-50%);z-index:60;',
+          'display:flex;align-items:center;gap:4px;',
+          'padding:3px 6px;border-radius:10px;',
+          'background:rgba(2,6,23,0.52);',
+          'backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);',
+          'border:1px solid rgba(255,255,255,0.07);',
+          'box-shadow:0 2px 12px rgba(0,0,0,0.35);',
           'white-space:nowrap;',
+          'opacity:0;pointer-events:none;',
+          'transition:opacity 0.3s ease;',
         ].join('');
 
         const mkBtn = (id, html) => {
           const b = document.createElement('button');
           b.id = id;
           b.innerHTML = html;
-          b.style.cssText = 'padding:4px 10px;border-radius:8px;font-size:0.68rem;font-weight:700;border:none;cursor:pointer;transition:all 0.2s;white-space:nowrap;';
+          b.style.cssText = 'padding:3px 9px;border-radius:7px;font-size:0.62rem;font-weight:700;border:none;cursor:pointer;transition:background 0.18s,color 0.18s;white-space:nowrap;letter-spacing:0.02em;';
           return b;
         };
 
@@ -1814,11 +1866,13 @@
           else _channelIdx = 0;
           _applyChannelLayout(streams);
           _buildChannelBar(streams);
+          _barsShow?.();
           AudioManager.sync(streams);
           _syncModeBar(streams);
         });
 
         viewerView.appendChild(bar);
+        _setupBarVisibility();
         _syncModeBar(streams);
       }
       // ═══════════════════════════════════════════════════════════════════
