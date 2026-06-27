@@ -1468,17 +1468,11 @@
         } else if (e.type === 'direct' && e.video) {
           if (shouldPlay) e.video.play().catch(() => {});
           else e.video.pause();
-        }
         } else if (e.type === 'iframe-other' && e.iframe) {
           if (!shouldPlay) {
-            // Única forma de detener audio cross-origin: vaciar src.
-            // Se guarda la URL para restaurarla al activar el canal.
-            if (e.iframe.src && e.iframe.src !== 'about:blank') {
-              e._savedSrc = e.iframe.src;
-            }
+            if (e.iframe.src && e.iframe.src !== 'about:blank') e._savedSrc = e.iframe.src;
             e.iframe.src = 'about:blank';
           } else {
-            // Restaurar URL: el player recarga, pero el audio empieza correctamente.
             const url = e._savedSrc || e.originalUrl;
             if (url && e.iframe.src !== url) e.iframe.src = url;
           }
