@@ -907,8 +907,8 @@
           e.player.setMuted(muted);
         } else if (e.type === 'direct' && e.video) {
           e.video.muted = muted;
-        // iframe-other: no hay API cross-origin; mutar via src causa reload y no funciona
-        // con players como Bitmovin que ignoran esos parámetros GET.
+        }
+        // iframe-other: sin API cross-origin; el mute se maneja via _applyPlayback (src blank)
       }
 
       function updateDualSound() {
