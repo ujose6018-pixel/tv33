@@ -1,0 +1,1317 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TV Mundial 2026 - MultiStream</title>
+  <link rel="icon" href="https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/2026_FIFA_World_Cup_emblem.svg/1920px-2026_FIFA_World_Cup_emblem.svg.png" type="image/png">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, getDocs, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
+    
+    const firebaseConfig = {
+      apiKey: "AIzaSyAp1IAukg9FGiOHGsRvvapN6QYzLOYDrOY",
+      authDomain: "tvmundial-b190a.firebaseapp.com",
+      projectId: "tvmundial-b190a",
+      storageBucket: "tvmundial-b190a.firebasestorage.app",
+      messagingSenderId: "324034223779",
+      appId: "1:324034223779:web:49e679e822c4ae99762916"
+    };
+    
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    
+    window.firebaseDB = db;
+    window.firebaseCollections = { collection, addDoc, getDocs, onSnapshot, query, orderBy };
+  </script>
+  <style>
+    .hidden { display: none !important; }
+    
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 20px rgba(251, 191, 36, 0.4); }
+      50% { box-shadow: 0 0 40px rgba(251, 191, 36, 0.8); }
+    }
+    
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+    }
+    
+    @keyframes gradient-shift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    
+    @keyframes fade-in-up {
+      0% { opacity: 0; transform: translateY(20px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+    
+    .pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+    .float-animation { animation: float 3s ease-in-out infinite; }
+    .fade-in-up { animation: fade-in-up 0.5s ease-out; }
+    
+    .gradient-bg {
+      background: linear-gradient(-45deg, #020617, #0f172a, #020617, #1e293b);
+      background-size: 400% 400%;
+      animation: gradient-shift 20s ease infinite;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, #059669 0%, #10b981 50%, #34d399 100%);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #047857 0%, #059669 50%, #10b981 100%);
+      transform: translateY(-3px);
+      box-shadow: 0 15px 40px rgba(5, 150, 105, 0.5);
+    }
+    
+    .btn-primary:active {
+      transform: translateY(-1px);
+    }
+    
+    .btn-gold {
+      background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 50%, #fcd34d 100%);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .btn-gold:hover {
+      background: linear-gradient(135deg, #d97706 0%, #f59e0b 50%, #fbbf24 100%);
+      transform: translateY(-3px);
+      box-shadow: 0 15px 40px rgba(245, 158, 11, 0.6);
+    }
+    
+    .btn-gold:active {
+      transform: translateY(-1px);
+    }
+    
+    .card-glow {
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(20px);
+    }
+    
+    .card-hover {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .card-hover:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+    }
+    
+    input, select {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    input:focus, select:focus {
+      transform: scale(1.01);
+    }
+    
+    .tab-btn {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .tab-btn:hover {
+      transform: scale(1.02);
+    }
+    
+    .tab-btn.active {
+      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+    }
+    
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    
+    ::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.5);
+      border-radius: 10px;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+      background: linear-gradient(180deg, #10b981, #3b82f6);
+      border-radius: 10px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+      background: linear-gradient(180deg, #059669, #2563eb);
+    }
+  </style>
+</head>
+<body class="gradient-bg text-white min-h-screen w-full font-sans selection:bg-emerald-500/50">
+
+  <!-- ==========================================
+       VISTA DEL ADMINISTRADOR (PC/Móvil)
+       ========================================== -->
+  <div id="admin-view" class="min-h-screen flex flex-col items-center py-12 px-4 sm:px-6 hidden">
+    <div class="w-full max-w-4xl">
+      
+      <div class="text-center mb-12">
+        <div class="flex items-center justify-center gap-4 mb-5">
+          <div class="w-32 h-32 bg-white rounded-3xl flex items-center justify-center shadow-2xl float-animation p-2">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/2026_FIFA_World_Cup_emblem.svg/1920px-2026_FIFA_World_Cup_emblem.svg.png" alt="Mundial 2026" class="w-full h-full object-contain">
+          </div>
+        </div>
+        <h1 class="text-5xl md:text-6xl font-black bg-gradient-to-r from-yellow-300 via-orange-400 to-yellow-500 bg-clip-text text-transparent">
+          TV MUNDIAL 2026
+        </h1>
+        <p class="text-emerald-300 mt-4 text-xl font-semibold">⚽ MultiStream - Ver partidos simultáneos</p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Columna Principal - Generar Enlaces -->
+        <div class="lg:col-span-2">
+          <div class="bg-slate-900/90 backdrop-blur-xl rounded-3xl card-glow border border-emerald-500/30 overflow-hidden">
+            <div class="p-8 space-y-8">
+              
+              <!-- Tabs de navegación -->
+              <div class="flex gap-2 bg-slate-800/60 rounded-3xl p-2 border border-slate-700/50">
+                <button id="tab-generator" class="tab-btn active flex-1 py-4 px-6 rounded-2xl font-bold text-lg text-white transition-all bg-gradient-to-r from-emerald-600 to-teal-600 shadow-lg">
+                  <div class="flex items-center justify-center gap-3">
+                    <span class="text-2xl">🚀</span>
+                    <span>Generar Enlaces</span>
+                  </div>
+                </button>
+                <button id="tab-tester" class="tab-btn flex-1 py-4 px-6 rounded-2xl font-bold text-lg text-slate-400 hover:text-white hover:bg-slate-700/50 transition-all">
+                  <div class="flex items-center justify-center gap-3">
+                    <span class="text-2xl">🔍</span>
+                    <span>Probar Streams</span>
+                  </div>
+                </button>
+              </div>
+              
+              <!-- Pestaña Generador -->
+              <div id="panel-generator" class="space-y-6 mt-2">
+                <div class="bg-gradient-to-r from-emerald-900/50 to-teal-900/50 border border-emerald-500/40 rounded-3xl p-6 flex gap-4 card-hover">
+                  <div class="w-14 h-14 bg-gradient-to-br from-yellow-500/30 to-orange-500/30 rounded-2xl flex items-center justify-center shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-yellow-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <circle cx="12" cy="12" r="10"/>
+                      <path d="M12 16v-4"/><path d="M12 8h.01"/>
+                    </svg>
+                  </div>
+                  <div class="flex-1">
+                    <h3 class="text-xl font-bold text-emerald-200 mb-2">Crea tus enlaces de partidos</h3>
+                    <p class="text-emerald-100/80 text-base">Selecciona streams guardados o pega nuevos enlaces para compartir</p>
+                  </div>
+                </div>
+
+                <!-- Stream 1 -->
+                <div class="space-y-4 bg-slate-800/40 rounded-3xl p-6 border border-slate-700/50 card-hover">
+                  <div class="flex items-center gap-4 mb-4">
+                    <div class="w-12 h-12 bg-gradient-to-br from-yellow-400 to-orange-500 text-slate-900 rounded-2xl flex items-center justify-center font-black text-2xl shadow-lg">1</div>
+                    <div>
+                      <h3 class="text-xl font-bold text-yellow-300">Stream Principal</h3>
+                      <p class="text-slate-400 text-sm">Izquierda / Arriba</p>
+                    </div>
+                  </div>
+                  
+                  <div class="space-y-4">
+                    <select id="stream1-select" class="w-full bg-slate-900/60 border-2 border-emerald-600/50 rounded-2xl px-6 py-5 text-white text-lg focus:outline-none focus:border-emerald-400 focus:ring-4 focus:ring-emerald-500/20 transition-all cursor-pointer">
+                      <option value="">-- 📺 Selecciona un stream guardado --</option>
+                    </select>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <input id="input1" type="text" placeholder="🔗 O pega un nuevo enlace..." class="bg-slate-900/60 border border-slate-700 rounded-2xl px-6 py-5 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 transition-all">
+                      <input id="input1-title" type="text" placeholder="📝 Título (ej: Argentina vs México)" class="bg-slate-900/60 border border-slate-700 rounded-2xl px-6 py-5 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 transition-all">
+                    </div>
+                    
+                    <button id="save-stream1" class="btn-primary w-full text-white font-bold py-5 px-8 rounded-2xl shadow-xl transition-all flex items-center justify-center gap-3 text-lg">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 21H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
+                      </svg>
+                      💾 Guardar Stream
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Stream 2 -->
+                <div class="space-y-4 bg-slate-800/40 rounded-3xl p-6 border border-slate-700/50 card-hover">
+                  <div class="flex items-center gap-4 mb-4">
+                    <div class="w-12 h-12 bg-gradient-to-br from-cyan-400 to-blue-500 text-slate-900 rounded-2xl flex items-center justify-center font-black text-2xl shadow-lg">2</div>
+                    <div>
+                      <h3 class="text-xl font-bold text-cyan-300">Stream Secundario</h3>
+                      <p class="text-slate-400 text-sm">Derecha / Abajo - Opcional</p>
+                    </div>
+                  </div>
+                  
+                  <div class="space-y-4">
+                    <select id="stream2-select" class="w-full bg-slate-900/60 border-2 border-cyan-600/50 rounded-2xl px-6 py-5 text-white text-lg focus:outline-none focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/20 transition-all cursor-pointer">
+                      <option value="">-- 📺 Selecciona un stream guardado --</option>
+                    </select>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <input id="input2" type="text" placeholder="🔗 O pega un nuevo enlace..." class="bg-slate-900/60 border border-slate-700 rounded-2xl px-6 py-5 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/20 transition-all">
+                      <input id="input2-title" type="text" placeholder="📝 Título (ej: Brasil vs España)" class="bg-slate-900/60 border border-slate-700 rounded-2xl px-6 py-5 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/20 transition-all">
+                    </div>
+                    
+                    <button id="save-stream2" class="btn-primary w-full text-white font-bold py-5 px-8 rounded-2xl shadow-xl transition-all flex items-center justify-center gap-3 text-lg">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 21H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
+                      </svg>
+                      💾 Guardar Stream
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Nombre del Enlace -->
+                <div class="space-y-4 bg-slate-800/40 rounded-3xl p-6 border border-slate-700/50 card-hover">
+                  <div class="flex items-center gap-4 mb-4">
+                    <div class="w-12 h-12 bg-gradient-to-br from-pink-400 to-rose-500 text-slate-900 rounded-2xl flex items-center justify-center shadow-lg">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 class="text-xl font-bold text-pink-300">Nombre del Enlace</h3>
+                      <p class="text-slate-400 text-sm">Para identificarlo en tu lista</p>
+                    </div>
+                  </div>
+                  <input id="link-name" type="text" placeholder="Ej: Partido de hoy - Canales 1 y 2" class="w-full bg-slate-900/60 border-2 border-pink-600/50 rounded-2xl px-6 py-5 text-white placeholder-slate-500 text-lg focus:outline-none focus:border-pink-400 focus:ring-4 focus:ring-pink-500/20 transition-all">
+                </div>
+
+                <!-- Expiración -->
+                <div class="space-y-4 bg-slate-800/40 rounded-3xl p-6 border border-slate-700/50 card-hover">
+                  <div class="flex items-center gap-4 mb-4">
+                    <div class="w-12 h-12 bg-gradient-to-br from-purple-400 to-pink-500 text-slate-900 rounded-2xl flex items-center justify-center shadow-lg">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 class="text-xl font-bold text-purple-300">Expiración del Enlace</h3>
+                      <p class="text-slate-400 text-sm">¿Cuánto tiempo durará activo?</p>
+                    </div>
+                  </div>
+                  <select id="expiration-select" class="w-full bg-slate-900/60 border-2 border-purple-600/50 rounded-2xl px-6 py-5 text-white text-lg focus:outline-none focus:border-purple-400 focus:ring-4 focus:ring-purple-500/20 transition-all cursor-pointer">
+                    <option value="1">⏱️ 1 Hora</option>
+                    <option value="6">⏱️ 6 Horas</option>
+                    <option value="24" selected>📅 1 Día</option>
+                    <option value="72">📅 3 Días</option>
+                    <option value="168">📅 7 Días</option>
+                  </select>
+                </div>
+
+                <!-- Botones de Acción -->
+                <div class="flex flex-col sm:flex-row gap-4 pt-2">
+                  <button id="btn-generate" class="flex-1 btn-gold text-slate-900 font-black text-xl py-7 px-8 rounded-3xl shadow-2xl transition-all flex items-center justify-center gap-4 disabled:opacity-50 disabled:cursor-not-allowed pulse-glow" disabled>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                    </svg>
+                    <span>🚀 Generar Enlace y Guardar</span>
+                  </button>
+                  <button id="btn-cancel-edit" class="px-8 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded-3xl shadow-xl transition-all border-2 border-slate-600 hidden">
+                    ✖️ Cancelar
+                  </button>
+                </div>
+
+              <!-- Resultado -->
+              <div id="result-box" class="mt-6 p-8 bg-gradient-to-br from-yellow-900/30 to-orange-900/30 rounded-3xl border border-yellow-500/40 hidden">
+                <h3 class="text-xl font-bold text-yellow-300 mb-5 flex items-center gap-3">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 6 9 17l-5-5"/>
+                  </svg>
+                  ✨ ¡Enlace generado con éxito!
+                </h3>
+                
+                <div class="flex flex-col sm:flex-row gap-3 mb-6">
+                  <input id="url-output" readonly class="flex-1 bg-slate-900 border border-yellow-600/50 rounded-2xl px-5 py-4 text-yellow-100 text-sm focus:outline-none truncate">
+                </div>
+                
+                <div class="flex flex-col sm:flex-row gap-3">
+                  <button id="btn-copy" class="flex-1 flex items-center justify-center gap-3 px-6 py-4 rounded-2xl font-bold transition-all bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-lg">
+                    <svg id="icon-copy" xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+                    </svg>
+                    <span id="text-copy">📋 Copiar</span>
+                  </button>
+                  <button id="btn-whatsapp" class="flex-1 flex items-center justify-center gap-3 px-6 py-4 rounded-2xl font-bold transition-all bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white shadow-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.488-.492-.67-.5h-.572c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/>
+                    </svg>
+                    💬 Compartir por WhatsApp
+                  </button>
+                </div>
+              </div>
+              </div>
+              
+              <!-- Pestaña Tester -->
+              <div id="panel-tester" class="hidden mt-6">
+                <div class="bg-gradient-to-r from-blue-900/40 to-indigo-900/40 border border-blue-500/40 rounded-2xl p-6 flex gap-4">
+                  <div class="w-12 h-12 bg-blue-500/20 rounded-2xl flex items-center justify-center shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                    </svg>
+                  </div>
+                  <div class="flex-1">
+                    <h3 class="text-lg font-bold text-blue-200 mb-1">Prueba tus streams</h3>
+                    <p class="text-blue-100/80 text-sm">Verifica si tus URLs están funcionando</p>
+                  </div>
+                </div>
+                
+                <!-- Selector de stream para probar -->
+                <div class="space-y-4 mt-6">
+                  <div class="flex items-center gap-3 mb-2">
+                    <div class="w-10 h-10 bg-gradient-to-br from-purple-400 to-blue-500 text-slate-900 rounded-xl flex items-center justify-center font-black text-xl">▶️</div>
+                    <h3 class="text-lg font-bold text-purple-300">Seleccionar o pegar URL</h3>
+                  </div>
+                  
+                  <select id="tester-select" class="w-full bg-slate-800 border-2 border-purple-600/50 rounded-2xl px-5 py-4 text-white text-lg focus:outline-none focus:border-purple-400 focus:ring-4 focus:ring-purple-500/20 transition-all cursor-pointer">
+                    <option value="">-- 📺 Selecciona un stream guardado para probar --</option>
+                  </select>
+                  
+                  <input id="tester-input" type="text" placeholder="🔗 O pega directamente una URL para probar..." class="w-full bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4 text-white placeholder-slate-400 focus:outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-500/20 transition-all">
+                  
+                  <button id="btn-test" class="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-black text-lg py-5 px-8 rounded-3xl shadow-xl transition-all flex items-center justify-center gap-3 mt-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polygon points="5 3 19 12 5 21 5 3"/>
+                    </svg>
+                    ▶️ Probar Stream
+                  </button>
+                </div>
+                
+                <!-- Contenedor de prueba -->
+                <div id="tester-container" class="mt-8 aspect-video bg-black rounded-2xl border border-slate-700 overflow-hidden hidden">
+                </div>
+              </div>
+              
+            </div>
+          </div>
+        </div>
+
+        <!-- Columna Lateral -->
+        <div class="lg:col-span-1 space-y-6">
+          <!-- Mis Enlaces Generados -->
+          <div class="bg-slate-900/90 backdrop-blur-xl rounded-3xl card-glow border border-blue-500/30 overflow-hidden">
+            <div class="p-6 border-b border-blue-500/20 bg-gradient-to-r from-blue-900/40 to-indigo-900/40">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-blue-500/20 rounded-xl flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6z"/><polyline points="8 10 12 14 16 10"/>
+                  </svg>
+                </div>
+                <div>
+                  <h3 class="text-xl font-bold text-blue-200">Mis Enlaces Generados</h3>
+                  <p class="text-blue-100/70 text-xs">Enlaces con expiración</p>
+                </div>
+              </div>
+            </div>
+            <div id="links-container" class="p-4 max-h-[350px] overflow-y-auto space-y-3">
+              <div class="text-center text-slate-400 py-12">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-16 h-16 mx-auto mb-4 opacity-50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                </svg>
+                <p>No hay enlaces generados aún</p>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Mis Streams Guardados -->
+          <div class="bg-slate-900/90 backdrop-blur-xl rounded-3xl card-glow border border-emerald-500/30 overflow-hidden">
+            <div class="p-6 border-b border-emerald-500/20 bg-gradient-to-r from-emerald-900/40 to-teal-900/40">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-emerald-500/20 rounded-xl flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 6h16M4 12h16M4 18h7"/>
+                  </svg>
+                </div>
+                <div>
+                  <h3 class="text-xl font-bold text-emerald-200">Mis Streams Guardados</h3>
+                  <p class="text-emerald-100/70 text-xs">Gestiona tus canales</p>
+                </div>
+              </div>
+            </div>
+            <div id="streams-container" class="p-4 max-h-[350px] overflow-y-auto space-y-3">
+              <div class="text-center text-slate-400 py-12">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-16 h-16 mx-auto mb-4 opacity-50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M12 2c5.523 0 10 4.477 10 10s-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2z"/>
+                  <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                <p>No hay streams guardados aún</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       VISTA DEL VISOR (TV)
+       ========================================== -->
+  <div id="viewer-view" class="fixed inset-0 bg-black flex-col md:flex-row overflow-hidden w-full h-full hidden">
+    <button id="btn-fullscreen" class="absolute top-4 left-4 z-50 bg-black/80 hover:bg-black/95 text-white p-4 rounded-2xl opacity-80 hover:opacity-100 transition-all backdrop-blur-xl shadow-2xl flex items-center gap-3 group">
+      <svg id="icon-fullscreen" xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/>
+      </svg>
+      <span id="text-fullscreen" class="hidden group-hover:inline font-bold text-lg pr-2">Pantalla Completa</span>
+    </button>
+
+    <div id="video-container" class="w-full h-full flex flex-col md:flex-row">
+    </div>
+  </div>
+
+  <!-- ==========================================
+       VISTA DE ENLACE EXPIRADO
+       ========================================== -->
+  <div id="expired-view" class="fixed inset-0 bg-gradient-to-br from-red-900 to-slate-950 flex items-center justify-center hidden">
+    <div class="text-center p-12 bg-slate-900/90 backdrop-blur-xl rounded-3xl border border-red-500/30 card-glow max-w-md">
+      <div class="w-24 h-24 bg-gradient-to-br from-red-500 to-pink-600 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-14 h-14 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+      </div>
+      <h2 class="text-4xl font-black text-red-400 mb-3">¡Enlace Expirado!</h2>
+      <p class="text-slate-300 text-lg mb-8">Este enlace ha caducado y ya no está disponible</p>
+      <a href="index.html" class="inline-block btn-gold text-slate-900 font-bold text-lg py-4 px-10 rounded-2xl shadow-lg transition-all">
+        🏠 Volver al Inicio
+      </a>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       LÓGICA JAVASCRIPT
+       ========================================== -->
+  <script type="module">
+    import { getFirestore, collection, addDoc, getDocs, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
+    
+    document.addEventListener('DOMContentLoaded', async () => {
+      const db = getFirestore();
+      const streamsCol = collection(db, "streams");
+      const linksCol = collection(db, "generatedLinks");
+      let editingLinkId = null;
+      
+      // Elementos del DOM
+      const adminView = document.getElementById('admin-view');
+      const viewerView = document.getElementById('viewer-view');
+      const expiredView = document.getElementById('expired-view');
+      const input1 = document.getElementById('input1');
+      const input1Title = document.getElementById('input1-title');
+      const input2 = document.getElementById('input2');
+      const input2Title = document.getElementById('input2-title');
+      const stream1Select = document.getElementById('stream1-select');
+      const stream2Select = document.getElementById('stream2-select');
+      const saveStream1 = document.getElementById('save-stream1');
+      const saveStream2 = document.getElementById('save-stream2');
+      const linkNameInput = document.getElementById('link-name');
+      const expirationSelect = document.getElementById('expiration-select');
+      const btnGenerate = document.getElementById('btn-generate');
+      const resultBox = document.getElementById('result-box');
+      const urlOutput = document.getElementById('url-output');
+      const btnCopy = document.getElementById('btn-copy');
+      const textCopy = document.getElementById('text-copy');
+      const iconCopy = document.getElementById('icon-copy');
+      const btnWhatsapp = document.getElementById('btn-whatsapp');
+      const linksContainer = document.getElementById('links-container');
+      const videoContainer = document.getElementById('video-container');
+      const btnFullscreen = document.getElementById('btn-fullscreen');
+      const btnCancelEdit = document.getElementById('btn-cancel-edit');
+      const tabGenerator = document.getElementById('tab-generator');
+      const tabTester = document.getElementById('tab-tester');
+      const panelGenerator = document.getElementById('panel-generator');
+      const panelTester = document.getElementById('panel-tester');
+      const testerSelect = document.getElementById('tester-select');
+      const testerInput = document.getElementById('tester-input');
+      const btnTest = document.getElementById('btn-test');
+      const testerContainer = document.getElementById('tester-container');
+      const streamsContainer = document.getElementById('streams-container');
+
+      // Bloquear ventanas emergentes
+      window.open = function() { return null; };
+      window.addEventListener('beforeunload', (e) => e.preventDefault());
+
+      // Función para formatear fecha
+      const formatDate = (date) => {
+        return new Intl.DateTimeFormat('es-ES', {
+          day: '2-digit', month: '2-digit', year: '2-digit',
+          hour: '2-digit', minute: '2-digit'
+        }).format(date);
+      };
+
+      // Cargar streams desde Firestore en tiempo real
+      const loadStreams = async () => {
+        onSnapshot(streamsCol, (snapshot) => {
+          const streams = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          
+          // Limpiar selects
+          stream1Select.innerHTML = '<option value="">-- 📺 Selecciona un stream guardado --</option>';
+          stream2Select.innerHTML = '<option value="">-- 📺 Selecciona un stream guardado --</option>';
+          testerSelect.innerHTML = '<option value="">-- 📺 Selecciona un stream guardado para probar --</option>';
+          
+          streams.forEach(stream => {
+            // Para generador
+            const option1 = document.createElement('option');
+            option1.value = stream.url;
+            option1.textContent = `⚽ ${stream.title}`;
+            stream1Select.appendChild(option1);
+            
+            const option2 = document.createElement('option');
+            option2.value = stream.url;
+            option2.textContent = `⚽ ${stream.title}`;
+            stream2Select.appendChild(option2);
+            
+            // Para tester
+            const testerOption = document.createElement('option');
+            testerOption.value = stream.url;
+            testerOption.textContent = `⚽ ${stream.title}`;
+            testerSelect.appendChild(testerOption);
+          });
+          
+          // Actualizar lista lateral de streams
+          if (streams.length === 0) {
+            streamsContainer.innerHTML = `
+              <div class="text-center text-slate-400 py-12">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-16 h-16 mx-auto mb-4 opacity-50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M12 2c5.523 0 10 4.477 10 10s-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2z"/>
+                  <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                <p>No hay streams guardados aún</p>
+              </div>
+            `;
+          } else {
+            streamsContainer.innerHTML = streams.map(stream => `
+              <div class="bg-slate-800/80 rounded-xl border border-slate-700 p-3 hover:border-emerald-500/50 transition-all">
+                <div class="flex items-start justify-between gap-2">
+                  <div class="flex-1 min-w-0">
+                    <h4 class="text-sm font-bold text-emerald-200 truncate">${stream.title}</h4>
+                    <p class="text-xs text-slate-400 mt-1 truncate">${stream.url}</p>
+                  </div>
+                  <button onclick="deleteStream('${stream.id}')" class="shrink-0 w-9 h-9 bg-red-600 hover:bg-red-500 text-white rounded-xl flex items-center justify-center transition-all">
+                    🗑️
+                  </button>
+                </div>
+              </div>
+            `).join('');
+          }
+        });
+      };
+      
+      // Cargar enlaces generados
+      const loadLinks = async () => {
+        const q = query(linksCol, orderBy('createdAt', 'desc'));
+        onSnapshot(q, (snapshot) => {
+          const links = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          
+          if (links.length === 0) {
+            linksContainer.innerHTML = `
+              <div class="text-center text-slate-400 py-12">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-16 h-16 mx-auto mb-4 opacity-50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                </svg>
+                <p>No hay enlaces generados aún</p>
+              </div>
+            `;
+            return;
+          }
+          
+          linksContainer.innerHTML = links.map(link => {
+            const expiresAt = new Date(link.expiresAt.seconds * 1000);
+            const isExpired = new Date() > expiresAt;
+            const timeLeft = expiresAt - new Date();
+            const hoursLeft = Math.max(0, Math.floor(timeLeft / (1000 * 60 * 60)));
+            const daysLeft = Math.floor(hoursLeft / 24);
+            
+            return `
+              <div class="group bg-slate-800/80 rounded-2xl border border-slate-700 p-4 hover:border-blue-500/50 transition-all ${isExpired ? 'opacity-50 bg-slate-800/40' : ''}">
+                <div class="flex items-start justify-between mb-3">
+                  <div class="flex-1 min-w-0">
+                    <h4 class="text-sm font-bold text-blue-200 truncate">${link.name || 'Partido'}</h4>
+                    <p class="text-xs text-slate-400 mt-1">Creado: ${formatDate(new Date(link.createdAt.seconds * 1000))}</p>
+                  </div>
+                  <div class="ml-3 shrink-0">
+                    ${isExpired ? 
+                      '<span class="px-2 py-1 bg-red-500/20 text-red-400 text-xs rounded-full font-medium">Expirado</span>' : 
+                      `<span class="px-2 py-1 bg-emerald-500/20 text-emerald-400 text-xs rounded-full font-medium">${daysLeft > 0 ? daysLeft + ' días' : hoursLeft + ' horas'}</span>`
+                    }
+                  </div>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                  <button onclick="loadLinkForEdit('${link.id}')" class="flex-1 min-w-[70px] bg-blue-600 hover:bg-blue-500 text-white py-2 px-3 rounded-xl text-xs font-bold transition-all">
+                    ✏️
+                  </button>
+                  <button onclick="navigator.clipboard.writeText('${link.url}').then(() => alert('Enlace copiado!'))" class="flex-1 min-w-[70px] bg-slate-700 hover:bg-slate-600 text-white py-2 px-3 rounded-xl text-xs font-medium transition-all">
+                    📋
+                  </button>
+                  <a href="https://wa.me/?text=${encodeURIComponent('¡Mira los partidos del Mundial! 🏆 ' + link.url)}" target="_blank" class="flex-1 min-w-[70px] bg-green-600 hover:bg-green-500 text-white py-2 px-3 rounded-xl text-xs font-medium transition-all text-center">
+                    💬
+                  </a>
+                  <a href="${link.url}" class="flex-1 min-w-[70px] btn-gold text-slate-900 py-2 px-3 rounded-xl text-xs font-bold transition-all text-center ${isExpired ? 'opacity-50 pointer-events-none' : ''}">
+                    ▶️
+                  </a>
+                  <button onclick="deleteLink('${link.id}')" class="w-full bg-red-600 hover:bg-red-500 text-white py-2 px-3 rounded-xl text-xs font-bold transition-all mt-2">
+                    🗑️ Eliminar
+                  </button>
+                </div>
+              </div>
+            `;
+          }).join('');
+        });
+      };
+      
+      await loadStreams();
+      await loadLinks();
+      
+      // ------------------------------
+      // Funcionalidad de Pestañas
+      // ------------------------------
+      tabGenerator.addEventListener('click', () => {
+        // Activar pestaña de generador
+        tabGenerator.classList.add('bg-gradient-to-r', 'from-emerald-600', 'to-teal-600', 'shadow-lg');
+        tabGenerator.classList.remove('text-slate-400');
+        tabTester.classList.remove('bg-gradient-to-r', 'from-emerald-600', 'to-teal-600', 'text-white', 'shadow-lg');
+        tabTester.classList.add('text-slate-400');
+        panelGenerator.classList.remove('hidden');
+        panelTester.classList.add('hidden');
+      });
+      
+      tabTester.addEventListener('click', () => {
+        // Activar pestaña de tester
+        tabTester.classList.add('bg-gradient-to-r', 'from-emerald-600', 'to-teal-600', 'text-white', 'shadow-lg');
+        tabTester.classList.remove('text-slate-400');
+        tabGenerator.classList.remove('bg-gradient-to-r', 'from-emerald-600', 'to-teal-600', 'shadow-lg');
+        tabGenerator.classList.add('text-slate-400');
+        panelTester.classList.remove('hidden');
+        panelGenerator.classList.add('hidden');
+      });
+      
+      // ------------------------------
+      // Funcionalidad del Tester
+      // ------------------------------
+      testerSelect.addEventListener('change', () => {
+        if (testerSelect.value) {
+          testerInput.value = testerSelect.value;
+        }
+      });
+      
+      btnTest.addEventListener('click', () => {
+        const url = testerInput.value.trim() || testerSelect.value;
+        if (!url) {
+          alert('Por favor ingresa o selecciona una URL');
+          return;
+        }
+        
+        testerContainer.classList.remove('hidden');
+        testerContainer.innerHTML = `
+          <iframe src="${url}" class="w-full h-full" frameborder="0" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
+        `;
+      });
+      
+      // ------------------------------
+      // Funciones de Eliminación
+      // ------------------------------
+      window.deleteLink = async (linkId) => {
+        if (confirm('¿Estás seguro de que deseas eliminar este enlace?')) {
+          try {
+            const linkDoc = doc(db, 'generatedLinks', linkId);
+            await deleteDoc(linkDoc);
+            alert('Enlace eliminado correctamente');
+          } catch (e) {
+            console.error('Error eliminando enlace:', e);
+            alert('Error al eliminar el enlace');
+          }
+        }
+      };
+      
+      window.deleteStream = async (streamId) => {
+        if (confirm('¿Estás seguro de que deseas eliminar este stream?')) {
+          try {
+            const streamDoc = doc(db, 'streams', streamId);
+            await deleteDoc(streamDoc);
+            alert('Stream eliminado correctamente');
+          } catch (e) {
+            console.error('Error eliminando stream:', e);
+            alert('Error al eliminar el stream');
+          }
+        }
+      };
+      
+      // Función para cargar un enlace para editar
+      window.loadLinkForEdit = async (linkId) => {
+        try {
+          const querySnapshot = await getDocs(linksCol);
+          const linkDoc = querySnapshot.docs.find(doc => doc.id === linkId);
+          
+          if (linkDoc) {
+            const linkData = linkDoc.data();
+            editingLinkId = linkId;
+            
+            // Cargar datos en los campos
+            if (linkData.s1) input1.value = decodeURIComponent(linkData.s1);
+            if (linkData.s2) input2.value = decodeURIComponent(linkData.s2);
+            linkNameInput.value = linkData.name || '';
+            
+            // Calcular y seleccionar la expiración original
+            const now = new Date();
+            const expiresAt = new Date(linkData.expiresAt.seconds * 1000);
+            const diffHours = Math.ceil((expiresAt - now) / (1000 * 60 * 60));
+            
+            // Seleccionar la opción más cercana
+            const options = [1, 6, 24, 72, 168];
+            let selectedOption = 24;
+            for (const opt of options) {
+              if (diffHours <= opt) {
+                selectedOption = opt;
+                break;
+              }
+            }
+            expirationSelect.value = selectedOption;
+            
+            // Actualizar botón
+            btnGenerate.innerHTML = '🔄 Actualizar Enlace';
+            btnGenerate.classList.remove('pulse-glow');
+            btnCancelEdit.classList.remove('hidden');
+            
+            // Scroll suave al formulario
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+        } catch (e) {
+          console.error('Error cargando enlace para editar:', e);
+          alert('Error al cargar el enlace para editar');
+        }
+      };
+
+      // Guardar streams
+      saveStream1.addEventListener('click', async () => {
+        if (input1.value.trim() && input1Title.value.trim()) {
+          try {
+            await addDoc(streamsCol, {
+              title: input1Title.value.trim(),
+              url: input1.value.trim(),
+              createdAt: new Date()
+            });
+            input1Title.value = '';
+            alert('¡Stream guardado correctamente! ⚽');
+          } catch (e) {
+            console.error('Error:', e);
+            alert('Error al guardar el stream');
+          }
+        } else {
+          alert('Por favor completa el enlace y el título');
+        }
+      });
+
+      saveStream2.addEventListener('click', async () => {
+        if (input2.value.trim() && input2Title.value.trim()) {
+          try {
+            await addDoc(streamsCol, {
+              title: input2Title.value.trim(),
+              url: input2.value.trim(),
+              createdAt: new Date()
+            });
+            input2Title.value = '';
+            alert('¡Stream guardado correctamente! ⚽');
+          } catch (e) {
+            console.error('Error:', e);
+            alert('Error al guardar el stream');
+          }
+        } else {
+          alert('Por favor completa el enlace y el título');
+        }
+      });
+
+      // Al seleccionar un stream del menú, llenar el input
+      stream1Select.addEventListener('change', () => {
+        if (stream1Select.value) {
+          input1.value = stream1Select.value;
+          checkInputs();
+        }
+      });
+
+      stream2Select.addEventListener('change', () => {
+        if (stream2Select.value) {
+          input2.value = stream2Select.value;
+          checkInputs();
+        }
+      });
+
+      // Función para verificar inputs
+      const checkInputs = () => {
+        if (input1.value.trim() || input2.value.trim()) {
+          btnGenerate.disabled = false;
+          btnGenerate.classList.remove('disabled:opacity-50', 'disabled:cursor-not-allowed');
+        } else {
+          btnGenerate.disabled = true;
+          btnGenerate.classList.add('disabled:opacity-50', 'disabled:cursor-not-allowed');
+        }
+      };
+
+      input1.addEventListener('input', checkInputs);
+      input2.addEventListener('input', checkInputs);
+      stream1Select.addEventListener('change', checkInputs);
+      stream2Select.addEventListener('change', checkInputs);
+
+      // 1. Detectar modo (Admin, Visor o Expirado)
+      const params = new URLSearchParams(window.location.search);
+      const s1 = params.get('s1');
+      const s2 = params.get('s2');
+      const linkId = params.get('linkId');
+
+      if (linkId) {
+        // Verificar si el enlace ha expirado
+        try {
+          const docRef = await getDocs(linksCol);
+          const linkDoc = docRef.docs.find(doc => doc.id === linkId);
+          
+          if (linkDoc) {
+            const linkData = linkDoc.data();
+            const expiresAt = new Date(linkData.expiresAt.seconds * 1000);
+            
+            if (new Date() > expiresAt) {
+              expiredView.classList.remove('hidden');
+            } else {
+              // Usar los streams del enlace guardado
+              const streams = [
+                linkData.s1 ? decodeURIComponent(linkData.s1) : null, 
+                linkData.s2 ? decodeURIComponent(linkData.s2) : null
+              ].filter(Boolean);
+              
+              loadViewer(streams);
+            }
+          } else {
+            expiredView.classList.remove('hidden');
+          }
+        } catch (e) {
+          console.error('Error checking link:', e);
+          // Fallback: cargar desde s1/s2
+          const streams = [
+            s1 ? decodeURIComponent(s1) : null, 
+            s2 ? decodeURIComponent(s2) : null
+          ].filter(Boolean);
+          if (streams.length > 0) {
+            loadViewer(streams);
+          } else {
+            adminView.classList.remove('hidden');
+          }
+        }
+      } else if (s1 || s2) {
+        const streams = [
+          s1 ? decodeURIComponent(s1) : null, 
+          s2 ? decodeURIComponent(s2) : null
+        ].filter(Boolean);
+        loadViewer(streams);
+      } else {
+        adminView.classList.remove('hidden');
+      }
+
+      // ─── DUAL SOUND SYSTEM ──────────────────────────────────────────────────────
+      // localStorage key: stream-${index}-dualsound  ("true"=sound on / "false"=muted)
+      // Default: index 0 → sound on, index 1 → muted
+
+      function detectStreamType(url) {
+        if (/youtube\.com|youtube-nocookie\.com|youtu\.be/.test(url)) return 'youtube';
+        if (/twitch\.tv/.test(url)) return 'twitch';
+        if (/\.(m3u8|m3u|mp4|ts|webm)(\?|$)/i.test(url)) return 'direct';
+        return 'iframe-other';
+      }
+
+      const _sp = {}; // streamPlayers: { [index]: { type, player?, video?, playerReady? } }
+
+      // ── YouTube API loader (once) ──
+      let _ytReady = false, _ytQ = [];
+      function _ensureYT(cb) {
+        if (_ytReady) { cb(); return; }
+        _ytQ.push(cb);
+        if (!window._ytLoading) {
+          window._ytLoading = true;
+          window.onYouTubeIframeAPIReady = () => { _ytReady = true; _ytQ.forEach(f => f()); _ytQ = []; };
+          const s = document.createElement('script');
+          s.src = 'https://www.youtube.com/iframe_api'; s.async = true;
+          document.head.appendChild(s);
+        }
+      }
+
+      // ── Twitch API loader (once) ──
+      let _twReady = false, _twQ = [];
+      function _ensureTwitch(cb) {
+        if (_twReady) { cb(); return; }
+        _twQ.push(cb);
+        if (!window._twLoading) {
+          window._twLoading = true;
+          const s = document.createElement('script');
+          s.src = 'https://player.twitch.tv/js/embed/v1.js'; s.async = true;
+          s.onload = () => { _twReady = true; _twQ.forEach(f => f()); _twQ = []; };
+          document.head.appendChild(s);
+        }
+      }
+
+      // ── HLS.js loader (once) ──
+      let _hlsReady = false, _hlsQ = [];
+      function _ensureHLS(cb) {
+        if (_hlsReady) { cb(); return; }
+        _hlsQ.push(cb);
+        if (!window._hlsLoading) {
+          window._hlsLoading = true;
+          const s = document.createElement('script');
+          s.src = 'https://cdn.jsdelivr.net/npm/hls.js@latest/dist/hls.min.js'; s.async = true;
+          s.onload = () => { _hlsReady = true; _hlsQ.forEach(f => f()); _hlsQ = []; };
+          document.head.appendChild(s);
+        }
+      }
+
+      // ── Apply mute/unmute to a single stream ──
+      function _applyMute(index, muted) {
+        const e = _sp[index]; if (!e) return;
+        if (e.type === 'youtube' && e.player && e.playerReady) {
+          muted ? e.player.mute() : e.player.unMute();
+        } else if (e.type === 'twitch' && e.player) {
+          e.player.setMuted(muted);
+        } else if (e.type === 'direct' && e.video) {
+          e.video.muted = muted;
+        }
+        // iframe-other: no reliable API — user controls via provider's UI
+      }
+
+      // ── updateDualSound: reads both checkboxes, applies mute state ──
+      function updateDualSound() {
+        Object.keys(_sp).forEach(idx => {
+          const cb = document.getElementById(`audio-cb-${idx}`);
+          if (cb) _applyMute(parseInt(idx), !cb.checked);
+        });
+      }
+
+      // ── Pill visual updater ──
+      function _updatePill(pill, iconSpan, active) {
+        if (active) {
+          pill.style.background = 'rgba(16,185,129,0.88)';
+          pill.style.boxShadow = '0 0 22px rgba(16,185,129,0.45), 0 8px 32px rgba(0,0,0,0.5)';
+          iconSpan.textContent = '🔊';
+        } else {
+          pill.style.background = 'rgba(0,0,0,0.82)';
+          pill.style.boxShadow = '0 8px 32px rgba(0,0,0,0.55)';
+          iconSpan.textContent = '🔇';
+        }
+      }
+
+      // ── loadViewer ──────────────────────────────────────────────────────────
+      function loadViewer(streams) {
+        viewerView.classList.remove('hidden');
+        viewerView.classList.add('flex');
+
+        const isSplit = streams.length === 2;
+        const forced = streams.length === 1; // single stream: always sound on
+
+        streams.forEach((url, index) => {
+          const type = detectStreamType(url);
+          _sp[index] = { type };
+
+          // Restore from localStorage; default: 0→on, 1→off
+          const saved = localStorage.getItem(`stream-${index}-dualsound`);
+          const isActive = forced ? true : (saved !== null ? saved === 'true' : index === 0);
+
+          // ── Wrapper ──
+          const div = document.createElement('div');
+          div.className = `relative ${isSplit
+            ? 'w-full md:w-1/2 h-1/2 md:h-full border-b md:border-b-0 md:border-r border-slate-800'
+            : 'w-full h-full'}`;
+
+          // ── Media element by type ──
+          if (type === 'youtube') {
+            // Normalise to embed URL
+            let embedUrl = url
+              .replace(/youtube\.com\/watch\?v=([^&]+)/, 'youtube.com/embed/$1')
+              .replace(/youtu\.be\/([^?]+)/, 'youtube.com/embed/$1')
+              .replace(/youtube-nocookie\.com\/watch\?v=([^&]+)/, 'youtube-nocookie.com/embed/$1');
+            const origin = encodeURIComponent(window.location.origin);
+            embedUrl += (embedUrl.includes('?') ? '&' : '?') + `enablejsapi=1&origin=${origin}`;
+
+            const iframe = document.createElement('iframe');
+            iframe.id = `stream-iframe-${index}`;
+            iframe.src = embedUrl;
+            iframe.className = 'absolute top-0 left-0 w-full h-full';
+            iframe.frameBorder = '0';
+            iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+            iframe.allowFullscreen = true;
+            div.appendChild(iframe);
+
+            _ensureYT(() => {
+              const player = new YT.Player(`stream-iframe-${index}`, {
+                events: {
+                  onReady: () => {
+                    _sp[index].playerReady = true;
+                    _applyMute(index, !document.getElementById(`audio-cb-${index}`)?.checked);
+                  }
+                }
+              });
+              _sp[index].player = player;
+            });
+
+          } else if (type === 'twitch') {
+            const cId = `twitch-container-${index}`;
+            const cDiv = document.createElement('div');
+            cDiv.id = cId;
+            cDiv.className = 'absolute top-0 left-0 w-full h-full';
+            div.appendChild(cDiv);
+
+            // Parse channel or video from URL
+            let tOpts = { width: '100%', height: '100%', muted: !isActive, parent: [window.location.hostname] };
+            try {
+              const u = new URL(url.startsWith('http') ? url : 'https://' + url);
+              const vParam = u.searchParams.get('video');
+              const chParam = u.searchParams.get('channel');
+              const pathParts = u.pathname.split('/').filter(Boolean);
+              if (vParam) tOpts.video = vParam;
+              else if (chParam) tOpts.channel = chParam;
+              else if (pathParts[0] === 'videos' && pathParts[1]) tOpts.video = pathParts[1];
+              else if (pathParts[0]) tOpts.channel = pathParts[0];
+            } catch (_) {}
+
+            _ensureTwitch(() => {
+              const player = new Twitch.Player(cId, tOpts);
+              _sp[index].player = player;
+              player.addEventListener(Twitch.Player.READY, () => updateDualSound());
+            });
+
+          } else if (type === 'direct') {
+            const isHLS = /\.m3u8?(\?|$)/i.test(url);
+            const video = document.createElement('video');
+            video.className = 'absolute top-0 left-0 w-full h-full';
+            video.autoplay = true;
+            video.setAttribute('playsinline', '');
+            video.controls = false;
+            video.muted = !isActive;
+            _sp[index].video = video;
+            div.appendChild(video);
+
+            if (isHLS) {
+              _ensureHLS(() => {
+                if (Hls.isSupported()) {
+                  const hls = new Hls();
+                  hls.loadSource(url);
+                  hls.attachMedia(video);
+                } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                  video.src = url; // native HLS (Safari)
+                }
+              });
+            } else {
+              video.src = url;
+            }
+
+          } else {
+            // iframe-other: recreate with common mute params when muted
+            let embedUrl = url;
+            if (!isActive) embedUrl += (embedUrl.includes('?') ? '&' : '?') + 'mute=1&muted=true&autoplay=1';
+            const iframe = document.createElement('iframe');
+            iframe.id = `stream-iframe-${index}`;
+            iframe.src = embedUrl;
+            iframe.className = 'absolute top-0 left-0 w-full h-full';
+            iframe.frameBorder = '0';
+            iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+            iframe.allowFullscreen = true;
+            _sp[index].iframe = iframe;
+            div.appendChild(iframe);
+          }
+
+          // ── Dual Sound pill checkbox ──
+          // id="audio-btn-${index}" preserves original id pattern on the wrapper label
+          const audioBtn = document.createElement('label');
+          audioBtn.id = `audio-btn-${index}`;
+          audioBtn.className = 'absolute bottom-5 right-5 z-40 flex items-center gap-0 cursor-pointer select-none';
+          if (forced) audioBtn.style.cursor = 'default';
+
+          const cb = document.createElement('input');
+          cb.type = 'checkbox';
+          cb.id = `audio-cb-${index}`;
+          cb.checked = isActive;
+          cb.disabled = forced;
+          cb.className = 'sr-only';
+
+          const pill = document.createElement('div');
+          pill.style.cssText = 'backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-radius:1rem;padding:10px 16px;display:flex;align-items:center;gap:8px;transition:background 0.25s,box-shadow 0.25s;border:1.5px solid rgba(255,255,255,0.10);';
+
+          const iconSpan = document.createElement('span');
+          iconSpan.style.cssText = 'font-size:1.35rem;line-height:1;transition:all 0.2s;';
+
+          const labelSpan = document.createElement('span');
+          labelSpan.style.cssText = 'font-size:0.72rem;font-weight:700;color:#fff;letter-spacing:0.03em;display:none;';
+          labelSpan.textContent = `Sonido ${index + 1}`;
+          // Show label on larger screens via matchMedia
+          if (window.matchMedia('(min-width:640px)').matches) labelSpan.style.display = 'inline';
+
+          _updatePill(pill, iconSpan, isActive);
+          pill.appendChild(iconSpan);
+          pill.appendChild(labelSpan);
+
+          // Warning badge for iframe-other
+          if (type === 'iframe-other') {
+            const warn = document.createElement('span');
+            warn.title = 'El control de audio depende del proveedor';
+            warn.style.cssText = 'font-size:0.85rem;line-height:1;opacity:0.85;margin-left:2px;';
+            warn.textContent = '⚠️';
+            pill.appendChild(warn);
+          }
+
+          cb.addEventListener('change', () => {
+            if (!forced) localStorage.setItem(`stream-${index}-dualsound`, cb.checked);
+            _updatePill(pill, iconSpan, cb.checked);
+            _applyMute(index, !cb.checked);
+          });
+
+          audioBtn.appendChild(cb);
+          audioBtn.appendChild(pill);
+          div.appendChild(audioBtn);
+          videoContainer.appendChild(div);
+        });
+      }
+
+      // Función para resetear el modo de edición
+      const resetEditMode = () => {
+        editingLinkId = null;
+        btnGenerate.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-9 h-9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+          </svg>
+          🚀 Generar Enlace y Guardar
+        `;
+        btnGenerate.classList.add('pulse-glow');
+        btnCancelEdit.classList.add('hidden');
+        linkNameInput.value = '';
+      };
+      
+      // Botón de cancelar edición
+      btnCancelEdit.addEventListener('click', resetEditMode);
+      
+      // Generar/Actualizar enlace y guardar
+      btnGenerate.addEventListener('click', async () => {
+        const baseUrl = window.location.origin + window.location.pathname;
+        const newParams = new URLSearchParams();
+        const s1Value = input1.value.trim();
+        const s2Value = input2.value.trim();
+        
+        if (s1Value) newParams.append('s1', encodeURIComponent(s1Value));
+        if (s2Value) newParams.append('s2', encodeURIComponent(s2Value));
+        
+        const fullUrl = `${baseUrl}?${newParams.toString()}`;
+        urlOutput.value = fullUrl;
+        resultBox.classList.remove('hidden');
+        
+        // Guardar en Firestore con expiración
+        const expirationHours = parseInt(expirationSelect.value);
+        const expiresAt = new Date();
+        expiresAt.setHours(expiresAt.getHours() + expirationHours);
+        
+        // Usar nombre manual o generar uno automático
+        let finalLinkName = linkNameInput.value.trim();
+        if (!finalLinkName) {
+          const linkNameParts = [];
+          if (stream1Select.selectedIndex > 0) linkNameParts.push(stream1Select.options[stream1Select.selectedIndex].text.replace('⚽ ', ''));
+          if (stream2Select.selectedIndex > 0) linkNameParts.push(stream2Select.options[stream2Select.selectedIndex].text.replace('⚽ ', ''));
+          finalLinkName = linkNameParts.length > 0 ? linkNameParts.join(' + ') : 'Partido';
+        }
+        
+        try {
+          if (editingLinkId) {
+            // Actualizar documento existente
+            const linkDocRef = doc(db, "generatedLinks", editingLinkId);
+            await updateDoc(linkDocRef, {
+              name: finalLinkName,
+              s1: s1Value || null,
+              s2: s2Value || null,
+              url: fullUrl,
+              expiresAt: expiresAt,
+              expirationHours: expirationHours
+            });
+            alert('Enlace actualizado correctamente!');
+            resetEditMode();
+          } else {
+            // Crear nuevo documento
+            await addDoc(linksCol, {
+              name: finalLinkName,
+              s1: s1Value || null,
+              s2: s2Value || null,
+              url: fullUrl,
+              createdAt: new Date(),
+              expiresAt: expiresAt,
+              expirationHours: expirationHours
+            });
+          }
+        } catch (e) {
+          console.error('Error saving link:', e);
+        }
+        
+        btnCopy.classList.remove('bg-green-500');
+        btnCopy.classList.add('bg-gradient-to-r', 'from-blue-600', 'to-indigo-600');
+        textCopy.textContent = '📋 Copiar';
+        iconCopy.innerHTML = '<rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>';
+      });
+
+      btnCopy.addEventListener('click', () => {
+        const copySuccess = () => {
+          btnCopy.classList.remove('bg-gradient-to-r', 'from-blue-600', 'to-indigo-600');
+          btnCopy.classList.add('bg-green-600');
+          textCopy.textContent = '✅ ¡Copiado!';
+          iconCopy.innerHTML = '<path d="M20 6 9 17l-5-5"/>';
+          
+          setTimeout(() => {
+            btnCopy.classList.remove('bg-green-600');
+            btnCopy.classList.add('bg-gradient-to-r', 'from-blue-600', 'to-indigo-600');
+            textCopy.textContent = '📋 Copiar';
+            iconCopy.innerHTML = '<rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>';
+          }, 3000);
+        };
+
+        if (navigator.clipboard && window.isSecureContext) {
+          navigator.clipboard.writeText(urlOutput.value).then(copySuccess);
+        } else {
+          urlOutput.select();
+          document.execCommand('copy');
+          copySuccess();
+        }
+      });
+
+      btnWhatsapp.addEventListener('click', () => {
+        const message = `¡Mira los partidos del Mundial! 🏆⚽\n\n${urlOutput.value}`;
+        window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+      });
+
+      // Funcionalidad de Pantalla Completa
+      const iconFullscreen = document.getElementById('icon-fullscreen');
+      const textFullscreen = document.getElementById('text-fullscreen');
+
+      const updateFullscreenUI = () => {
+        const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
+        
+        if (isFullscreen) {
+          iconFullscreen.innerHTML = '<path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/>';
+          textFullscreen.textContent = 'Salir';
+        } else {
+          iconFullscreen.innerHTML = '<path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/>';
+          textFullscreen.textContent = 'Pantalla Completa';
+        }
+      };
+
+      btnFullscreen.addEventListener('click', () => {
+        const elem = viewerView;
+        
+        if (document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement) {
+          if (document.exitFullscreen) {
+            document.exitFullscreen();
+          } else if (document.webkitExitFullscreen) {
+            document.webkitExitFullscreen();
+          } else if (document.msExitFullscreen) {
+            document.msExitFullscreen();
+          }
+        } else {
+          if (elem.requestFullscreen) {
+            elem.requestFullscreen();
+          } else if (elem.webkitRequestFullscreen) {
+            elem.webkitRequestFullscreen();
+          } else if (elem.msRequestFullscreen) {
+            elem.msRequestFullscreen();
+          }
+        }
+      });
+
+      document.addEventListener('fullscreenchange', updateFullscreenUI);
+      document.addEventListener('webkitfullscreenchange', updateFullscreenUI);
+      document.addEventListener('msfullscreenchange', updateFullscreenUI);
+    });
+  </script>
+</body>
+</html>
