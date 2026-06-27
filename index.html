@@ -1463,7 +1463,22 @@
       //  CHANNEL MODE (zapping a pantalla completa)
       // ═══════════════════════════════════════════════════════════════════
 
-      // Layout: un solo stream visible, el resto oculto (sin destruir DOM)
+      // Pausa o reanuda la reproducción de un stream según su tipo
+      function _applyPlayback(index, shouldPlay) {
+        const e = _sp[index];
+        if (!e) return;
+        if (e.type === 'youtube' && e.player && e.playerReady) {
+          shouldPlay ? e.player.playVideo() : e.player.pauseVideo();
+        } else if (e.type === 'twitch' && e.player) {
+          shouldPlay ? e.player.play() : e.player.pause();
+        } else if (e.type === 'direct' && e.video) {
+          if (shouldPlay) e.video.play().catch(() => {});
+          else e.video.pause();
+        }
+        // iframe-other: sin API cross-origin; queda silenciado por AudioManager
+      }
+
+      // Layout: un solo stream visible, el resto oculto y pausado
       function _applyChannelLayout(streams) {
         document.getElementById('pip-extra-list')?.remove();
         videoContainer.removeAttribute('style');
@@ -1479,14 +1494,16 @@
             st.div.removeAttribute('style');
             st.div.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;z-index:1;';
             st.div.className = 'relative';
+            _applyPlayback(i, true);
           } else {
             st.div.style.cssText = 'position:absolute;display:none;';
             st.div.className = 'relative';
+            _applyPlayback(i, false);
           }
         });
       }
 
-      // Cambiar canal activo (solo visibilidad + audio, sin tocar iframes)
+      // Cambiar canal activo: pausa los demás, reanuda el seleccionado
       function _switchChannel(idx, streams) {
         _channelIdx = idx;
         try { localStorage.setItem(_CHANNEL_KEY, String(idx)); } catch(_) {}
