@@ -2,7 +2,13 @@
   "permissions": {
     "allow": [
       "Bash(node --version)",
-      "Bash(node -e ' *)"
+      "Bash(node -e ' *)",
+      "Bash(node \"C:/Users/josex/AppData/Local/Temp/claude/C--Users-josex-Downloads-tv2-main/e3ee4efb-9284-46ec-ae8f-f689ba1847d6/scratchpad/splice.js\")",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(cd \"C:/Users/josex/.claude/projects/C--Users-josex-Downloads-tv2-main/memory\")",
+      "Bash(cat MEMORY.md)",
+      "Bash(echo \"exit=$?\")",
+      "Bash(node \"C:/Users/josex/AppData/Local/Temp/claude/C--Users-josex-Downloads-tv2-main/e3ee4efb-9284-46ec-ae8f-f689ba1847d6/scratchpad/panel-edit.js\")"
     ]
   }
 }
