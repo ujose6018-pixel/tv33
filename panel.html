@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel Admin - TV Mundial 2026</title>
+  <link rel="icon" href="https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/2026_FIFA_World_Cup_emblem.svg/1920px-2026_FIFA_World_Cup_emblem.svg.png" type="image/png">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
+    import { getFirestore } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
+    const firebaseConfig = {
+      apiKey: "AIzaSyAp1IAukg9FGiOHGsRvvapN6QYzLOYDrOY",
+      authDomain: "tvmundial-b190a.firebaseapp.com",
+      projectId: "tvmundial-b190a",
+      storageBucket: "tvmundial-b190a.firebasestorage.app",
+      messagingSenderId: "324034223779",
+      appId: "1:324034223779:web:49e679e822c4ae99762916"
+    };
+    const app = initializeApp(firebaseConfig);
+    getFirestore(app);
+  </script>
+  <style>
+    .hidden { display: none !important; }
+    @keyframes pulse-glow { 0%,100%{box-shadow:0 0 20px rgba(251,191,36,0.4);} 50%{box-shadow:0 0 40px rgba(251,191,36,0.8);} }
+    @keyframes gradient-shift { 0%{background-position:0% 50%;} 50%{background-position:100% 50%;} 100%{background-position:0% 50%;} }
+    .pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+    .gradient-bg { background: linear-gradient(-45deg,#020617,#0f172a,#020617,#1e293b); background-size:400% 400%; animation: gradient-shift 20s ease infinite; }
+    .btn-primary { background: linear-gradient(135deg,#059669 0%,#10b981 50%,#34d399 100%); transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
+    .btn-primary:hover { background: linear-gradient(135deg,#047857 0%,#059669 50%,#10b981 100%); transform: translateY(-3px); box-shadow:0 15px 40px rgba(5,150,105,0.5); }
+    .btn-gold { background: linear-gradient(135deg,#f59e0b 0%,#fbbf24 50%,#fcd34d 100%); transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
+    .btn-gold:hover { background: linear-gradient(135deg,#d97706 0%,#f59e0b 50%,#fbbf24 100%); transform: translateY(-3px); box-shadow:0 15px 40px rgba(245,158,11,0.6); }
+    .card-glow { box-shadow:0 30px 80px rgba(0,0,0,0.6); backdrop-filter: blur(20px); }
+    .tab-btn { transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
+    .tab-btn.active { box-shadow:0 4px 15px rgba(16,185,129,0.4); }
+    input, select, textarea { transition: all 0.2s cubic-bezier(0.4,0,0.2,1); }
+    ::-webkit-scrollbar { width:8px; }
+    ::-webkit-scrollbar-track { background: rgba(15,23,42,0.5); border-radius:10px; }
+    ::-webkit-scrollbar-thumb { background: linear-gradient(180deg,#10b981,#3b82f6); border-radius:10px; }
+    input[type="datetime-local"]::-webkit-calendar-picker-indicator { filter: invert(1); opacity:0.6; }
+  </style>
+</head>
+<body class="gradient-bg text-white min-h-screen w-full font-sans selection:bg-emerald-500/50">
+
+  <div class="min-h-screen flex flex-col items-center py-8 px-3 sm:px-6">
+    <div class="w-full max-w-6xl">
+
+      <!-- Encabezado -->
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
+        <div class="flex items-center gap-4">
+          <div class="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-2xl p-1.5">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/2026_FIFA_World_Cup_emblem.svg/1920px-2026_FIFA_World_Cup_emblem.svg.png" alt="Mundial 2026" class="w-full h-full object-contain">
+          </div>
+          <div>
+            <h1 class="text-3xl md:text-4xl font-black bg-gradient-to-r from-yellow-300 via-orange-400 to-yellow-500 bg-clip-text text-transparent">PANEL ADMIN</h1>
+            <p class="text-emerald-300 text-sm font-semibold">⚽ Gestión de la plataforma de streaming</p>
+          </div>
+        </div>
+        <a href="index.html" target="_blank" class="btn-gold text-slate-900 font-bold py-3 px-6 rounded-2xl shadow-lg flex items-center gap-2 text-sm">
+          🌐 Ver plataforma
+        </a>
+      </div>
+
+      <!-- Tabs principales -->
+      <div class="flex flex-wrap gap-2 bg-slate-800/60 rounded-3xl p-2 border border-slate-700/50 mb-6">
+        <button data-tab="matches" class="main-tab active flex-1 min-w-[120px] py-4 px-5 rounded-2xl font-bold text-base text-white bg-gradient-to-r from-emerald-600 to-teal-600 shadow-lg">
+          ⚽ Partidos
+        </button>
+        <button data-tab="tester" class="main-tab flex-1 min-w-[120px] py-4 px-5 rounded-2xl font-bold text-base text-slate-400 hover:text-white hover:bg-slate-700/50">
+          🔍 Probar señales
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Columna principal -->
+        <div class="lg:col-span-2 space-y-6">
+
+          <!-- ============ PANEL: PARTIDOS ============ -->
+          <div id="panel-matches" class="bg-slate-900/90 backdrop-blur-xl rounded-3xl card-glow border border-emerald-500/30 overflow-hidden">
+            <div class="p-6 sm:p-8 space-y-6">
+              <div class="bg-gradient-to-r from-emerald-900/50 to-teal-900/50 border border-emerald-500/40 rounded-3xl p-5 flex gap-4">
+                <span class="text-3xl">⚽</span>
+                <div>
+                  <h3 class="text-lg font-bold text-emerald-200">Crear / editar partido</h3>
+                  <p class="text-emerald-100/80 text-sm">Agrega varias señales y elige cuál se transmite. Puedes cambiarla en vivo.</p>
+                </div>
+              </div>
+
+              <!-- Competición -->
+              <div>
+                <label class="block text-sm font-bold text-slate-300 mb-2">🏆 Competición / liga</label>
+                <input id="m-competition" type="text" placeholder="Ej: Mundial 2026 - Fase de grupos" class="w-full bg-slate-800/60 border border-slate-700 rounded-2xl px-5 py-4 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500">
+              </div>
+
+              <!-- Equipos -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-slate-800/40 rounded-2xl p-4 border border-slate-700/50 space-y-3">
+                  <label class="block text-sm font-bold text-yellow-300">🏠 Equipo local</label>
+                  <input id="m-home" type="text" placeholder="Ej: Argentina" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-yellow-500">
+                  <input id="m-home-logo" type="text" placeholder="URL del escudo (opcional)" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-3 text-white text-sm placeholder-slate-500 focus:outline-none focus:border-yellow-500">
+                </div>
+                <div class="bg-slate-800/40 rounded-2xl p-4 border border-slate-700/50 space-y-3">
+                  <label class="block text-sm font-bold text-cyan-300">🛫 Equipo visitante</label>
+                  <input id="m-away" type="text" placeholder="Ej: México" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500">
+                  <input id="m-away-logo" type="text" placeholder="URL del escudo (opcional)" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-3 text-white text-sm placeholder-slate-500 focus:outline-none focus:border-cyan-500">
+                </div>
+              </div>
+
+              <!-- Fecha/hora + estado -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-bold text-slate-300 mb-2">🕐 Fecha y hora</label>
+                  <input id="m-kickoff" type="datetime-local" class="w-full bg-slate-800/60 border border-slate-700 rounded-2xl px-5 py-4 text-white focus:outline-none focus:border-emerald-500">
+                </div>
+                <div>
+                  <label class="block text-sm font-bold text-slate-300 mb-2">📡 Estado</label>
+                  <select id="m-status" class="w-full bg-slate-800/60 border border-slate-700 rounded-2xl px-5 py-4 text-white focus:outline-none focus:border-emerald-500 cursor-pointer">
+                    <option value="upcoming">🕐 Próximamente</option>
+                    <option value="live">🔴 EN VIVO</option>
+                    <option value="finished">✅ Finalizado</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Señales -->
+              <div class="bg-slate-800/40 rounded-3xl p-5 border border-purple-500/30 space-y-4">
+                <div class="flex items-center justify-between gap-3 flex-wrap">
+                  <div>
+                    <h4 class="text-base font-bold text-purple-300">📶 Señales del partido</h4>
+                    <p class="text-slate-400 text-xs">Marca con ⭐ la señal que se transmite ahora</p>
+                  </div>
+                  <select id="m-add-saved" class="bg-slate-900/60 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-purple-500 cursor-pointer">
+                    <option value="">➕ Agregar desde stream guardado</option>
+                  </select>
+                </div>
+                <div id="signals-list" class="space-y-3"></div>
+                <button id="add-signal" type="button" class="w-full border-2 border-dashed border-purple-500/40 hover:border-purple-400 text-purple-300 hover:text-purple-200 font-bold py-3 rounded-2xl transition-all">
+                  ➕ Agregar señal manual
+                </button>
+              </div>
+
+              <!-- Slug / enlace -->
+              <div class="bg-slate-800/40 rounded-3xl p-5 border border-pink-500/30 space-y-2">
+                <label class="block text-sm font-bold text-pink-300">🔗 Enlace corto (final de la URL)</label>
+                <input id="m-slug" type="text" placeholder="Se genera solo desde los equipos, ej: arg-vs-mex" class="w-full bg-slate-900/60 border border-slate-700 rounded-2xl px-5 py-4 text-white placeholder-slate-500 focus:outline-none focus:border-pink-400 font-mono">
+                <p id="m-slug-preview" class="text-sm text-pink-200/80 break-all font-mono min-h-[1.25rem]"></p>
+              </div>
+
+              <!-- Acciones -->
+              <div class="flex flex-col sm:flex-row gap-3">
+                <button id="m-save" class="flex-1 btn-gold text-slate-900 font-black text-lg py-5 px-6 rounded-3xl shadow-2xl pulse-glow flex items-center justify-center gap-3">
+                  💾 Guardar partido
+                </button>
+                <button id="m-cancel" class="px-6 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded-3xl border-2 border-slate-600 hidden">✖️ Cancelar</button>
+              </div>
+
+              <!-- Resultado -->
+              <div id="m-result" class="p-6 bg-gradient-to-br from-yellow-900/30 to-orange-900/30 rounded-3xl border border-yellow-500/40 hidden">
+                <h3 class="text-lg font-bold text-yellow-300 mb-4">✨ ¡Partido guardado! Este es su enlace:</h3>
+                <input id="m-url-output" readonly class="w-full bg-slate-900 border border-yellow-600/50 rounded-2xl px-4 py-3 text-yellow-100 text-sm focus:outline-none mb-3">
+                <div class="flex flex-col sm:flex-row gap-3">
+                  <button id="m-copy" class="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white">📋 Copiar</button>
+                  <button id="m-whatsapp" class="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-2xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white">💬 WhatsApp</button>
+                  <a id="m-open" href="#" target="_blank" class="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-2xl font-bold btn-gold text-slate-900 text-center">▶️ Abrir</a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ============ PANEL: TESTER ============ -->
+          <div id="panel-tester" class="hidden bg-slate-900/90 backdrop-blur-xl rounded-3xl card-glow border border-blue-500/30 overflow-hidden">
+            <div class="p-6 sm:p-8 space-y-5">
+              <div class="bg-gradient-to-r from-blue-900/40 to-indigo-900/40 border border-blue-500/40 rounded-2xl p-5 flex gap-4">
+                <span class="text-3xl">🔍</span>
+                <div>
+                  <h3 class="text-lg font-bold text-blue-200">Prueba tus señales</h3>
+                  <p class="text-blue-100/80 text-sm">Verifica si una URL funciona antes de transmitirla</p>
+                </div>
+              </div>
+              <select id="tester-select" class="w-full bg-slate-800 border border-purple-600/50 rounded-2xl px-5 py-4 text-white focus:outline-none focus:border-purple-400 cursor-pointer">
+                <option value="">-- 📺 Selecciona un stream guardado --</option>
+              </select>
+              <input id="tester-input" type="text" placeholder="🔗 O pega una URL para probar..." class="w-full bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4 text-white placeholder-slate-400 focus:outline-none focus:border-purple-500">
+              <button id="btn-test" class="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-black text-lg py-4 px-6 rounded-3xl">▶️ Probar</button>
+              <button id="btn-save-tester" class="w-full border-2 border-dashed border-emerald-500/40 hover:border-emerald-400 text-emerald-300 hover:text-emerald-200 font-bold py-3 rounded-2xl transition-all">💾 Guardar esta URL como stream</button>
+              <div id="tester-container" class="aspect-video bg-black rounded-2xl border border-slate-700 overflow-hidden hidden"></div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Columna lateral -->
+        <div class="lg:col-span-1 space-y-6">
+          <!-- Lista de partidos -->
+          <div id="side-matches" class="bg-slate-900/90 backdrop-blur-xl rounded-3xl card-glow border border-emerald-500/30 overflow-hidden">
+            <div class="p-5 border-b border-emerald-500/20 bg-gradient-to-r from-emerald-900/40 to-teal-900/40">
+              <h3 class="text-lg font-bold text-emerald-200">⚽ Partidos</h3>
+              <p class="text-emerald-100/70 text-xs">Cambia la señal en vivo desde aquí</p>
+            </div>
+            <div id="matches-container" class="p-4 max-h-[500px] overflow-y-auto space-y-3">
+              <div class="text-center text-slate-400 py-10 text-sm">No hay partidos aún</div>
+            </div>
+          </div>
+
+          <!-- Streams guardados -->
+          <div class="bg-slate-900/90 backdrop-blur-xl rounded-3xl card-glow border border-emerald-500/30 overflow-hidden">
+            <div class="p-5 border-b border-emerald-500/20 bg-gradient-to-r from-emerald-900/40 to-teal-900/40">
+              <h3 class="text-lg font-bold text-emerald-200">📺 Streams guardados</h3>
+              <p class="text-emerald-100/70 text-xs">Fuentes reutilizables</p>
+            </div>
+            <div id="streams-container" class="p-4 max-h-[350px] overflow-y-auto space-y-3">
+              <div class="text-center text-slate-400 py-10 text-sm">No hay streams aún</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { getFirestore, collection, addDoc, getDocs, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const db = getFirestore();
+      const streamsCol = collection(db, "streams");
+      const linksCol = collection(db, "generatedLinks");
+      const matchesCol = collection(db, "matches");
+
+      // ── Helpers ───────────────────────────────────────────────
+      const $ = id => document.getElementById(id);
+      const slugify = (str) => (str || '').toLowerCase()
+        .normalize('NFD').replace(/[̀-ͯ]/g, '')
+        .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').substring(0, 60);
+      const getBaseDir = () => { const p = window.location.pathname; return p.substring(0, p.lastIndexOf('/') + 1); };
+      const shortUrlFor = (slug) => window.location.origin + getBaseDir() + slug;
+      const safeDecode = (v) => { try { return decodeURIComponent(v); } catch (_) { return v; } };
+      const esc = (s) => (s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+      const fmtDateTime = (d) => new Intl.DateTimeFormat('es-ES', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' }).format(d);
+      const toLocalInput = (d) => {
+        const p = n => String(n).padStart(2, '0');
+        return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+      };
+      let savedStreams = [];
+
+      // ── Tabs ──────────────────────────────────────────────────
+      const mainTabs = document.querySelectorAll('.main-tab');
+      const panels = { matches: $('panel-matches'), tester: $('panel-tester') };
+      mainTabs.forEach(btn => btn.addEventListener('click', () => {
+        const tab = btn.dataset.tab;
+        mainTabs.forEach(b => {
+          const active = b === btn;
+          b.classList.toggle('active', active);
+          b.classList.toggle('text-white', active);
+          b.classList.toggle('bg-gradient-to-r', active);
+          b.classList.toggle('from-emerald-600', active);
+          b.classList.toggle('to-teal-600', active);
+          b.classList.toggle('shadow-lg', active);
+          b.classList.toggle('text-slate-400', !active);
+        });
+        Object.entries(panels).forEach(([k, el]) => el.classList.toggle('hidden', k !== tab));
+        $('side-matches').classList.toggle('hidden', tab !== 'matches');
+      }));
+
+      // ══════════════════════════════════════════════════════════
+      //  SEÑALES (formulario de partido)
+      // ══════════════════════════════════════════════════════════
+      const signalsList = $('signals-list');
+
+      function createSignalRow(name = '', url = '', active = false) {
+        const row = document.createElement('div');
+        row.className = 'signal-row flex flex-col sm:flex-row gap-2 items-stretch sm:items-center bg-slate-900/50 rounded-2xl p-3 border border-slate-700/50';
+        row.innerHTML = `
+          <label class="flex items-center gap-2 cursor-pointer shrink-0 px-1" title="Señal que se transmite ahora">
+            <input type="radio" name="active-signal" class="sig-active accent-emerald-500 w-5 h-5 cursor-pointer">
+            <span class="text-xs text-emerald-300 font-bold hidden sm:inline">⭐</span>
+          </label>
+          <input type="text" class="sig-name w-full sm:w-32 bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm placeholder-slate-500 focus:outline-none focus:border-purple-500" placeholder="Nombre (ej: HD)">
+          <input type="text" class="sig-url flex-1 bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm placeholder-slate-500 focus:outline-none focus:border-purple-500" placeholder="URL de la señal">
+          <button type="button" class="sig-test shrink-0 w-9 h-9 bg-blue-600 hover:bg-blue-500 rounded-xl" title="Probar">▶️</button>
+          <button type="button" class="sig-remove shrink-0 w-9 h-9 bg-red-600 hover:bg-red-500 rounded-xl" title="Quitar">🗑️</button>
+        `;
+        row.querySelector('.sig-name').value = name;
+        row.querySelector('.sig-url').value = url;
+        row.querySelector('.sig-active').checked = active;
+        row.querySelector('.sig-remove').addEventListener('click', () => {
+          row.remove();
+          if (!signalsList.querySelector('.sig-active:checked')) {
+            const first = signalsList.querySelector('.sig-active');
+            if (first) first.checked = true;
+          }
+        });
+        row.querySelector('.sig-test').addEventListener('click', () => {
+          const u = row.querySelector('.sig-url').value.trim();
+          if (!u) { alert('Escribe una URL primero'); return; }
+          mainTabs.forEach(b => { if (b.dataset.tab === 'tester') b.click(); });
+          $('tester-input').value = u;
+          $('btn-test').click();
+        });
+        signalsList.appendChild(row);
+        return row;
+      }
+
+      $('add-signal').addEventListener('click', () => {
+        const row = createSignalRow('', '', signalsList.children.length === 0);
+        row.querySelector('.sig-url').focus();
+      });
+
+      $('m-add-saved').addEventListener('change', (e) => {
+        const idx = e.target.value;
+        if (idx === '') return;
+        const s = savedStreams[Number(idx)];
+        if (s) createSignalRow(s.title || '', s.url || '', signalsList.children.length === 0);
+        e.target.value = '';
+      });
+
+      function readSignals() {
+        return [...signalsList.querySelectorAll('.signal-row')].map(r => ({
+          name: r.querySelector('.sig-name').value.trim(),
+          url: r.querySelector('.sig-url').value.trim()
+        })).filter(s => s.url);
+      }
+      function readActiveIndex() {
+        const rows = [...signalsList.querySelectorAll('.signal-row')];
+        const withUrl = rows.filter(r => r.querySelector('.sig-url').value.trim());
+        const activeRow = rows.find(r => r.querySelector('.sig-active').checked && r.querySelector('.sig-url').value.trim());
+        return activeRow ? withUrl.indexOf(activeRow) : 0;
+      }
+
+      // Slug preview del partido
+      const updateMatchSlug = () => {
+        let slug = $('m-slug').value.trim();
+        if (!slug) {
+          const h = slugify($('m-home').value), a = slugify($('m-away').value);
+          slug = (h && a) ? `${h}-vs-${a}` : (h || a);
+        } else slug = slugify(slug);
+        $('m-slug-preview').textContent = slug ? '🔗 ' + shortUrlFor(slug) : '';
+        return slug;
+      };
+      ['m-home', 'm-away', 'm-slug'].forEach(id => $(id).addEventListener('input', updateMatchSlug));
+
+      let editingMatchId = null;
+
+      function resetMatchForm() {
+        editingMatchId = null;
+        ['m-competition','m-home','m-home-logo','m-away','m-away-logo','m-kickoff','m-slug'].forEach(id => $(id).value = '');
+        $('m-status').value = 'upcoming';
+        signalsList.innerHTML = '';
+        createSignalRow('Señal 1', '', true);
+        $('m-slug-preview').textContent = '';
+        $('m-result').classList.add('hidden');
+        $('m-cancel').classList.add('hidden');
+        $('m-save').textContent = '💾 Guardar partido';
+      }
+
+      $('m-cancel').addEventListener('click', resetMatchForm);
+
+      $('m-save').addEventListener('click', async () => {
+        const home = $('m-home').value.trim();
+        const away = $('m-away').value.trim();
+        if (!home && !away) { alert('Escribe al menos un equipo'); return; }
+        const signals = readSignals();
+        if (signals.length === 0) { alert('Agrega al menos una señal con URL'); return; }
+
+        let slug = updateMatchSlug();
+        if (!slug) slug = 'partido-' + Math.random().toString(36).slice(2, 7);
+
+        const kickoffVal = $('m-kickoff').value;
+        const kickoff = kickoffVal ? new Date(kickoffVal) : new Date();
+
+        const payload = {
+          home, away,
+          homeLogo: $('m-home-logo').value.trim(),
+          awayLogo: $('m-away-logo').value.trim(),
+          competition: $('m-competition').value.trim(),
+          title: [home, away].filter(Boolean).join(' vs '),
+          kickoff,
+          status: $('m-status').value,
+          slug,
+          signals,
+          activeSignal: Math.min(readActiveIndex(), signals.length - 1),
+          updatedAt: new Date()
+        };
+
+        try {
+          let targetId = editingMatchId;
+          if (!targetId) {
+            const snap = await getDocs(matchesCol);
+            const ex = snap.docs.find(d => d.data().slug === slug);
+            if (ex) targetId = ex.id;
+          }
+          if (targetId) {
+            await updateDoc(doc(db, 'matches', targetId), payload);
+          } else {
+            await addDoc(matchesCol, { ...payload, createdAt: new Date() });
+          }
+          const url = shortUrlFor(slug);
+          $('m-url-output').value = url;
+          $('m-open').href = url;
+          $('m-result').classList.remove('hidden');
+          $('m-result').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          if (editingMatchId) { resetMatchForm(); }
+        } catch (e) {
+          console.error('Error guardando partido:', e);
+          alert('Error al guardar el partido');
+        }
+      });
+
+      $('m-copy').addEventListener('click', () => {
+        navigator.clipboard.writeText($('m-url-output').value).then(() => {
+          $('m-copy').textContent = '✅ ¡Copiado!';
+          setTimeout(() => $('m-copy').textContent = '📋 Copiar', 2500);
+        });
+      });
+      $('m-whatsapp').addEventListener('click', () => {
+        window.open('https://wa.me/?text=' + encodeURIComponent('⚽ Mira el partido en vivo:\n' + $('m-url-output').value), '_blank');
+      });
+
+      // ── Acciones en vivo sobre partidos ───────────────────────
+      window.switchSignal = async (id, idx) => {
+        try { await updateDoc(doc(db, 'matches', id), { activeSignal: Number(idx), updatedAt: new Date() }); }
+        catch (e) { console.error(e); alert('Error al cambiar la señal'); }
+      };
+      window.setMatchStatus = async (id, status) => {
+        try { await updateDoc(doc(db, 'matches', id), { status, updatedAt: new Date() }); }
+        catch (e) { console.error(e); alert('Error al cambiar el estado'); }
+      };
+      window.deleteMatch = async (id) => {
+        if (!confirm('¿Eliminar este partido?')) return;
+        try { await deleteDoc(doc(db, 'matches', id)); } catch (e) { console.error(e); }
+      };
+      window.editMatch = async (id) => {
+        try {
+          const snap = await getDocs(matchesCol);
+          const d = snap.docs.find(x => x.id === id);
+          if (!d) return;
+          const m = d.data();
+          editingMatchId = id;
+          $('m-competition').value = m.competition || '';
+          $('m-home').value = m.home || '';
+          $('m-home-logo').value = m.homeLogo || '';
+          $('m-away').value = m.away || '';
+          $('m-away-logo').value = m.awayLogo || '';
+          $('m-slug').value = m.slug || '';
+          $('m-status').value = m.status || 'upcoming';
+          if (m.kickoff?.seconds) $('m-kickoff').value = toLocalInput(new Date(m.kickoff.seconds * 1000));
+          signalsList.innerHTML = '';
+          (m.signals || []).forEach((s, i) => createSignalRow(s.name || '', s.url || '', i === (m.activeSignal || 0)));
+          if (signalsList.children.length === 0) createSignalRow('Señal 1', '', true);
+          updateMatchSlug();
+          $('m-save').textContent = '🔄 Actualizar partido';
+          $('m-cancel').classList.remove('hidden');
+          mainTabs.forEach(b => { if (b.dataset.tab === 'matches') b.click(); });
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        } catch (e) { console.error(e); }
+      };
+
+      // ── Render lista de partidos (sidebar) ────────────────────
+      const statusBadge = (s) => s === 'live'
+        ? '<span class="px-2 py-0.5 bg-red-500/20 text-red-400 text-xs rounded-full font-bold animate-pulse">🔴 EN VIVO</span>'
+        : s === 'finished'
+          ? '<span class="px-2 py-0.5 bg-slate-500/20 text-slate-400 text-xs rounded-full font-bold">✅ Fin</span>'
+          : '<span class="px-2 py-0.5 bg-amber-500/20 text-amber-300 text-xs rounded-full font-bold">🕐 Próximo</span>';
+
+      onSnapshot(matchesCol, (snap) => {
+        const matches = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+          .sort((a, b) => (a.kickoff?.seconds || 0) - (b.kickoff?.seconds || 0));
+        const cont = $('matches-container');
+        if (matches.length === 0) { cont.innerHTML = '<div class="text-center text-slate-400 py-10 text-sm">No hay partidos aún</div>'; return; }
+        cont.innerHTML = matches.map(m => {
+          const url = shortUrlFor(m.slug);
+          const when = m.kickoff?.seconds ? fmtDateTime(new Date(m.kickoff.seconds * 1000)) : '';
+          const sigOptions = (m.signals || []).map((s, i) =>
+            `<option value="${i}" ${i === (m.activeSignal || 0) ? 'selected' : ''}>${esc(s.name || ('Señal ' + (i + 1)))}</option>`).join('');
+          return `
+            <div class="bg-slate-800/80 rounded-2xl border border-slate-700 p-3 space-y-2">
+              <div class="flex items-start justify-between gap-2">
+                <div class="min-w-0">
+                  <h4 class="text-sm font-bold text-white truncate">${esc(m.title || 'Partido')}</h4>
+                  <p class="text-xs text-slate-400 truncate">${esc(m.competition || '')} ${when ? '· ' + when : ''}</p>
+                </div>
+                ${statusBadge(m.status)}
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-xs text-slate-400 shrink-0">📶</span>
+                <select onchange="switchSignal('${m.id}', this.value)" class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-white text-xs focus:outline-none focus:border-emerald-500 cursor-pointer">
+                  ${sigOptions || '<option>Sin señales</option>'}
+                </select>
+              </div>
+              <div class="flex flex-wrap gap-1.5">
+                ${m.status !== 'live'
+                  ? `<button onclick="setMatchStatus('${m.id}','live')" class="flex-1 bg-red-600 hover:bg-red-500 text-white py-1.5 rounded-lg text-xs font-bold">▶️ En vivo</button>`
+                  : `<button onclick="setMatchStatus('${m.id}','finished')" class="flex-1 bg-slate-600 hover:bg-slate-500 text-white py-1.5 rounded-lg text-xs font-bold">⏹️ Finalizar</button>`}
+                <button onclick="navigator.clipboard.writeText('${url}').then(()=>alert('Enlace copiado'))" class="bg-slate-700 hover:bg-slate-600 text-white px-2.5 py-1.5 rounded-lg text-xs">📋</button>
+                <a href="${url}" target="_blank" class="btn-gold text-slate-900 px-2.5 py-1.5 rounded-lg text-xs font-bold text-center">▶️</a>
+                <button onclick="editMatch('${m.id}')" class="bg-blue-600 hover:bg-blue-500 text-white px-2.5 py-1.5 rounded-lg text-xs">✏️</button>
+                <button onclick="deleteMatch('${m.id}')" class="bg-red-700 hover:bg-red-600 text-white px-2.5 py-1.5 rounded-lg text-xs">🗑️</button>
+              </div>
+            </div>`;
+        }).join('');
+      });
+
+      // ══════════════════════════════════════════════════════════
+      //  STREAMS GUARDADOS + ENLACES (legacy)
+      // ══════════════════════════════════════════════════════════
+      const testerSelect = $('tester-select');
+      const mAddSaved = $('m-add-saved');
+
+      onSnapshot(streamsCol, (snapshot) => {
+        savedStreams = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        const opt = (s) => `<option value="${esc(s.url)}">⚽ ${esc(s.title)}</option>`;
+        testerSelect.innerHTML = '<option value="">-- 📺 Selecciona un stream guardado --</option>' + savedStreams.map(opt).join('');
+        mAddSaved.innerHTML = '<option value="">➕ Agregar desde stream guardado</option>' + savedStreams.map((s, i) => `<option value="${i}">⚽ ${esc(s.title)}</option>`).join('');
+
+        const sc = $('streams-container');
+        sc.innerHTML = savedStreams.length === 0
+          ? '<div class="text-center text-slate-400 py-10 text-sm">No hay streams aún</div>'
+          : savedStreams.map(s => `
+            <div class="bg-slate-800/80 rounded-xl border border-slate-700 p-3 flex items-start justify-between gap-2">
+              <div class="min-w-0">
+                <h4 class="text-sm font-bold text-emerald-200 truncate">${esc(s.title)}</h4>
+                <p class="text-xs text-slate-400 truncate">${esc(s.url)}</p>
+              </div>
+              <button onclick="deleteStream('${s.id}')" class="shrink-0 w-9 h-9 bg-red-600 hover:bg-red-500 rounded-xl">🗑️</button>
+            </div>`).join('');
+      });
+
+      window.deleteStream = async (id) => { if (confirm('¿Eliminar este stream?')) { try { await deleteDoc(doc(db, 'streams', id)); } catch (e) { console.error(e); } } };
+
+      // Tester
+      testerSelect.addEventListener('change', () => { if (testerSelect.value) $('tester-input').value = testerSelect.value; });
+      $('btn-test').addEventListener('click', () => {
+        const url = $('tester-input').value.trim() || testerSelect.value;
+        if (!url) { alert('Ingresa o selecciona una URL'); return; }
+        $('tester-container').classList.remove('hidden');
+        $('tester-container').innerHTML = `<iframe src="${esc(url)}" class="w-full h-full" frameborder="0" allowfullscreen allow="autoplay; encrypted-media; picture-in-picture"></iframe>`;
+      });
+
+      // Guardar como stream desde el tester
+      $('btn-save-tester').addEventListener('click', async () => {
+        const url = $('tester-input').value.trim() || testerSelect.value;
+        if (!url) { alert('Ingresa o selecciona una URL primero'); return; }
+        const title = prompt('Nombre para este stream (ej: ESPN HD):');
+        if (!title || !title.trim()) return;
+        try { await addDoc(streamsCol, { title: title.trim(), url, createdAt: new Date() }); alert('¡Stream guardado! ⚽'); }
+        catch (e) { console.error(e); alert('Error al guardar'); }
+      });
+
+      // Inicial
+      resetMatchForm();
+    });
+  </script>
+</body>
+</html>

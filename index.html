@@ -3,13 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TV Mundial 2026 - MultiStream</title>
+  <title>TV Mundial 2026 - Fútbol en Vivo</title>
   <link rel="icon" href="https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/2026_FIFA_World_Cup_emblem.svg/1920px-2026_FIFA_World_Cup_emblem.svg.png" type="image/png">
   <script src="https://cdn.tailwindcss.com"></script>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
-    
+    import { getFirestore } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
     const firebaseConfig = {
       apiKey: "AIzaSyAp1IAukg9FGiOHGsRvvapN6QYzLOYDrOY",
       authDomain: "tvmundial-b190a.firebaseapp.com",
@@ -18,434 +17,77 @@
       messagingSenderId: "324034223779",
       appId: "1:324034223779:web:49e679e822c4ae99762916"
     };
-    
     const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    
-    window.firebaseDB = db;
-    window.firebaseCollections = { collection, addDoc, getDocs, onSnapshot, query, orderBy };
+    getFirestore(app);
   </script>
   <style>
     .hidden { display: none !important; }
-    
-    @keyframes pulse-glow {
-      0%, 100% { box-shadow: 0 0 20px rgba(251, 191, 36, 0.4); }
-      50% { box-shadow: 0 0 40px rgba(251, 191, 36, 0.8); }
-    }
-    
-    @keyframes float {
-      0%, 100% { transform: translateY(0px); }
-      50% { transform: translateY(-10px); }
-    }
-    
-    @keyframes gradient-shift {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
-    
-    @keyframes fade-in-up {
-      0% { opacity: 0; transform: translateY(20px); }
-      100% { opacity: 1; transform: translateY(0); }
-    }
-    
-    .pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+    @keyframes float { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-10px);} }
+    @keyframes gradient-shift { 0%{background-position:0% 50%;} 50%{background-position:100% 50%;} 100%{background-position:0% 50%;} }
+    @keyframes fade-in-up { 0%{opacity:0;transform:translateY(20px);} 100%{opacity:1;transform:translateY(0);} }
+    @keyframes live-blink { 0%,100%{opacity:1;} 50%{opacity:0.35;} }
     .float-animation { animation: float 3s ease-in-out infinite; }
-    .fade-in-up { animation: fade-in-up 0.5s ease-out; }
-    
-    .gradient-bg {
-      background: linear-gradient(-45deg, #020617, #0f172a, #020617, #1e293b);
-      background-size: 400% 400%;
-      animation: gradient-shift 20s ease infinite;
-    }
-    
-    .btn-primary {
-      background: linear-gradient(135deg, #059669 0%, #10b981 50%, #34d399 100%);
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    
-    .btn-primary:hover {
-      background: linear-gradient(135deg, #047857 0%, #059669 50%, #10b981 100%);
-      transform: translateY(-3px);
-      box-shadow: 0 15px 40px rgba(5, 150, 105, 0.5);
-    }
-    
-    .btn-primary:active {
-      transform: translateY(-1px);
-    }
-    
-    .btn-gold {
-      background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 50%, #fcd34d 100%);
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    
-    .btn-gold:hover {
-      background: linear-gradient(135deg, #d97706 0%, #f59e0b 50%, #fbbf24 100%);
-      transform: translateY(-3px);
-      box-shadow: 0 15px 40px rgba(245, 158, 11, 0.6);
-    }
-    
-    .btn-gold:active {
-      transform: translateY(-1px);
-    }
-    
-    .card-glow {
-      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
-      backdrop-filter: blur(20px);
-    }
-    
-    .card-hover {
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    
-    .card-hover:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
-    }
-    
-    input, select {
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    
-    input:focus, select:focus {
-      transform: scale(1.01);
-    }
-    
-    .tab-btn {
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    
-    .tab-btn:hover {
-      transform: scale(1.02);
-    }
-    
-    .tab-btn.active {
-      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
-    }
-    
-    ::-webkit-scrollbar {
-      width: 8px;
-    }
-    
-    ::-webkit-scrollbar-track {
-      background: rgba(15, 23, 42, 0.5);
-      border-radius: 10px;
-    }
-    
-    ::-webkit-scrollbar-thumb {
-      background: linear-gradient(180deg, #10b981, #3b82f6);
-      border-radius: 10px;
-    }
-    
-    ::-webkit-scrollbar-thumb:hover {
-      background: linear-gradient(180deg, #059669, #2563eb);
-    }
+    .fade-in-up { animation: fade-in-up 0.4s ease-out; }
+    .live-dot { animation: live-blink 1.1s ease-in-out infinite; }
+    .gradient-bg { background: linear-gradient(-45deg,#020617,#0f172a,#020617,#1e293b); background-size:400% 400%; animation: gradient-shift 20s ease infinite; }
+    .btn-gold { background: linear-gradient(135deg,#f59e0b 0%,#fbbf24 50%,#fcd34d 100%); transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
+    .btn-gold:hover { background: linear-gradient(135deg,#d97706 0%,#f59e0b 50%,#fbbf24 100%); transform: translateY(-2px); box-shadow:0 15px 40px rgba(245,158,11,0.6); }
+    .card-glow { box-shadow:0 20px 50px rgba(0,0,0,0.5); backdrop-filter: blur(16px); }
+    .match-card { transition: all 0.25s cubic-bezier(0.4,0,0.2,1); cursor:pointer; }
+    .match-card:hover { transform: translateY(-5px); box-shadow:0 24px 60px rgba(16,185,129,0.25); border-color: rgba(16,185,129,0.6); }
+    .chip { transition: all 0.2s ease; }
+    ::-webkit-scrollbar { width:8px; }
+    ::-webkit-scrollbar-track { background: rgba(15,23,42,0.5); border-radius:10px; }
+    ::-webkit-scrollbar-thumb { background: linear-gradient(180deg,#10b981,#3b82f6); border-radius:10px; }
   </style>
 </head>
 <body class="gradient-bg text-white min-h-screen w-full font-sans selection:bg-emerald-500/50">
 
   <!-- ==========================================
-       VISTA DEL ADMINISTRADOR (PC/Móvil)
+       VISTA CLIENTE (Plataforma de partidos)
        ========================================== -->
-  <div id="admin-view" class="min-h-screen flex flex-col items-center py-12 px-4 sm:px-6 hidden">
-    <div class="w-full max-w-4xl">
-      
-      <div class="text-center mb-12">
-        <div class="flex items-center justify-center gap-4 mb-5">
-          <div class="w-32 h-32 bg-white rounded-3xl flex items-center justify-center shadow-2xl float-animation p-2">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/2026_FIFA_World_Cup_emblem.svg/1920px-2026_FIFA_World_Cup_emblem.svg.png" alt="Mundial 2026" class="w-full h-full object-contain">
-          </div>
+  <div id="home-view" class="min-h-screen hidden">
+    <header class="sticky top-0 z-30 bg-slate-950/80 backdrop-blur-xl border-b border-emerald-500/20">
+      <div class="max-w-6xl mx-auto px-4 py-4 flex items-center gap-3">
+        <div class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-xl p-1 float-animation">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/2026_FIFA_World_Cup_emblem.svg/1920px-2026_FIFA_World_Cup_emblem.svg.png" alt="Mundial 2026" class="w-full h-full object-contain">
         </div>
-        <h1 class="text-5xl md:text-6xl font-black bg-gradient-to-r from-yellow-300 via-orange-400 to-yellow-500 bg-clip-text text-transparent">
-          TV MUNDIAL 2026
-        </h1>
-        <p class="text-emerald-300 mt-4 text-xl font-semibold">⚽ MultiStream - Ver partidos simultáneos</p>
-      </div>
-
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Columna Principal - Generar Enlaces -->
-        <div class="lg:col-span-2">
-          <div class="bg-slate-900/90 backdrop-blur-xl rounded-3xl card-glow border border-emerald-500/30 overflow-hidden">
-            <div class="p-8 space-y-8">
-              
-              <!-- Tabs de navegación -->
-              <div class="flex gap-2 bg-slate-800/60 rounded-3xl p-2 border border-slate-700/50">
-                <button id="tab-generator" class="tab-btn active flex-1 py-4 px-6 rounded-2xl font-bold text-lg text-white transition-all bg-gradient-to-r from-emerald-600 to-teal-600 shadow-lg">
-                  <div class="flex items-center justify-center gap-3">
-                    <span class="text-2xl">🚀</span>
-                    <span>Generar Enlaces</span>
-                  </div>
-                </button>
-                <button id="tab-tester" class="tab-btn flex-1 py-4 px-6 rounded-2xl font-bold text-lg text-slate-400 hover:text-white hover:bg-slate-700/50 transition-all">
-                  <div class="flex items-center justify-center gap-3">
-                    <span class="text-2xl">🔍</span>
-                    <span>Probar Streams</span>
-                  </div>
-                </button>
-              </div>
-              
-              <!-- Pestaña Generador -->
-              <div id="panel-generator" class="space-y-6 mt-2">
-                <div class="bg-gradient-to-r from-emerald-900/50 to-teal-900/50 border border-emerald-500/40 rounded-3xl p-6 flex gap-4 card-hover">
-                  <div class="w-14 h-14 bg-gradient-to-br from-yellow-500/30 to-orange-500/30 rounded-2xl flex items-center justify-center shrink-0">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-yellow-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <circle cx="12" cy="12" r="10"/>
-                      <path d="M12 16v-4"/><path d="M12 8h.01"/>
-                    </svg>
-                  </div>
-                  <div class="flex-1">
-                    <h3 class="text-xl font-bold text-emerald-200 mb-2">Crea tus enlaces de partidos</h3>
-                    <p class="text-emerald-100/80 text-base">Selecciona streams guardados o pega nuevos enlaces para compartir</p>
-                  </div>
-                </div>
-
-                <!-- Stream 1 -->
-                <div class="space-y-4 bg-slate-800/40 rounded-3xl p-6 border border-slate-700/50 card-hover">
-                  <div class="flex items-center gap-4 mb-4">
-                    <div class="w-12 h-12 bg-gradient-to-br from-yellow-400 to-orange-500 text-slate-900 rounded-2xl flex items-center justify-center font-black text-2xl shadow-lg">1</div>
-                    <div>
-                      <h3 class="text-xl font-bold text-yellow-300">Stream Principal</h3>
-                      <p class="text-slate-400 text-sm">Izquierda / Arriba</p>
-                    </div>
-                  </div>
-                  
-                  <div class="space-y-4">
-                    <select id="stream1-select" class="w-full bg-slate-900/60 border-2 border-emerald-600/50 rounded-2xl px-6 py-5 text-white text-lg focus:outline-none focus:border-emerald-400 focus:ring-4 focus:ring-emerald-500/20 transition-all cursor-pointer">
-                      <option value="">-- 📺 Selecciona un stream guardado --</option>
-                    </select>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <input id="input1" type="text" placeholder="🔗 O pega un nuevo enlace..." class="bg-slate-900/60 border border-slate-700 rounded-2xl px-6 py-5 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 transition-all">
-                      <input id="input1-title" type="text" placeholder="📝 Título (ej: Argentina vs México)" class="bg-slate-900/60 border border-slate-700 rounded-2xl px-6 py-5 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 transition-all">
-                    </div>
-                    
-                    <button id="save-stream1" class="btn-primary w-full text-white font-bold py-5 px-8 rounded-2xl shadow-xl transition-all flex items-center justify-center gap-3 text-lg">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M19 21H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
-                      </svg>
-                      💾 Guardar Stream
-                    </button>
-                  </div>
-                </div>
-
-                <!-- Stream 2 -->
-                <div class="space-y-4 bg-slate-800/40 rounded-3xl p-6 border border-slate-700/50 card-hover">
-                  <div class="flex items-center gap-4 mb-4">
-                    <div class="w-12 h-12 bg-gradient-to-br from-cyan-400 to-blue-500 text-slate-900 rounded-2xl flex items-center justify-center font-black text-2xl shadow-lg">2</div>
-                    <div>
-                      <h3 class="text-xl font-bold text-cyan-300">Stream Secundario</h3>
-                      <p class="text-slate-400 text-sm">Derecha / Abajo - Opcional</p>
-                    </div>
-                  </div>
-                  
-                  <div class="space-y-4">
-                    <select id="stream2-select" class="w-full bg-slate-900/60 border-2 border-cyan-600/50 rounded-2xl px-6 py-5 text-white text-lg focus:outline-none focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/20 transition-all cursor-pointer">
-                      <option value="">-- 📺 Selecciona un stream guardado --</option>
-                    </select>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <input id="input2" type="text" placeholder="🔗 O pega un nuevo enlace..." class="bg-slate-900/60 border border-slate-700 rounded-2xl px-6 py-5 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/20 transition-all">
-                      <input id="input2-title" type="text" placeholder="📝 Título (ej: Brasil vs España)" class="bg-slate-900/60 border border-slate-700 rounded-2xl px-6 py-5 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/20 transition-all">
-                    </div>
-                    
-                    <button id="save-stream2" class="btn-primary w-full text-white font-bold py-5 px-8 rounded-2xl shadow-xl transition-all flex items-center justify-center gap-3 text-lg">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M19 21H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
-                      </svg>
-                      💾 Guardar Stream
-                    </button>
-                  </div>
-                </div>
-
-                <!-- Nombre del Enlace -->
-                <div class="space-y-4 bg-slate-800/40 rounded-3xl p-6 border border-slate-700/50 card-hover">
-                  <div class="flex items-center gap-4 mb-4">
-                    <div class="w-12 h-12 bg-gradient-to-br from-pink-400 to-rose-500 text-slate-900 rounded-2xl flex items-center justify-center shadow-lg">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                      </svg>
-                    </div>
-                    <div>
-                      <h3 class="text-xl font-bold text-pink-300">Nombre del Enlace</h3>
-                      <p class="text-slate-400 text-sm">Este nombre será el final de tu enlace corto</p>
-                    </div>
-                  </div>
-                  <input id="link-name" type="text" placeholder="Ej: mar-vs-arg" class="w-full bg-slate-900/60 border-2 border-pink-600/50 rounded-2xl px-6 py-5 text-white placeholder-slate-500 text-lg focus:outline-none focus:border-pink-400 focus:ring-4 focus:ring-pink-500/20 transition-all">
-                  <p id="slug-preview" class="text-sm text-pink-200/80 mt-1 break-all font-mono min-h-[1.25rem]"></p>
-                </div>
-
-                <!-- Expiración -->
-                <div class="space-y-4 bg-slate-800/40 rounded-3xl p-6 border border-slate-700/50 card-hover">
-                  <div class="flex items-center gap-4 mb-4">
-                    <div class="w-12 h-12 bg-gradient-to-br from-purple-400 to-pink-500 text-slate-900 rounded-2xl flex items-center justify-center shadow-lg">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-                      </svg>
-                    </div>
-                    <div>
-                      <h3 class="text-xl font-bold text-purple-300">Expiración del Enlace</h3>
-                      <p class="text-slate-400 text-sm">¿Cuánto tiempo durará activo?</p>
-                    </div>
-                  </div>
-                  <select id="expiration-select" class="w-full bg-slate-900/60 border-2 border-purple-600/50 rounded-2xl px-6 py-5 text-white text-lg focus:outline-none focus:border-purple-400 focus:ring-4 focus:ring-purple-500/20 transition-all cursor-pointer">
-                    <option value="1">⏱️ 1 Hora</option>
-                    <option value="6">⏱️ 6 Horas</option>
-                    <option value="24" selected>📅 1 Día</option>
-                    <option value="72">📅 3 Días</option>
-                    <option value="168">📅 7 Días</option>
-                  </select>
-                </div>
-
-                <!-- Botones de Acción -->
-                <div class="flex flex-col sm:flex-row gap-4 pt-2">
-                  <button id="btn-generate" class="flex-1 btn-gold text-slate-900 font-black text-xl py-7 px-8 rounded-3xl shadow-2xl transition-all flex items-center justify-center gap-4 disabled:opacity-50 disabled:cursor-not-allowed pulse-glow" disabled>
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
-                      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
-                    </svg>
-                    <span>🚀 Generar Enlace y Guardar</span>
-                  </button>
-                  <button id="btn-cancel-edit" class="px-8 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded-3xl shadow-xl transition-all border-2 border-slate-600 hidden">
-                    ✖️ Cancelar
-                  </button>
-                </div>
-
-              <!-- Resultado -->
-              <div id="result-box" class="mt-6 p-8 bg-gradient-to-br from-yellow-900/30 to-orange-900/30 rounded-3xl border border-yellow-500/40 hidden">
-                <h3 class="text-xl font-bold text-yellow-300 mb-5 flex items-center gap-3">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M20 6 9 17l-5-5"/>
-                  </svg>
-                  ✨ ¡Enlace generado con éxito!
-                </h3>
-                
-                <div class="flex flex-col sm:flex-row gap-3 mb-6">
-                  <input id="url-output" readonly class="flex-1 bg-slate-900 border border-yellow-600/50 rounded-2xl px-5 py-4 text-yellow-100 text-sm focus:outline-none truncate">
-                </div>
-                
-                <div class="flex flex-col sm:flex-row gap-3">
-                  <button id="btn-copy" class="flex-1 flex items-center justify-center gap-3 px-6 py-4 rounded-2xl font-bold transition-all bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-lg">
-                    <svg id="icon-copy" xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
-                    </svg>
-                    <span id="text-copy">📋 Copiar</span>
-                  </button>
-                  <button id="btn-whatsapp" class="flex-1 flex items-center justify-center gap-3 px-6 py-4 rounded-2xl font-bold transition-all bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white shadow-lg">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.488-.492-.67-.5h-.572c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/>
-                    </svg>
-                    💬 Compartir por WhatsApp
-                  </button>
-                </div>
-              </div>
-              </div>
-              
-              <!-- Pestaña Tester -->
-              <div id="panel-tester" class="hidden mt-6">
-                <div class="bg-gradient-to-r from-blue-900/40 to-indigo-900/40 border border-blue-500/40 rounded-2xl p-6 flex gap-4">
-                  <div class="w-12 h-12 bg-blue-500/20 rounded-2xl flex items-center justify-center shrink-0">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-                    </svg>
-                  </div>
-                  <div class="flex-1">
-                    <h3 class="text-lg font-bold text-blue-200 mb-1">Prueba tus streams</h3>
-                    <p class="text-blue-100/80 text-sm">Verifica si tus URLs están funcionando</p>
-                  </div>
-                </div>
-                
-                <!-- Selector de stream para probar -->
-                <div class="space-y-4 mt-6">
-                  <div class="flex items-center gap-3 mb-2">
-                    <div class="w-10 h-10 bg-gradient-to-br from-purple-400 to-blue-500 text-slate-900 rounded-xl flex items-center justify-center font-black text-xl">▶️</div>
-                    <h3 class="text-lg font-bold text-purple-300">Seleccionar o pegar URL</h3>
-                  </div>
-                  
-                  <select id="tester-select" class="w-full bg-slate-800 border-2 border-purple-600/50 rounded-2xl px-5 py-4 text-white text-lg focus:outline-none focus:border-purple-400 focus:ring-4 focus:ring-purple-500/20 transition-all cursor-pointer">
-                    <option value="">-- 📺 Selecciona un stream guardado para probar --</option>
-                  </select>
-                  
-                  <input id="tester-input" type="text" placeholder="🔗 O pega directamente una URL para probar..." class="w-full bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4 text-white placeholder-slate-400 focus:outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-500/20 transition-all">
-                  
-                  <button id="btn-test" class="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-black text-lg py-5 px-8 rounded-3xl shadow-xl transition-all flex items-center justify-center gap-3 mt-4">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <polygon points="5 3 19 12 5 21 5 3"/>
-                    </svg>
-                    ▶️ Probar Stream
-                  </button>
-                </div>
-                
-                <!-- Contenedor de prueba -->
-                <div id="tester-container" class="mt-8 aspect-video bg-black rounded-2xl border border-slate-700 overflow-hidden hidden">
-                </div>
-              </div>
-              
-            </div>
-          </div>
-        </div>
-
-        <!-- Columna Lateral -->
-        <div class="lg:col-span-1 space-y-6">
-          <!-- Mis Enlaces Generados -->
-          <div class="bg-slate-900/90 backdrop-blur-xl rounded-3xl card-glow border border-blue-500/30 overflow-hidden">
-            <div class="p-6 border-b border-blue-500/20 bg-gradient-to-r from-blue-900/40 to-indigo-900/40">
-              <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-blue-500/20 rounded-xl flex items-center justify-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6z"/><polyline points="8 10 12 14 16 10"/>
-                  </svg>
-                </div>
-                <div>
-                  <h3 class="text-xl font-bold text-blue-200">Mis Enlaces Generados</h3>
-                  <p class="text-blue-100/70 text-xs">Enlaces con expiración</p>
-                </div>
-              </div>
-            </div>
-            <div id="links-container" class="p-4 max-h-[350px] overflow-y-auto space-y-3">
-              <div class="text-center text-slate-400 py-12">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-16 h-16 mx-auto mb-4 opacity-50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
-                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
-                </svg>
-                <p>No hay enlaces generados aún</p>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Mis Streams Guardados -->
-          <div class="bg-slate-900/90 backdrop-blur-xl rounded-3xl card-glow border border-emerald-500/30 overflow-hidden">
-            <div class="p-6 border-b border-emerald-500/20 bg-gradient-to-r from-emerald-900/40 to-teal-900/40">
-              <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-emerald-500/20 rounded-xl flex items-center justify-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M4 6h16M4 12h16M4 18h7"/>
-                  </svg>
-                </div>
-                <div>
-                  <h3 class="text-xl font-bold text-emerald-200">Mis Streams Guardados</h3>
-                  <p class="text-emerald-100/70 text-xs">Gestiona tus canales</p>
-                </div>
-              </div>
-            </div>
-            <div id="streams-container" class="p-4 max-h-[350px] overflow-y-auto space-y-3">
-              <div class="text-center text-slate-400 py-12">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-16 h-16 mx-auto mb-4 opacity-50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <path d="M12 2c5.523 0 10 4.477 10 10s-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2z"/>
-                  <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                </svg>
-                <p>No hay streams guardados aún</p>
-              </div>
-            </div>
-          </div>
+        <div>
+          <h1 class="text-xl sm:text-2xl font-black bg-gradient-to-r from-yellow-300 via-orange-400 to-yellow-500 bg-clip-text text-transparent leading-tight">TV MUNDIAL 2026</h1>
+          <p class="text-emerald-300/80 text-xs font-semibold">⚽ Fútbol en vivo</p>
         </div>
       </div>
-    </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 py-6">
+      <div id="filter-chips" class="flex gap-2 mb-6 overflow-x-auto pb-1">
+        <button data-filter="all" class="chip active shrink-0 px-5 py-2.5 rounded-full font-bold text-sm bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg">📺 Todos</button>
+        <button data-filter="live" class="chip shrink-0 px-5 py-2.5 rounded-full font-bold text-sm bg-slate-800/70 text-slate-300 hover:bg-slate-700">🔴 En vivo</button>
+        <button data-filter="upcoming" class="chip shrink-0 px-5 py-2.5 rounded-full font-bold text-sm bg-slate-800/70 text-slate-300 hover:bg-slate-700">🕐 Próximos</button>
+      </div>
+
+      <div id="matches-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="col-span-full text-center text-slate-400 py-24">
+          <div class="text-6xl mb-4 opacity-50">📡</div>
+          <p class="text-lg">Cargando partidos…</p>
+        </div>
+      </div>
+    </main>
+
+    <footer class="max-w-6xl mx-auto px-4 py-8 text-center text-slate-500 text-xs">
+      ⚽ TV Mundial 2026 · Transmisiones en vivo
+    </footer>
   </div>
 
   <!-- ==========================================
-       VISTA DEL VISOR (TV)
+       VISTA DEL VISOR (una sola señal)
        ========================================== -->
-  <div id="viewer-view" class="fixed inset-0 bg-black flex-col md:flex-row overflow-hidden w-full h-full hidden">
+  <div id="viewer-view" class="fixed inset-0 bg-black flex-col overflow-hidden w-full h-full hidden">
+    <a href="index.html" id="btn-home" class="absolute top-4 left-4 z-50 bg-black/80 hover:bg-black/95 text-white p-2.5 rounded-xl opacity-60 hover:opacity-90 transition-all backdrop-blur-xl shadow-lg flex items-center gap-2 group">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+      <span class="hidden group-hover:inline font-bold text-xs pr-1">Inicio</span>
+    </a>
+
     <button id="btn-fullscreen" class="absolute bottom-4 left-4 z-50 bg-black/80 hover:bg-black/95 text-white p-2.5 rounded-xl opacity-60 hover:opacity-90 transition-all backdrop-blur-xl shadow-lg flex items-center gap-2 group">
       <svg id="icon-fullscreen" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/>
@@ -453,1700 +95,359 @@
       <span id="text-fullscreen" class="hidden group-hover:inline font-bold text-xs pr-1">Fullscreen</span>
     </button>
 
-    <div id="video-container" class="w-full h-full flex flex-col md:flex-row">
+    <div id="video-container" class="w-full h-full"></div>
+  </div>
+
+  <!-- ==========================================
+       OVERLAY DE PARTIDO (previo / finalizado)
+       ========================================== -->
+  <div id="match-overlay" class="fixed inset-0 z-40 bg-gradient-to-br from-slate-950 to-slate-900 hidden items-center justify-center p-6">
+    <div class="text-center max-w-lg fade-in-up">
+      <div id="mo-content"></div>
+      <a href="index.html" class="inline-block mt-8 btn-gold text-slate-900 font-bold py-3 px-8 rounded-2xl shadow-lg">🏠 Ver otros partidos</a>
     </div>
   </div>
 
   <!-- ==========================================
-       VISTA DE ENLACE EXPIRADO
+       VISTA DE ENLACE EXPIRADO / NO DISPONIBLE
        ========================================== -->
   <div id="expired-view" class="fixed inset-0 bg-gradient-to-br from-red-900 to-slate-950 flex items-center justify-center hidden">
     <div class="text-center p-12 bg-slate-900/90 backdrop-blur-xl rounded-3xl border border-red-500/30 card-glow max-w-md">
       <div class="w-24 h-24 bg-gradient-to-br from-red-500 to-pink-600 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-14 h-14 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-        </svg>
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-14 h-14 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
       </div>
-      <h2 class="text-4xl font-black text-red-400 mb-3">¡Enlace Expirado!</h2>
-      <p class="text-slate-300 text-lg mb-8">Este enlace ha caducado y ya no está disponible</p>
-      <a href="index.html" class="inline-block btn-gold text-slate-900 font-bold text-lg py-4 px-10 rounded-2xl shadow-lg transition-all">
-        🏠 Volver al Inicio
-      </a>
+      <h2 class="text-4xl font-black text-red-400 mb-3">¡Enlace no disponible!</h2>
+      <p class="text-slate-300 text-lg mb-8">Este enlace ha caducado o no existe</p>
+      <a href="index.html" class="inline-block btn-gold text-slate-900 font-bold text-lg py-4 px-10 rounded-2xl shadow-lg">🏠 Volver al Inicio</a>
     </div>
   </div>
 
   <!-- ==========================================
-       LÓGICA JAVASCRIPT
+       LÓGICA
        ========================================== -->
   <script type="module">
-    import { getFirestore, collection, addDoc, getDocs, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
-    
+    import { getFirestore, collection, getDocs, onSnapshot, doc } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
+
     document.addEventListener('DOMContentLoaded', async () => {
       const db = getFirestore();
-      const streamsCol = collection(db, "streams");
+      const matchesCol = collection(db, "matches");
       const linksCol = collection(db, "generatedLinks");
-      let editingLinkId = null;
-      
-      // Elementos del DOM
-      const adminView = document.getElementById('admin-view');
+
+      // ── Refs ──────────────────────────────────────────────────
+      const homeView = document.getElementById('home-view');
       const viewerView = document.getElementById('viewer-view');
-      const expiredView = document.getElementById('expired-view');
-      const input1 = document.getElementById('input1');
-      const input1Title = document.getElementById('input1-title');
-      const input2 = document.getElementById('input2');
-      const input2Title = document.getElementById('input2-title');
-      const stream1Select = document.getElementById('stream1-select');
-      const stream2Select = document.getElementById('stream2-select');
-      const saveStream1 = document.getElementById('save-stream1');
-      const saveStream2 = document.getElementById('save-stream2');
-      const linkNameInput = document.getElementById('link-name');
-      const slugPreview = document.getElementById('slug-preview');
-      const expirationSelect = document.getElementById('expiration-select');
-      const btnGenerate = document.getElementById('btn-generate');
-      const resultBox = document.getElementById('result-box');
-      const urlOutput = document.getElementById('url-output');
-      const btnCopy = document.getElementById('btn-copy');
-      const textCopy = document.getElementById('text-copy');
-      const iconCopy = document.getElementById('icon-copy');
-      const btnWhatsapp = document.getElementById('btn-whatsapp');
-      const linksContainer = document.getElementById('links-container');
       const videoContainer = document.getElementById('video-container');
+      const expiredView = document.getElementById('expired-view');
+      const matchOverlay = document.getElementById('match-overlay');
+      const moContent = document.getElementById('mo-content');
       const btnFullscreen = document.getElementById('btn-fullscreen');
-      const btnCancelEdit = document.getElementById('btn-cancel-edit');
-      const tabGenerator = document.getElementById('tab-generator');
-      const tabTester = document.getElementById('tab-tester');
-      const panelGenerator = document.getElementById('panel-generator');
-      const panelTester = document.getElementById('panel-tester');
-      const testerSelect = document.getElementById('tester-select');
-      const testerInput = document.getElementById('tester-input');
-      const btnTest = document.getElementById('btn-test');
-      const testerContainer = document.getElementById('tester-container');
-      const streamsContainer = document.getElementById('streams-container');
+      const matchesGrid = document.getElementById('matches-grid');
+      const filterChips = document.getElementById('filter-chips');
 
-      // Bloquear ventanas emergentes
-      window.open = function() { return null; };
-      window.addEventListener('beforeunload', (e) => e.preventDefault());
-
-      // Función para formatear fecha
-      const formatDate = (date) => {
-        return new Intl.DateTimeFormat('es-ES', {
-          day: '2-digit', month: '2-digit', year: '2-digit',
-          hour: '2-digit', minute: '2-digit'
-        }).format(date);
-      };
-
-      // Convierte un texto en un slug corto y escribible (ej: "Mar vs Arg" -> "mar-vs-arg")
-      const slugify = (str) => (str || '')
-        .toLowerCase()
-        .normalize('NFD').replace(/[̀-ͯ]/g, '') // quitar acentos
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-+|-+$/g, '')
-        .substring(0, 60);
-
-      // Decodifica sin romperse si el valor tiene un % suelto
+      // ── Helpers ───────────────────────────────────────────────
       const safeDecode = (v) => { try { return decodeURIComponent(v); } catch (_) { return v; } };
-
-      // Directorio base del sitio (ej: "/tv2/") — sirve para armar la URL corta
-      const getBaseDir = () => {
-        const p = window.location.pathname;
-        return p.substring(0, p.lastIndexOf('/') + 1);
+      const getBaseDir = () => { const p = window.location.pathname; return p.substring(0, p.lastIndexOf('/') + 1); };
+      const esc = (s) => (s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+      const isToday = (d) => { const n = new Date(); return d.getDate()===n.getDate() && d.getMonth()===n.getMonth() && d.getFullYear()===n.getFullYear(); };
+      const timeLabel = (m) => {
+        if (!m.kickoff?.seconds) return '';
+        const d = new Date(m.kickoff.seconds * 1000);
+        const hm = new Intl.DateTimeFormat('es-ES', { hour:'2-digit', minute:'2-digit' }).format(d);
+        return isToday(d) ? 'Hoy ' + hm : new Intl.DateTimeFormat('es-ES', { day:'2-digit', month:'2-digit' }).format(d) + ' ' + hm;
       };
 
-      // Cargar streams desde Firestore en tiempo real
-      const loadStreams = async () => {
-        onSnapshot(streamsCol, (snapshot) => {
-          const streams = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-          
-          // Limpiar selects
-          stream1Select.innerHTML = '<option value="">-- 📺 Selecciona un stream guardado --</option>';
-          stream2Select.innerHTML = '<option value="">-- 📺 Selecciona un stream guardado --</option>';
-          testerSelect.innerHTML = '<option value="">-- 📺 Selecciona un stream guardado para probar --</option>';
-          
-          streams.forEach(stream => {
-            // Para generador
-            const option1 = document.createElement('option');
-            option1.value = stream.url;
-            option1.textContent = `⚽ ${stream.title}`;
-            stream1Select.appendChild(option1);
-            
-            const option2 = document.createElement('option');
-            option2.value = stream.url;
-            option2.textContent = `⚽ ${stream.title}`;
-            stream2Select.appendChild(option2);
-            
-            // Para tester
-            const testerOption = document.createElement('option');
-            testerOption.value = stream.url;
-            testerOption.textContent = `⚽ ${stream.title}`;
-            testerSelect.appendChild(testerOption);
-          });
-          
-          // Actualizar lista lateral de streams
-          if (streams.length === 0) {
-            streamsContainer.innerHTML = `
-              <div class="text-center text-slate-400 py-12">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-16 h-16 mx-auto mb-4 opacity-50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <path d="M12 2c5.523 0 10 4.477 10 10s-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2z"/>
-                  <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                </svg>
-                <p>No hay streams guardados aún</p>
-              </div>
-            `;
-          } else {
-            streamsContainer.innerHTML = streams.map(stream => `
-              <div class="bg-slate-800/80 rounded-xl border border-slate-700 p-3 hover:border-emerald-500/50 transition-all">
-                <div class="flex items-start justify-between gap-2">
-                  <div class="flex-1 min-w-0">
-                    <h4 class="text-sm font-bold text-emerald-200 truncate">${stream.title}</h4>
-                    <p class="text-xs text-slate-400 mt-1 truncate">${stream.url}</p>
-                  </div>
-                  <button onclick="deleteStream('${stream.id}')" class="shrink-0 w-9 h-9 bg-red-600 hover:bg-red-500 text-white rounded-xl flex items-center justify-center transition-all">
-                    🗑️
-                  </button>
-                </div>
-              </div>
-            `).join('');
-          }
-        });
-      };
-      
-      // Cargar enlaces generados
-      const loadLinks = async () => {
-        const q = query(linksCol, orderBy('createdAt', 'desc'));
-        onSnapshot(q, (snapshot) => {
-          const links = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-          
-          if (links.length === 0) {
-            linksContainer.innerHTML = `
-              <div class="text-center text-slate-400 py-12">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-16 h-16 mx-auto mb-4 opacity-50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
-                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
-                </svg>
-                <p>No hay enlaces generados aún</p>
-              </div>
-            `;
-            return;
-          }
-          
-          linksContainer.innerHTML = links.map(link => {
-            const expiresAt = new Date(link.expiresAt.seconds * 1000);
-            const isExpired = new Date() > expiresAt;
-            const timeLeft = expiresAt - new Date();
-            const hoursLeft = Math.max(0, Math.floor(timeLeft / (1000 * 60 * 60)));
-            const daysLeft = Math.floor(hoursLeft / 24);
-            
-            return `
-              <div class="group bg-slate-800/80 rounded-2xl border border-slate-700 p-4 hover:border-blue-500/50 transition-all ${isExpired ? 'opacity-50 bg-slate-800/40' : ''}">
-                <div class="flex items-start justify-between mb-3">
-                  <div class="flex-1 min-w-0">
-                    <h4 class="text-sm font-bold text-blue-200 truncate">${link.name || 'Partido'}</h4>
-                    <p class="text-xs text-slate-400 mt-1">Creado: ${formatDate(new Date(link.createdAt.seconds * 1000))}</p>
-                  </div>
-                  <div class="ml-3 shrink-0">
-                    ${isExpired ? 
-                      '<span class="px-2 py-1 bg-red-500/20 text-red-400 text-xs rounded-full font-medium">Expirado</span>' : 
-                      `<span class="px-2 py-1 bg-emerald-500/20 text-emerald-400 text-xs rounded-full font-medium">${daysLeft > 0 ? daysLeft + ' días' : hoursLeft + ' horas'}</span>`
-                    }
-                  </div>
-                </div>
-                <div class="flex flex-wrap gap-2">
-                  <button onclick="loadLinkForEdit('${link.id}')" class="flex-1 min-w-[70px] bg-blue-600 hover:bg-blue-500 text-white py-2 px-3 rounded-xl text-xs font-bold transition-all">
-                    ✏️
-                  </button>
-                  <button onclick="navigator.clipboard.writeText('${link.url}').then(() => alert('Enlace copiado!'))" class="flex-1 min-w-[70px] bg-slate-700 hover:bg-slate-600 text-white py-2 px-3 rounded-xl text-xs font-medium transition-all">
-                    📋
-                  </button>
-                  <a href="https://wa.me/?text=${encodeURIComponent('¡Mira los partidos del Mundial! 🏆 ' + link.url)}" target="_blank" class="flex-1 min-w-[70px] bg-green-600 hover:bg-green-500 text-white py-2 px-3 rounded-xl text-xs font-medium transition-all text-center">
-                    💬
-                  </a>
-                  <a href="${link.url}" class="flex-1 min-w-[70px] btn-gold text-slate-900 py-2 px-3 rounded-xl text-xs font-bold transition-all text-center ${isExpired ? 'opacity-50 pointer-events-none' : ''}">
-                    ▶️
-                  </a>
-                  <button onclick="deleteLink('${link.id}')" class="w-full bg-red-600 hover:bg-red-500 text-white py-2 px-3 rounded-xl text-xs font-bold transition-all mt-2">
-                    🗑️ Eliminar
-                  </button>
-                </div>
-              </div>
-            `;
-          }).join('');
-        });
-      };
-      
-      await loadStreams();
-      await loadLinks();
-      
-      // ------------------------------
-      // Funcionalidad de Pestañas
-      // ------------------------------
-      tabGenerator.addEventListener('click', () => {
-        // Activar pestaña de generador
-        tabGenerator.classList.add('bg-gradient-to-r', 'from-emerald-600', 'to-teal-600', 'shadow-lg');
-        tabGenerator.classList.remove('text-slate-400');
-        tabTester.classList.remove('bg-gradient-to-r', 'from-emerald-600', 'to-teal-600', 'text-white', 'shadow-lg');
-        tabTester.classList.add('text-slate-400');
-        panelGenerator.classList.remove('hidden');
-        panelTester.classList.add('hidden');
-      });
-      
-      tabTester.addEventListener('click', () => {
-        // Activar pestaña de tester
-        tabTester.classList.add('bg-gradient-to-r', 'from-emerald-600', 'to-teal-600', 'text-white', 'shadow-lg');
-        tabTester.classList.remove('text-slate-400');
-        tabGenerator.classList.remove('bg-gradient-to-r', 'from-emerald-600', 'to-teal-600', 'shadow-lg');
-        tabGenerator.classList.add('text-slate-400');
-        panelTester.classList.remove('hidden');
-        panelGenerator.classList.add('hidden');
-      });
-      
-      // ------------------------------
-      // Funcionalidad del Tester
-      // ------------------------------
-      testerSelect.addEventListener('change', () => {
-        if (testerSelect.value) {
-          testerInput.value = testerSelect.value;
-        }
-      });
-      
-      btnTest.addEventListener('click', () => {
-        const url = testerInput.value.trim() || testerSelect.value;
-        if (!url) {
-          alert('Por favor ingresa o selecciona una URL');
-          return;
-        }
-        
-        testerContainer.classList.remove('hidden');
-        testerContainer.innerHTML = `
-          <iframe src="${url}" class="w-full h-full" frameborder="0" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
-        `;
-      });
-      
-      // ------------------------------
-      // Funciones de Eliminación
-      // ------------------------------
-      window.deleteLink = async (linkId) => {
-        if (confirm('¿Estás seguro de que deseas eliminar este enlace?')) {
-          try {
-            const linkDoc = doc(db, 'generatedLinks', linkId);
-            await deleteDoc(linkDoc);
-            alert('Enlace eliminado correctamente');
-          } catch (e) {
-            console.error('Error eliminando enlace:', e);
-            alert('Error al eliminar el enlace');
-          }
-        }
-      };
-      
-      window.deleteStream = async (streamId) => {
-        if (confirm('¿Estás seguro de que deseas eliminar este stream?')) {
-          try {
-            const streamDoc = doc(db, 'streams', streamId);
-            await deleteDoc(streamDoc);
-            alert('Stream eliminado correctamente');
-          } catch (e) {
-            console.error('Error eliminando stream:', e);
-            alert('Error al eliminar el stream');
-          }
-        }
-      };
-      
-      // Función para cargar un enlace para editar
-      window.loadLinkForEdit = async (linkId) => {
-        try {
-          const querySnapshot = await getDocs(linksCol);
-          const linkDoc = querySnapshot.docs.find(doc => doc.id === linkId);
-          
-          if (linkDoc) {
-            const linkData = linkDoc.data();
-            editingLinkId = linkId;
-            
-            // Cargar datos en los campos
-            if (linkData.s1) input1.value = safeDecode(linkData.s1);
-            if (linkData.s2) input2.value = safeDecode(linkData.s2);
-            linkNameInput.value = linkData.name || '';
-            updateSlugPreview();
-            checkInputs();
+      // Al entrar al visor: bloquear popups (ads de iframes)
+      let viewerGuardsSet = false;
+      const enterViewerGuards = () => { if (!viewerGuardsSet) { window.open = function () { return null; }; viewerGuardsSet = true; } };
 
-            // Calcular y seleccionar la expiración original
-            const now = new Date();
-            const expiresAt = new Date(linkData.expiresAt.seconds * 1000);
-            const diffHours = Math.ceil((expiresAt - now) / (1000 * 60 * 60));
-            
-            // Seleccionar la opción más cercana
-            const options = [1, 6, 24, 72, 168];
-            let selectedOption = 24;
-            for (const opt of options) {
-              if (diffHours <= opt) {
-                selectedOption = opt;
-                break;
-              }
-            }
-            expirationSelect.value = selectedOption;
-            
-            // Actualizar botón
-            btnGenerate.innerHTML = '🔄 Actualizar Enlace';
-            btnGenerate.classList.remove('pulse-glow');
-            btnCancelEdit.classList.remove('hidden');
-            
-            // Scroll suave al formulario
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }
-        } catch (e) {
-          console.error('Error cargando enlace para editar:', e);
-          alert('Error al cargar el enlace para editar');
-        }
-      };
-
-      // Guardar streams
-      saveStream1.addEventListener('click', async () => {
-        if (input1.value.trim() && input1Title.value.trim()) {
-          try {
-            await addDoc(streamsCol, {
-              title: input1Title.value.trim(),
-              url: input1.value.trim(),
-              createdAt: new Date()
-            });
-            input1Title.value = '';
-            alert('¡Stream guardado correctamente! ⚽');
-          } catch (e) {
-            console.error('Error:', e);
-            alert('Error al guardar el stream');
-          }
-        } else {
-          alert('Por favor completa el enlace y el título');
-        }
-      });
-
-      saveStream2.addEventListener('click', async () => {
-        if (input2.value.trim() && input2Title.value.trim()) {
-          try {
-            await addDoc(streamsCol, {
-              title: input2Title.value.trim(),
-              url: input2.value.trim(),
-              createdAt: new Date()
-            });
-            input2Title.value = '';
-            alert('¡Stream guardado correctamente! ⚽');
-          } catch (e) {
-            console.error('Error:', e);
-            alert('Error al guardar el stream');
-          }
-        } else {
-          alert('Por favor completa el enlace y el título');
-        }
-      });
-
-      // Al seleccionar un stream del menú, llenar el input
-      stream1Select.addEventListener('change', () => {
-        if (stream1Select.value) {
-          input1.value = stream1Select.value;
-          checkInputs();
-        }
-      });
-
-      stream2Select.addEventListener('change', () => {
-        if (stream2Select.value) {
-          input2.value = stream2Select.value;
-          checkInputs();
-        }
-      });
-
-      // Función para verificar inputs
-      const checkInputs = () => {
-        if (input1.value.trim() || input2.value.trim()) {
-          btnGenerate.disabled = false;
-          btnGenerate.classList.remove('disabled:opacity-50', 'disabled:cursor-not-allowed');
-        } else {
-          btnGenerate.disabled = true;
-          btnGenerate.classList.add('disabled:opacity-50', 'disabled:cursor-not-allowed');
-        }
-      };
-
-      input1.addEventListener('input', checkInputs);
-      input2.addEventListener('input', checkInputs);
-      stream1Select.addEventListener('change', checkInputs);
-      stream2Select.addEventListener('change', checkInputs);
-
-      // Preview en vivo de la URL corta mientras escribes el nombre
-      const updateSlugPreview = () => {
-        const raw = linkNameInput.value.trim();
-        if (!raw) { slugPreview.textContent = ''; return; }
-        const sl = slugify(raw) || '...';
-        slugPreview.textContent = '🔗 ' + window.location.origin + getBaseDir() + sl;
-      };
-      linkNameInput.addEventListener('input', updateSlugPreview);
-
-      // ─── DUAL SOUND SYSTEM ──────────────────────────────────────────────────────
-      // localStorage key: stream-${index}-dualsound  ("true"=audio on / "false"=muted)
-      // Default without localStorage: index 0 → audio on, index 1 → muted
-
-      // State (declared before any call site to avoid TDZ)
-      const _sp = {}; // { [idx]: { type, player?, video?, iframe?, originalUrl?, playerReady? } }
-      let _ytReady = false, _ytQ = [];
-      let _twReady = false, _twQ = [];
+      // ══════════════════════════════════════════════════════════
+      //  REPRODUCTOR DE UNA SOLA SEÑAL
+      // ══════════════════════════════════════════════════════════
       let _hlsReady = false, _hlsQ = [];
-
-      function detectStreamType(url) {
-        if (/youtube\.com|youtube-nocookie\.com|youtu\.be/.test(url)) return 'youtube';
-        if (/twitch\.tv/.test(url)) return 'twitch';
-        if (/\.(m3u8|m3u|mp4|ts|webm)(\?|$)/i.test(url)) return 'direct';
-        return 'iframe-other';
-      }
-
-      function _ensureYT(cb) {
-        if (_ytReady) { cb(); return; }
-        _ytQ.push(cb);
-        if (!window._ytLoading) {
-          window._ytLoading = true;
-          window.onYouTubeIframeAPIReady = () => { _ytReady = true; _ytQ.forEach(f => f()); _ytQ = []; };
-          const s = document.createElement('script');
-          s.src = 'https://www.youtube.com/iframe_api'; s.async = true;
-          document.head.appendChild(s);
-        }
-      }
-
-      function _ensureTwitch(cb) {
-        if (_twReady) { cb(); return; }
-        _twQ.push(cb);
-        if (!window._twLoading) {
-          window._twLoading = true;
-          const s = document.createElement('script');
-          s.src = 'https://player.twitch.tv/js/embed/v1.js'; s.async = true;
-          s.onload = () => { _twReady = true; _twQ.forEach(f => f()); _twQ = []; };
-          document.head.appendChild(s);
-        }
-      }
-
       function _ensureHLS(cb) {
         if (_hlsReady) { cb(); return; }
         _hlsQ.push(cb);
         if (!window._hlsLoading) {
           window._hlsLoading = true;
           const s = document.createElement('script');
-          s.src = 'https://cdn.jsdelivr.net/npm/hls.js@latest/dist/hls.min.js'; s.async = true;
+          s.src = 'https://cdn.jsdelivr.net/npm/hls.js@latest/dist/hls.min.js';
           s.onload = () => { _hlsReady = true; _hlsQ.forEach(f => f()); _hlsQ = []; };
           document.head.appendChild(s);
         }
       }
 
-      function _applyMute(index, muted) {
-        const e = _sp[index]; if (!e) return;
-        if (e.type === 'youtube' && e.player && e.playerReady) {
-          muted ? e.player.mute() : e.player.unMute();
-        } else if (e.type === 'twitch' && e.player) {
-          e.player.setMuted(muted);
-        } else if (e.type === 'direct' && e.video) {
-          e.video.muted = muted;
-        }
-        // iframe-other: sin API cross-origin; el mute se maneja via _applyPlayback (src blank)
+      function detectStreamType(url) {
+        if (/youtube\.com|youtube-nocookie\.com|youtu\.be/.test(url)) return 'youtube';
+        if (/twitch\.tv/.test(url)) return 'twitch';
+        if (/\.(m3u8|m3u|mp4|ts|webm)(\?|$)/i.test(url)) return 'direct';
+        return 'iframe';
       }
 
-      function updateDualSound() {
-        Object.keys(_sp).forEach(idx => {
-          const cbEl = document.getElementById(`audio-cb-${idx}`);
-          if (cbEl) _applyMute(parseInt(idx), !cbEl.checked);
-        });
-      }
+      function mountSingle(url) {
+        videoContainer.innerHTML = '';
+        const wrap = document.createElement('div');
+        wrap.className = 'relative w-full h-full';
+        const type = detectStreamType(url);
 
-      function _updatePill(pill, iconSpan, active) {
-        if (active) {
-          pill.style.background = 'rgba(16,185,129,0.88)';
-          pill.style.boxShadow = '0 0 22px rgba(16,185,129,0.45), 0 8px 32px rgba(0,0,0,0.5)';
-          iconSpan.textContent = '🔊';
-        } else {
-          pill.style.background = 'rgba(0,0,0,0.82)';
-          pill.style.boxShadow = '0 8px 32px rgba(0,0,0,0.55)';
-          iconSpan.textContent = '🔇';
-        }
-      }
+        if (type === 'youtube') {
+          let embed = url
+            .replace(/youtube\.com\/watch\?v=([^&]+)/, 'youtube.com/embed/$1')
+            .replace(/youtu\.be\/([^?]+)/, 'youtube.com/embed/$1')
+            .replace(/youtube-nocookie\.com\/watch\?v=([^&]+)/, 'youtube-nocookie.com/embed/$1');
+          embed += (embed.includes('?') ? '&' : '?') + 'autoplay=1&playsinline=1';
+          wrap.innerHTML = `<iframe src="${esc(embed)}" class="absolute inset-0 w-full h-full" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
 
-      // ── Stream extractor via CORS proxies ────────────────────────────────────
-      // Tries to fetch an iframe/embed page and regex-hunt for a real media URL.
-      // Returns the URL string, or null if none found / all proxies fail.
-      const _CORS_PROXIES = [
-        u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
-        u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
-        u => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
-      ];
-      // Patterns ordered from most specific to least
-      const _MEDIA_PATTERNS = [
-        /["'`](https?:\/\/[^"'`\s<>]{8,}?\.m3u8[^"'`\s<>]*?)["'`]/gi,
-        /["'`](https?:\/\/[^"'`\s<>]{8,}?\.mp4[^"'`\s<>]*?)["'`]/gi,
-        /["'`](https?:\/\/[^"'`\s<>]{8,}?\.ts[^"'`\s<>]*?)["'`]/gi,
-        /["'`](https?:\/\/[^"'`\s<>]{8,}?\.webm[^"'`\s<>]*?)["'`]/gi,
-        /(?:file|src|source|hls|stream|hlsUrl|hls_url|streamUrl|manifestUrl)\s*[=:]\s*["'`](https?:\/\/[^"'`\s<>]{8,})["'`]/gi,
-        /(?:url|path)\s*[=:]\s*["'`](https?:\/\/[^"'`\s<>]{8,}(?:m3u8|mp4|ts|stream)[^"'`\s<>]*)["'`]/gi,
-      ];
-
-      async function extractStreamUrl(pageUrl) {
-        for (const makeProxy of _CORS_PROXIES) {
+        } else if (type === 'twitch') {
+          let channel = '', video = '';
           try {
-            const ctrl = new AbortController();
-            const timer = setTimeout(() => ctrl.abort(), 9000);
-            const res = await fetch(makeProxy(pageUrl), { signal: ctrl.signal });
-            clearTimeout(timer);
-            if (!res.ok) continue;
-            const html = await res.text();
-            for (const pat of _MEDIA_PATTERNS) {
-              pat.lastIndex = 0;
-              let m;
-              while ((m = pat.exec(html)) !== null) {
-                const found = m[1];
-                if (/\.(m3u8|mp4|ts|webm)/i.test(found) || /m3u8/i.test(found)) return found;
-              }
-            }
-          } catch (_) { /* try next proxy */ }
-        }
-        return null;
-      }
+            const u = new URL(url.startsWith('http') ? url : 'https://' + url);
+            const vP = u.searchParams.get('video'), chP = u.searchParams.get('channel');
+            const pp = u.pathname.split('/').filter(Boolean);
+            if (vP) video = vP;
+            else if (chP) channel = chP;
+            else if (pp[0] === 'videos' && pp[1]) video = pp[1];
+            else if (pp[0]) channel = pp[0];
+          } catch (_) {}
+          const parent = window.location.hostname || 'localhost';
+          let src = 'https://player.twitch.tv/?parent=' + parent + '&autoplay=true';
+          if (video) src += '&video=' + video; else if (channel) src += '&channel=' + channel;
+          wrap.innerHTML = `<iframe src="${esc(src)}" class="absolute inset-0 w-full h-full" frameborder="0" allowfullscreen allow="autoplay; fullscreen"></iframe>`;
 
-      // ── Open stream in VLC via .m3u playlist download ──────────────────────
-      function openInVLC(streamUrl, label) {
-        const m3u = `#EXTM3U\n#EXTINF:-1,${label || 'Stream'}\n${streamUrl}`;
-        const blob = new Blob([m3u], { type: 'audio/x-mpegurl' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = 'stream.m3u';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        setTimeout(() => URL.revokeObjectURL(a.href), 2000);
-      }
+        } else if (type === 'direct') {
+          const v = document.createElement('video');
+          v.className = 'absolute inset-0 w-full h-full bg-black';
+          v.autoplay = true; v.controls = true; v.setAttribute('playsinline', '');
+          wrap.appendChild(v);
+          if (/\.m3u8?(\?|$)/i.test(url)) {
+            _ensureHLS(() => {
+              if (window.Hls && Hls.isSupported()) { const hls = new Hls(); hls.loadSource(url); hls.attachMedia(v); }
+              else if (v.canPlayType('application/vnd.apple.mpegurl')) { v.src = url; }
+            });
+          } else { v.src = url; }
 
-      // ── Upgrade iframe-other to native video in-place ──────────────────────
-      function _mountNativeVideo(index, streamUrl, div) {
-        const oldIframe = div.querySelector('iframe');
-        if (oldIframe) oldIframe.remove();
-
-        const isHLS = /\.m3u8?(\?|$)/i.test(streamUrl) || /m3u8/i.test(streamUrl);
-        const video = document.createElement('video');
-        video.className = 'absolute top-0 left-0 w-full h-full';
-        video.autoplay = true;
-        video.setAttribute('playsinline', '');
-        video.controls = false;
-        const cbEl = document.getElementById(`audio-cb-${index}`);
-        video.muted = cbEl ? !cbEl.checked : true;
-
-        // Insert before overlay controls (first child = media, rest = overlays)
-        div.insertBefore(video, div.firstChild);
-
-        _sp[index].type = 'direct';
-        _sp[index].video = video;
-        _sp[index].extractedUrl = streamUrl;
-        delete _sp[index].iframe;
-
-        if (isHLS) {
-          _ensureHLS(() => {
-            if (Hls.isSupported()) {
-              const hls = new Hls();
-              hls.loadSource(streamUrl);
-              hls.attachMedia(video);
-            } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-              video.src = streamUrl;
-            }
-          });
         } else {
-          video.src = streamUrl;
+          wrap.innerHTML = `<iframe src="${esc(url)}" class="absolute inset-0 w-full h-full" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>`;
         }
+        videoContainer.appendChild(wrap);
       }
 
-      // ── Shared overlay pill style ───────────────────────────────────────────
-      function _overlayPill(cssExtra) {
-        const el = document.createElement('button');
-        el.style.cssText = [
-          'display:flex;align-items:center;gap:6px;',
-          'padding:8px 14px;border-radius:0.9rem;border:1.5px solid rgba(255,255,255,0.12);',
-          'backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);',
-          'color:#fff;font-size:0.72rem;font-weight:700;letter-spacing:0.03em;',
-          'cursor:pointer;transition:background 0.2s,transform 0.15s;background:rgba(0,0,0,0.80);',
-          'box-shadow:0 4px 24px rgba(0,0,0,0.5);',
-          cssExtra || ''
-        ].join('');
-        el.onmouseenter = () => { el.style.transform = 'scale(1.05)'; };
-        el.onmouseleave = () => { el.style.transform = 'scale(1)'; };
-        return el;
+      function stopPlayer() { videoContainer.innerHTML = ''; }
+
+      // ══════════════════════════════════════════════════════════
+      //  VISTAS
+      // ══════════════════════════════════════════════════════════
+      function hideAllViews() { homeView.classList.add('hidden'); expiredView.classList.add('hidden'); }
+      function showViewer() { hideMatchOverlay(); viewerView.classList.remove('hidden'); viewerView.classList.add('flex'); }
+      function showMatchOverlay(html) {
+        stopPlayer();
+        currentSignalUrl = null;
+        viewerView.classList.add('hidden');
+        viewerView.classList.remove('flex');
+        moContent.innerHTML = html;
+        matchOverlay.classList.remove('hidden');
+        matchOverlay.classList.add('flex');
+      }
+      function hideMatchOverlay() { matchOverlay.classList.add('hidden'); matchOverlay.classList.remove('flex'); }
+      function showExpired() { hideAllViews(); stopPlayer(); expiredView.classList.remove('hidden'); }
+
+      // ══════════════════════════════════════════════════════════
+      //  VISOR DE PARTIDO (señal decidida por el admin)
+      // ══════════════════════════════════════════════════════════
+      let currentSignalUrl = null;
+
+      function teamsBlock(m) {
+        const badge = (name, logo) => `
+          <div class="flex flex-col items-center gap-2 w-28">
+            ${logo ? `<img src="${esc(logo)}" class="w-16 h-16 object-contain" alt="" onerror="this.style.display='none'">` : `<div class="w-16 h-16 rounded-full bg-slate-700 flex items-center justify-center text-2xl">⚽</div>`}
+            <span class="font-bold text-sm text-center">${esc(name || '')}</span>
+          </div>`;
+        return `<div class="flex items-center justify-center gap-4">${badge(m.home, m.homeLogo)}<span class="text-2xl font-black text-slate-500">VS</span>${badge(m.away, m.awayLogo)}</div>`;
       }
 
-      function loadViewer(streams) {
-        viewerView.classList.remove('hidden');
-        viewerView.classList.add('flex');
+      function applyMatchState(m) {
+        document.title = (m.title || 'Partido') + ' · En Vivo';
 
-        const isSplit = streams.length === 2;
-        const forced = streams.length === 1;
-
-        streams.forEach((url, index) => {
-          const type = detectStreamType(url);
-          _sp[index] = { type };
-
-          const saved = localStorage.getItem(`stream-${index}-dualsound`);
-          const isActive = forced ? true : (saved !== null ? saved === 'true' : index === 0);
-
-          const div = document.createElement('div');
-          div.className = `relative ${isSplit
-            ? 'w-full md:w-1/2 h-1/2 md:h-full border-b md:border-b-0 md:border-r border-slate-800'
-            : 'w-full h-full'}`;
-
-          if (type === 'youtube') {
-            let embedUrl = url
-              .replace(/youtube\.com\/watch\?v=([^&]+)/, 'youtube.com/embed/$1')
-              .replace(/youtu\.be\/([^?]+)/, 'youtube.com/embed/$1')
-              .replace(/youtube-nocookie\.com\/watch\?v=([^&]+)/, 'youtube-nocookie.com/embed/$1');
-            const origin = encodeURIComponent(window.location.origin);
-            embedUrl += (embedUrl.includes('?') ? '&' : '?') + `enablejsapi=1&origin=${origin}`;
-            const iframe = document.createElement('iframe');
-            iframe.id = `stream-iframe-${index}`;
-            iframe.src = embedUrl;
-            iframe.className = 'absolute top-0 left-0 w-full h-full';
-            iframe.frameBorder = '0';
-            iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
-            iframe.allowFullscreen = true;
-            div.appendChild(iframe);
-            _ensureYT(() => {
-              const player = new YT.Player(`stream-iframe-${index}`, {
-                events: { onReady: () => {
-                  _sp[index].playerReady = true;
-                  _applyMute(index, !document.getElementById(`audio-cb-${index}`)?.checked);
-                }}
-              });
-              _sp[index].player = player;
-            });
-
-          } else if (type === 'twitch') {
-            const cId = `twitch-container-${index}`;
-            const cDiv = document.createElement('div');
-            cDiv.id = cId;
-            cDiv.className = 'absolute top-0 left-0 w-full h-full';
-            div.appendChild(cDiv);
-            const tOpts = { width: '100%', height: '100%', muted: !isActive, parent: [window.location.hostname] };
-            try {
-              const u = new URL(url.startsWith('http') ? url : 'https://' + url);
-              const vP = u.searchParams.get('video'), chP = u.searchParams.get('channel');
-              const pp = u.pathname.split('/').filter(Boolean);
-              if (vP) tOpts.video = vP;
-              else if (chP) tOpts.channel = chP;
-              else if (pp[0] === 'videos' && pp[1]) tOpts.video = pp[1];
-              else if (pp[0]) tOpts.channel = pp[0];
-            } catch (_) {}
-            _ensureTwitch(() => {
-              const player = new Twitch.Player(cId, tOpts);
-              _sp[index].player = player;
-              player.addEventListener(Twitch.Player.READY, () => updateDualSound());
-            });
-
-          } else if (type === 'direct') {
-            const isHLS = /\.m3u8?(\?|$)/i.test(url);
-            const video = document.createElement('video');
-            video.className = 'absolute top-0 left-0 w-full h-full';
-            video.autoplay = true;
-            video.setAttribute('playsinline', '');
-            video.controls = false;
-            video.muted = !isActive;
-            _sp[index].video = video;
-            div.appendChild(video);
-            if (isHLS) {
-              _ensureHLS(() => {
-                if (Hls.isSupported()) {
-                  const hls = new Hls();
-                  hls.loadSource(url);
-                  hls.attachMedia(video);
-                } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-                  video.src = url;
-                }
-              });
-            } else {
-              video.src = url;
-            }
-
-          } else {
-            // iframe-other: load clean (no param injection — breaks .php pages)
-            const iframe = document.createElement('iframe');
-            iframe.id = `stream-iframe-${index}`;
-            iframe.src = url;
-            iframe.className = 'absolute top-0 left-0 w-full h-full';
-            iframe.frameBorder = '0';
-            iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
-            iframe.allowFullscreen = true;
-            _sp[index].iframe = iframe;
-            _sp[index].originalUrl = url;
-            div.appendChild(iframe);
-
-            // ── Extraction overlay (bottom-left) ──
-            const extractBar = document.createElement('div');
-            extractBar.style.cssText = 'position:absolute;bottom:20px;left:20px;z-index:40;display:flex;gap:8px;flex-wrap:wrap;max-width:60%;';
-
-            const extractBtn = _overlayPill();
-            extractBtn.innerHTML = '<span style="font-size:1rem">🔍</span><span>Analizando...</span>';
-            extractBtn.disabled = true;
-            extractBar.appendChild(extractBtn);
-
-            const vlcBtn = _overlayPill();
-            vlcBtn.innerHTML = '<span style="font-size:1rem">📺</span><span>VLC</span>';
-            vlcBtn.title = 'Abrir en VLC / descargar playlist';
-            vlcBtn.style.display = 'none';
-            vlcBtn.addEventListener('click', () => {
-              const target = _sp[index].extractedUrl || url;
-              openInVLC(target, `Stream ${index + 1}`);
-            });
-            extractBar.appendChild(vlcBtn);
-
-            div.appendChild(extractBar);
-
-            // Auto-extraction in background
-            extractStreamUrl(url).then(found => {
-              if (found) {
-                _sp[index].extractedUrl = found;
-                extractBtn.disabled = false;
-                extractBtn.innerHTML = '<span style="font-size:1rem">⬆️</span><span>Activar nativo</span>';
-                extractBtn.style.background = 'rgba(16,185,129,0.85)';
-                extractBtn.style.boxShadow = '0 0 18px rgba(16,185,129,0.4)';
-                extractBtn.title = found;
-                extractBtn.addEventListener('click', () => {
-                  _mountNativeVideo(index, found, div);
-                  extractBtn.innerHTML = '<span style="font-size:1rem">✅</span><span>Nativo</span>';
-                  extractBtn.disabled = true;
-                  extractBtn.style.background = 'rgba(16,185,129,0.5)';
-                });
-                vlcBtn.style.display = 'flex';
-              } else {
-                extractBtn.innerHTML = '<span style="font-size:1rem">⚠️</span><span>Sin stream directo</span>';
-                extractBtn.style.opacity = '0.5';
-                extractBtn.title = 'No se encontró URL de stream en la página';
-                setTimeout(() => { extractBar.style.opacity = '0'; }, 4000);
-              }
-            });
-          }
-
-          // ── Bottom-left: VLC button for native/youtube/twitch ──
-          // (iframe-other has its own extractBar above; this handles the other types)
-          if (type !== 'iframe-other') {
-            const vlcBarNative = document.createElement('div');
-            vlcBarNative.style.cssText = 'position:absolute;bottom:20px;left:20px;z-index:40;';
-            const vlcNativeBtn = _overlayPill();
-            vlcNativeBtn.innerHTML = '<span style="font-size:1rem">📺</span><span>VLC</span>';
-            vlcNativeBtn.title = 'Descargar playlist .m3u para abrir en VLC';
-            vlcNativeBtn.addEventListener('click', () => {
-              const target = _sp[index].extractedUrl || url;
-              openInVLC(target, `Stream ${index + 1}`);
-            });
-            vlcBarNative.appendChild(vlcNativeBtn);
-            div.appendChild(vlcBarNative);
-          }
-
-          // ── Dual Sound pill (bottom-right) ── oculto: audio gestionado desde la barra superior
-          const audioBtn = document.createElement('label');
-          audioBtn.id = `audio-btn-${index}`;
-          audioBtn.className = 'absolute bottom-5 right-5 z-40 flex items-center cursor-pointer select-none';
-          audioBtn.style.display = 'none';
-          if (forced) audioBtn.style.cursor = 'default';
-
-          const cb = document.createElement('input');
-          cb.type = 'checkbox';
-          cb.id = `audio-cb-${index}`;
-          cb.checked = isActive;
-          cb.disabled = forced;
-          cb.className = 'sr-only';
-
-          const pill = document.createElement('div');
-          pill.style.cssText = 'backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-radius:1rem;padding:10px 16px;display:flex;align-items:center;gap:8px;transition:background 0.25s,box-shadow 0.25s;border:1.5px solid rgba(255,255,255,0.10);';
-
-          const iconSpan = document.createElement('span');
-          iconSpan.style.cssText = 'font-size:1.35rem;line-height:1;';
-
-          const labelSpan = document.createElement('span');
-          labelSpan.style.cssText = 'font-size:0.72rem;font-weight:700;color:#fff;letter-spacing:0.03em;' +
-            (window.matchMedia('(min-width:640px)').matches ? '' : 'display:none;');
-          labelSpan.textContent = `Sonido ${index + 1}`;
-
-          _updatePill(pill, iconSpan, isActive);
-          pill.appendChild(iconSpan);
-          pill.appendChild(labelSpan);
-
-          if (type === 'iframe-other') {
-            const warn = document.createElement('span');
-            warn.title = 'El control de audio depende del proveedor';
-            warn.style.cssText = 'font-size:0.85rem;line-height:1;opacity:0.85;margin-left:2px;';
-            warn.textContent = '⚠️';
-            pill.appendChild(warn);
-          }
-
-          cb.addEventListener('change', () => {
-            if (!forced) localStorage.setItem(`stream-${index}-dualsound`, cb.checked);
-            _updatePill(pill, iconSpan, cb.checked);
-            _applyMute(index, !cb.checked);
-          });
-
-          audioBtn.appendChild(cb);
-          audioBtn.appendChild(pill);
-          div.appendChild(audioBtn);
-
-          // ── PiP: store div reference for layout switching ──
-          _sp[index].div = div;
-          _sp[index].splitClass = div.className;
-
-          videoContainer.appendChild(div);
-        });
-      }
-
-      // ═══════════════════════════════════════════════════════════════════
-      //  PICTURE IN PICTURE MODE
-      // ═══════════════════════════════════════════════════════════════════
-      let _viewMode = 'split';   // 'split' | 'pip' | 'channel'
-      let _pipMainIdx = 0;       // stream principal en PiP
-      const _CHANNEL_KEY = 'channel-active-idx';
-      let _channelIdx = parseInt(localStorage.getItem(_CHANNEL_KEY) || '0') || 0;
-      let _panelOpen = false; // estado del panel lateral de controles
-      let _pipFloatIdx = 1;      // stream flotante en PiP
-      const _PIP_POS_KEY = 'pip-win-pos';
-      const _PIP_AUDIO_KEY = 'pip-only-main-audio';
-      let _pipOnlyMainAudio = localStorage.getItem(_PIP_AUDIO_KEY) === 'true'; // default: dual audio (ON)
-
-      // ── Limpieza de drag listeners ─────────────────────────────────────
-      function _cleanPipDrag(div) {
-        if (!div || !div._pipDS) return;
-        div.removeEventListener('mousedown', div._pipOM0);
-        div.removeEventListener('touchstart', div._pipOM0);
-        document.removeEventListener('mousemove', div._pipOM1);
-        document.removeEventListener('touchmove', div._pipOM1);
-        document.removeEventListener('mouseup', div._pipOM2);
-        document.removeEventListener('touchend', div._pipOM2);
-        div._pipDS = false;
-      }
-
-      // ── Drag & Drop para ventana PiP ──────────────────────────────────
-      function _makePipDraggable(div) {
-        _cleanPipDrag(div);
-        let drag = false, sx, sy, sr, sb;
-
-        const onStart = e => {
-          if (e.target.closest('label,button,input,a')) return;
-          drag = true;
-          div.style.cursor = 'grabbing';
-          div.style.transition = 'box-shadow 0.2s';
-          const t = e.touches?.[0] || e;
-          sx = t.clientX; sy = t.clientY;
-          sr = parseInt(div.style.right) || 20;
-          sb = parseInt(div.style.bottom) || 20;
-          e.preventDefault();
-        };
-
-        const onMove = e => {
-          if (!drag) return;
-          const t = e.touches?.[0] || e;
-          const nr = Math.max(8, Math.min(window.innerWidth - div.offsetWidth - 8, sr - (t.clientX - sx)));
-          const nb = Math.max(8, Math.min(window.innerHeight - div.offsetHeight - 8, sb - (t.clientY - sy)));
-          div.style.right = nr + 'px';
-          div.style.bottom = nb + 'px';
-          e.preventDefault();
-        };
-
-        const onEnd = () => {
-          if (!drag) return;
-          drag = false;
-          div.style.cursor = 'grab';
-          try {
-            localStorage.setItem(_PIP_POS_KEY, JSON.stringify({
-              right: parseInt(div.style.right),
-              bottom: parseInt(div.style.bottom)
-            }));
-          } catch(_) {}
-        };
-
-        div._pipOM0 = onStart; div._pipOM1 = onMove; div._pipOM2 = onEnd; div._pipDS = true;
-        div.addEventListener('mousedown', onStart);
-        div.addEventListener('touchstart', onStart, { passive: false });
-        document.addEventListener('mousemove', onMove, { passive: false });
-        document.addEventListener('touchmove', onMove, { passive: false });
-        document.addEventListener('mouseup', onEnd);
-        document.addEventListener('touchend', onEnd);
-      }
-
-      // ── Layout: Split View ─────────────────────────────────────────────
-      function _applySplitLayout(streams) {
-        document.getElementById('pip-extra-list')?.remove();
-        videoContainer.removeAttribute('style');
-        const n = streams.length;
-
-        if (n >= 3) {
-          videoContainer.className = 'w-full h-full grid grid-cols-2 bg-black gap-px';
-        } else {
-          videoContainer.className = 'w-full h-full flex flex-col md:flex-row';
+        if (m.status === 'finished') {
+          showMatchOverlay(`
+            <div class="text-6xl mb-4">🏁</div>
+            <h2 class="text-3xl font-black text-slate-200 mb-2">Transmisión finalizada</h2>
+            <p class="text-slate-400 mb-6">${esc(m.title || '')}</p>
+            ${teamsBlock(m)}`);
+          return;
+        }
+        if (m.status !== 'live') {
+          showMatchOverlay(`
+            <div class="inline-block px-4 py-1.5 rounded-full bg-amber-500/20 text-amber-300 text-sm font-bold mb-4">🕐 PRÓXIMAMENTE</div>
+            <div class="mb-5">${teamsBlock(m)}</div>
+            <p class="text-slate-400 text-sm">${esc(m.competition || '')}</p>
+            <p class="text-2xl font-black text-white mt-1">${timeLabel(m) || 'Muy pronto'}</p>
+            <p class="text-slate-400 text-sm mt-3">La transmisión comenzará pronto. Esta página se actualiza sola. ⚡</p>`);
+          return;
         }
 
-        Object.keys(_sp).forEach(raw => {
-          const i = parseInt(raw), st = _sp[i];
-          if (!st?.div) return;
-          _cleanPipDrag(st.div);
-          st.div.querySelector('.pip-glass')?.remove();
-          st.div.removeAttribute('style');
-          if (n === 1) {
-            st.div.className = 'relative w-full h-full';
-          } else if (n === 2) {
-            st.div.className = i === 0
-              ? 'relative w-full md:w-1/2 h-1/2 md:h-full border-b md:border-b-0 md:border-r border-slate-800'
-              : 'relative w-full md:w-1/2 h-1/2 md:h-full';
-          } else {
-            st.div.className = 'relative w-full h-full min-h-0';
-          }
+        // EN VIVO — el admin decide la señal (activeSignal)
+        const signals = m.signals || [];
+        const sig = signals[m.activeSignal || 0] || signals[0];
+        if (!sig || !sig.url) {
+          showMatchOverlay(`<div class="text-6xl mb-4">📡</div><h2 class="text-2xl font-black text-slate-200">Señal no disponible</h2><p class="text-slate-400 mt-2">El administrador aún no ha asignado una señal.</p>`);
+          return;
+        }
+        showViewer();
+        if (currentSignalUrl !== sig.url) { currentSignalUrl = sig.url; mountSingle(sig.url); }
+      }
+
+      function openMatch(matchId) {
+        hideAllViews();
+        enterViewerGuards();
+        onSnapshot(doc(db, 'matches', matchId), (snap) => {
+          if (!snap.exists()) { showMatchOverlay(`<div class="text-6xl mb-4">❌</div><h2 class="text-2xl font-black text-slate-200">Partido no encontrado</h2>`); return; }
+          applyMatchState(snap.data());
         });
       }
 
-      // ── Layout: PiP ────────────────────────────────────────────────────
-      function _applyPipLayout(streams) {
-        document.getElementById('pip-extra-list')?.remove();
-        videoContainer.removeAttribute('style');
-        videoContainer.style.position = 'relative';
-        videoContainer.className = 'w-full h-full';
+      // ══════════════════════════════════════════════════════════
+      //  PLATAFORMA CLIENTE (grid de partidos)
+      // ══════════════════════════════════════════════════════════
+      let allMatches = [];
+      let currentFilter = 'all';
 
-        let pos = { right: 20, bottom: 20 };
-        try {
-          const p = JSON.parse(localStorage.getItem(_PIP_POS_KEY));
-          if (p?.right != null) pos = p;
-        } catch(_) {}
+      window.goMatch = (slug) => { window.location.href = getBaseDir() + '?slug=' + encodeURIComponent(slug); };
 
-        const sm = window.innerWidth < 768;
-        const pipW = sm ? '40vw' : '28vw';
+      function matchCard(m) {
+        const live = m.status === 'live';
+        const badge = live
+          ? `<span class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-600 text-white text-xs font-black"><span class="w-2 h-2 rounded-full bg-white live-dot"></span>EN VIVO</span>`
+          : `<span class="px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-bold">🕐 ${esc(timeLabel(m) || 'Próximo')}</span>`;
+        const badgeTeam = (name, logo) => `
+          <div class="flex flex-col items-center gap-2 flex-1 min-w-0">
+            ${logo ? `<img src="${esc(logo)}" class="w-14 h-14 object-contain" alt="" onerror="this.style.display='none'">` : `<div class="w-14 h-14 rounded-full bg-slate-700/80 flex items-center justify-center text-xl">⚽</div>`}
+            <span class="font-bold text-sm text-center truncate w-full px-1">${esc(name || '')}</span>
+          </div>`;
+        return `
+          <div class="match-card bg-slate-900/80 rounded-3xl border border-slate-700/60 card-glow overflow-hidden fade-in-up" onclick="goMatch('${esc(m.slug)}')">
+            <div class="px-4 pt-4 flex items-center justify-between gap-2">
+              <span class="text-xs text-emerald-300/80 font-semibold truncate">${esc(m.competition || '⚽ Partido')}</span>
+              ${badge}
+            </div>
+            <div class="p-5 flex items-center gap-2">
+              ${badgeTeam(m.home, m.homeLogo)}
+              <span class="text-lg font-black text-slate-500 shrink-0">VS</span>
+              ${badgeTeam(m.away, m.awayLogo)}
+            </div>
+            <div class="px-4 pb-4">
+              <div class="w-full text-center py-2.5 rounded-2xl font-bold text-sm ${live ? 'btn-gold text-slate-900' : 'bg-slate-800 text-slate-300'}">
+                ${live ? '▶️ Ver ahora' : '🔔 Ver detalle'}
+              </div>
+            </div>
+          </div>`;
+      }
 
-        Object.keys(_sp).forEach(raw => {
-          const i = parseInt(raw), st = _sp[i];
-          if (!st?.div) return;
-          const div = st.div;
-          _cleanPipDrag(div);
-          div.querySelector('.pip-glass')?.remove();
+      function renderGrid() {
+        let list = allMatches.slice();
+        if (currentFilter === 'live') list = list.filter(m => m.status === 'live');
+        else if (currentFilter === 'upcoming') list = list.filter(m => m.status === 'upcoming');
+        else list = list.filter(m => m.status !== 'finished');
 
-          if (i === _pipMainIdx) {
-            div.className = 'relative';
-            div.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;z-index:1;';
-
-          } else if (i === _pipFloatIdx) {
-            div.className = 'relative';
-            div.style.cssText = [
-              'position:absolute;',
-              'width:' + pipW + ';',
-              'aspect-ratio:16/9;',
-              'bottom:' + pos.bottom + 'px;',
-              'right:' + pos.right + 'px;',
-              'border-radius:14px;',
-              'overflow:hidden;',
-              'cursor:grab;',
-              'z-index:30;',
-              'transition:box-shadow 0.2s;',
-              'box-shadow:0 8px 40px rgba(0,0,0,0.78),0 2px 8px rgba(0,0,0,0.4),0 0 0 1.5px rgba(255,255,255,0.13);',
-            ].join('');
-
-            // Efecto glass + borde redondeado sobre el iframe/video
-            const gl = document.createElement('div');
-            gl.className = 'pip-glass';
-            gl.style.cssText = [
-              'position:absolute;inset:0;border-radius:14px;pointer-events:none;z-index:50;',
-              'background:linear-gradient(135deg,rgba(255,255,255,0.07) 0%,rgba(255,255,255,0) 60%);',
-              'border:1.5px solid rgba(255,255,255,0.17);',
-            ].join('');
-            div.appendChild(gl);
-
-            _makePipDraggable(div);
-
-          } else {
-            // Streams extra (3+): ocultos, accesibles desde el sidebar
-            div.style.cssText = 'position:absolute;display:none;';
-          }
+        list.sort((a, b) => {
+          const la = a.status === 'live' ? 0 : 1, lb = b.status === 'live' ? 0 : 1;
+          if (la !== lb) return la - lb;
+          return (a.kickoff?.seconds || 0) - (b.kickoff?.seconds || 0);
         });
 
-        // Sidebar de streams extra (3+ streams)
-        const extras = streams.map((_, i) => i).filter(i => i !== _pipMainIdx && i !== _pipFloatIdx);
-        if (extras.length > 0) {
-          const sidebar = document.createElement('div');
-          sidebar.id = 'pip-extra-list';
-          sidebar.style.cssText = [
-            'position:absolute;left:12px;bottom:12px;z-index:35;',
-            'display:flex;flex-direction:column;gap:6px;',
-          ].join('');
-          extras.forEach(i => {
-            const btn = document.createElement('button');
-            btn.style.cssText = [
-              'width:88px;aspect-ratio:16/9;border-radius:8px;',
-              'background:rgba(15,23,42,0.9);border:1.5px solid rgba(255,255,255,0.14);',
-              'color:rgba(255,255,255,0.8);font-size:0.6rem;font-weight:700;',
-              'cursor:pointer;transition:border-color 0.2s;',
-            ].join('');
-            btn.textContent = 'Stream ' + (i + 1);
-            btn.title = 'Ver Stream ' + (i + 1) + ' en PiP';
-            btn.addEventListener('mouseenter', () => { btn.style.borderColor = 'rgba(16,185,129,0.7)'; });
-            btn.addEventListener('mouseleave', () => { btn.style.borderColor = 'rgba(255,255,255,0.14)'; });
-            btn.addEventListener('click', () => {
-              _pipFloatIdx = i;
-              _applyPipLayout(streams);
-              _syncModeBar(streams);
-            });
-            sidebar.appendChild(btn);
-          });
-          viewerView.appendChild(sidebar);
+        if (list.length === 0) {
+          matchesGrid.innerHTML = `<div class="col-span-full text-center text-slate-400 py-24"><div class="text-6xl mb-4 opacity-50">📭</div><p class="text-lg">No hay partidos ${currentFilter === 'live' ? 'en vivo' : currentFilter === 'upcoming' ? 'próximos' : 'disponibles'} por ahora</p></div>`;
+          return;
         }
+        matchesGrid.innerHTML = list.map(matchCard).join('');
       }
 
-      // ═══════════════════════════════════════════════════════════════════
-      //  CHANNEL MODE (zapping a pantalla completa)
-      // ═══════════════════════════════════════════════════════════════════
+      filterChips.querySelectorAll('.chip').forEach(chip => chip.addEventListener('click', () => {
+        currentFilter = chip.dataset.filter;
+        filterChips.querySelectorAll('.chip').forEach(c => {
+          const on = c === chip;
+          c.classList.toggle('bg-gradient-to-r', on);
+          c.classList.toggle('from-emerald-600', on);
+          c.classList.toggle('to-teal-600', on);
+          c.classList.toggle('text-white', on);
+          c.classList.toggle('shadow-lg', on);
+          c.classList.toggle('bg-slate-800/70', !on);
+          c.classList.toggle('text-slate-300', !on);
+        });
+        renderGrid();
+      }));
 
-      // Pausa o reanuda la reproducción de un stream según su tipo
-      function _applyPlayback(index, shouldPlay) {
-        const e = _sp[index];
-        if (!e) return;
-        if (e.type === 'youtube' && e.player && e.playerReady) {
-          shouldPlay ? e.player.playVideo() : e.player.pauseVideo();
-        } else if (e.type === 'twitch' && e.player) {
-          shouldPlay ? e.player.play() : e.player.pause();
-        } else if (e.type === 'direct' && e.video) {
-          if (shouldPlay) e.video.play().catch(() => {});
-          else e.video.pause();
-        } else if (e.type === 'iframe-other' && e.iframe) {
-          if (!shouldPlay) {
-            if (e.iframe.src && e.iframe.src !== 'about:blank') e._savedSrc = e.iframe.src;
-            e.iframe.src = 'about:blank';
-          } else {
-            const url = e._savedSrc || e.originalUrl;
-            if (url && e.iframe.src !== url) e.iframe.src = url;
-          }
-        }
-      }
-
-      // Layout: un solo stream visible, el resto oculto y pausado
-      function _applyChannelLayout(streams) {
-        document.getElementById('pip-extra-list')?.remove();
-        videoContainer.removeAttribute('style');
-        videoContainer.style.position = 'relative';
-        videoContainer.className = 'w-full h-full';
-
-        Object.keys(_sp).forEach(raw => {
-          const i = parseInt(raw), st = _sp[i];
-          if (!st?.div) return;
-          _cleanPipDrag(st.div);
-          st.div.querySelector('.pip-glass')?.remove();
-          if (i === _channelIdx) {
-            st.div.removeAttribute('style');
-            st.div.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;z-index:1;';
-            st.div.className = 'relative';
-            _applyPlayback(i, true);
-          } else {
-            st.div.style.cssText = 'position:absolute;display:none;';
-            st.div.className = 'relative';
-            _applyPlayback(i, false);
-          }
+      function startHome() {
+        homeView.classList.remove('hidden');
+        onSnapshot(matchesCol, (snap) => {
+          allMatches = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+          renderGrid();
         });
       }
 
-      // Cambiar canal activo: pausa los demás, reanuda el seleccionado
-      function _switchChannel(idx, streams) {
-        _channelIdx = idx;
-        try { localStorage.setItem(_CHANNEL_KEY, String(idx)); } catch(_) {}
-        _applyChannelLayout(streams);
-        AudioManager.applyChannelMode(streams);
-        _syncModeBar(streams);
+      // ══════════════════════════════════════════════════════════
+      //  ENLACES LEGACY (una sola señal)
+      // ══════════════════════════════════════════════════════════
+      function playSingle(url) {
+        if (!url) { showExpired(); return; }
+        enterViewerGuards();
+        hideAllViews();
+        showViewer();
+        currentSignalUrl = url;
+        mountSingle(url);
+      }
+      function playLegacyLink(linkData) {
+        const expiresAt = new Date(linkData.expiresAt.seconds * 1000);
+        if (new Date() > expiresAt) { showExpired(); return; }
+        const url = (linkData.s1 && safeDecode(linkData.s1)) || (linkData.s2 && safeDecode(linkData.s2)) || null;
+        playSingle(url);
       }
 
-      // _buildChannelBar: chips integrados en el panel lateral; esta función es no-op.
-      function _buildChannelBar(_streams) {}
-
-      // ═══════════════════════════════════════════════════════════════════
-      //  END CHANNEL MODE
-      // ═══════════════════════════════════════════════════════════════════
-
-      // ── Utilidad: elementos del pill de audio ─────────────────────────
-      function _getPillElements(index) {
-        const label = document.getElementById('audio-btn-' + index);
-        if (!label) return null;
-        const pill = label.querySelector('div');
-        const iconSpan = pill ? pill.querySelector('span') : null;
-        return (pill && iconSpan) ? { pill, iconSpan } : null;
-      }
-
-      // ── AudioManager: controlador centralizado de audio ───────────────
-      const AudioManager = {
-
-        // Sincroniza visualmente el pill sin alterar el estado del checkbox
-        _syncPillVisual(index, active) {
-          const els = _getPillElements(index);
-          if (els) _updatePill(els.pill, els.iconSpan, active);
-        },
-
-        // PiP audio exclusivo: solo el stream principal reproduce audio.
-        // Solo llama _applyMute cuando el estado realmente cambia (evita ops redundantes).
-        applyPipMode(streams) {
-          if (!_pipOnlyMainAudio) { this.restoreOriginalAudio(); return; }
-          streams.forEach((_, i) => {
-            const shouldMute = (i !== _pipMainIdx);
-            const st = _sp[i];
-            if (!st) return;
-            if (st._pipForcedMute !== shouldMute) {
-              _applyMute(i, shouldMute);
-              st._pipForcedMute = shouldMute;
-            }
-            this._syncPillVisual(i, !shouldMute);
-          });
-        },
-
-        // Restaura el audio al estado original definido por los checkboxes del usuario.
-        restoreOriginalAudio() {
-          Object.keys(_sp).forEach(raw => {
-            const i = parseInt(raw), st = _sp[i];
-            if (!st) return;
-            const cbEl = document.getElementById('audio-cb-' + i);
-            const shouldBeActive = cbEl ? cbEl.checked : (i === 0);
-            _applyMute(i, !shouldBeActive);
-            delete st._pipForcedMute;
-            this._syncPillVisual(i, shouldBeActive);
-          });
-        },
-
-        // Canal: solo el stream visible tiene audio; el resto forzado a mute.
-        applyChannelMode(streams) {
-          streams.forEach((_, i) => {
-            const shouldMute = (i !== _channelIdx);
-            const st = _sp[i];
-            if (!st) return;
-            if (st._channelForcedMute !== shouldMute) {
-              _applyMute(i, shouldMute);
-              st._channelForcedMute = shouldMute;
-            }
-            this._syncPillVisual(i, !shouldMute);
-          });
-        },
-
-        // Punto de entrada unificado — sincroniza audio según estado actual.
-        sync(streams) {
-          if (_viewMode === 'channel') {
-            this.applyChannelMode(streams);
-          } else if (_pipOnlyMainAudio) {
-            this.applyPipMode(streams);
-          } else {
-            this.restoreOriginalAudio();
-          }
-        }
-      };
-
-      // ── Sincronizar estado visual del panel lateral ───────────────────
-      function _syncModeBar(streams) {
-        const panel = document.getElementById('ctrl-panel');
-        if (!panel) return;
-
-        // Botones de modo
-        const activeStyle  = 'background:rgba(16,185,129,0.88);color:#fff;';
-        const inactiveStyle = 'background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.5);';
-        ['pmb-split','pmb-pip','pmb-channel'].forEach(id => {
-          const b = document.getElementById(id);
-          if (b) b.style.cssText += inactiveStyle;
-        });
-        const activeId = _viewMode === 'split' ? 'pmb-split' : _viewMode === 'pip' ? 'pmb-pip' : 'pmb-channel';
-        const activeBtn = document.getElementById(activeId);
-        if (activeBtn) activeBtn.style.cssText += activeStyle;
-
-        // Sección PiP selectors
-        const selWrap = document.getElementById('pmb-selectors');
-        if (selWrap) selWrap.style.display = _viewMode === 'pip' ? 'flex' : 'none';
-
-        // Sección canal chips
-        const chSection = document.getElementById('ctrl-channel-chips');
-        if (chSection) chSection.style.display = _viewMode === 'channel' ? 'flex' : 'none';
-
-        // Sección audio: oculta en modo canal (audio exclusivo ya forzado)
-        const audioSec = document.getElementById('pmb-audio-switch');
-        if (audioSec) audioSec.style.display = _viewMode === 'channel' ? 'none' : 'block';
-
-        // Botón audio
-        const audioToggle = document.getElementById('pmb-audio-only-main');
-        if (audioToggle) {
-          audioToggle.innerHTML = _pipOnlyMainAudio ? '🔇 Solo principal' : '🔊 Ambos canales';
-          audioToggle.style.background = _pipOnlyMainAudio ? 'rgba(255,255,255,0.07)' : 'rgba(16,185,129,0.88)';
-          audioToggle.style.color = _pipOnlyMainAudio ? 'rgba(255,255,255,0.5)' : '#fff';
-        }
-
-        // Radios PiP
-        streams.forEach((_, i) => {
-          const rM = document.getElementById('pmb-main-r' + i);
-          if (rM) rM.checked = (i === _pipMainIdx);
-          const rF = document.getElementById('pmb-float-r' + i);
-          if (rF) rF.checked = (i === _pipFloatIdx);
-        });
-
-        // Chips de canal
-        streams.forEach((_, i) => {
-          const chip = document.getElementById('ch-btn-' + i);
-          if (!chip) return;
-          if (i === _channelIdx) {
-            chip.style.background = 'rgba(16,185,129,0.88)';
-            chip.style.color = '#fff';
-            chip.style.borderColor = 'rgba(16,185,129,0.45)';
-          } else {
-            chip.style.background = 'rgba(255,255,255,0.07)';
-            chip.style.color = 'rgba(255,255,255,0.5)';
-            chip.style.borderColor = 'rgba(255,255,255,0.08)';
-          }
-        });
-      }
-
-      // ── Panel lateral de controles + botón toggle ─────────────────────
-      function _buildModeSelector(streams) {
-        document.getElementById('ctrl-panel')?.remove();
-        document.getElementById('ctrl-toggle')?.remove();
-        document.getElementById('pip-mode-bar')?.remove();
-        document.getElementById('pip-extra-list')?.remove();
-        if (streams.length < 2) return;
-
-        if (_pipFloatIdx === _pipMainIdx || _pipFloatIdx >= streams.length) {
-          for (let j = 0; j < streams.length; j++) {
-            if (j !== _pipMainIdx) { _pipFloatIdx = j; break; }
-          }
-        }
-
-        // ── Botón toggle (esquina inferior derecha) ────────────────────
-        const toggle = document.createElement('button');
-        toggle.id = 'ctrl-toggle';
-        toggle.title = 'Controles';
-        toggle.style.cssText = [
-          'position:absolute;right:10px;bottom:10px;z-index:65;',
-          'width:32px;height:32px;border-radius:9px;',
-          'background:rgba(8,14,36,0.68);',
-          'backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);',
-          'border:1px solid rgba(255,255,255,0.10);',
-          'color:rgba(255,255,255,0.55);font-size:0.85rem;line-height:1;',
-          'cursor:pointer;display:flex;align-items:center;justify-content:center;',
-          'box-shadow:0 2px 10px rgba(0,0,0,0.5);',
-          'transition:background 0.2s,color 0.2s,transform 0.25s cubic-bezier(0.4,0,0.2,1);',
-        ].join('');
-        toggle.innerHTML = '⚙';
-
-        // ── Panel vertical ─────────────────────────────────────────────
-        const panel = document.createElement('div');
-        panel.id = 'ctrl-panel';
-        panel.style.cssText = [
-          'position:absolute;right:10px;bottom:50px;z-index:64;',
-          'display:flex;flex-direction:column;align-items:stretch;gap:2px;',
-          'width:116px;padding:7px;border-radius:12px;',
-          'background:rgba(6,10,28,0.82);',
-          'backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);',
-          'border:1px solid rgba(255,255,255,0.08);',
-          'box-shadow:0 8px 32px rgba(0,0,0,0.6),0 2px 8px rgba(0,0,0,0.3);',
-          'overflow:hidden;',
-          'max-height:0;opacity:0;pointer-events:none;',
-          'transition:max-height 0.35s cubic-bezier(0.4,0,0.2,1),opacity 0.22s ease;',
-          'transform-origin:bottom right;',
-        ].join('');
-
-        // helpers
-        const mkLabel = txt => {
-          const s = document.createElement('span');
-          s.style.cssText = 'display:block;font-size:0.48rem;font-weight:700;color:rgba(255,255,255,0.28);letter-spacing:0.08em;text-transform:uppercase;padding:4px 2px 2px;';
-          s.textContent = txt;
-          return s;
-        };
-        const mkSep = () => {
-          const d = document.createElement('div');
-          d.style.cssText = 'height:1px;background:rgba(255,255,255,0.06);margin:3px 0;';
-          return d;
-        };
-        const mkModeBtn = (id, html) => {
-          const b = document.createElement('button');
-          b.id = id;
-          b.innerHTML = html;
-          b.style.cssText = [
-            'display:block;width:100%;text-align:left;',
-            'padding:5px 8px;border-radius:7px;border:none;cursor:pointer;',
-            'font-size:0.65rem;font-weight:700;letter-spacing:0.02em;',
-            'transition:background 0.15s,color 0.15s;',
-            'background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.5);',
-          ].join('');
-          return b;
-        };
-
-        // ── Sección MODO ───────────────────────────────────────────────
-        panel.appendChild(mkLabel('Modo'));
-        const splitBtn   = mkModeBtn('pmb-split',   '⊞  Split');
-        const pipBtn     = mkModeBtn('pmb-pip',     '⧉  PiP');
-        const channelBtn = mkModeBtn('pmb-channel', '📺  Canal');
-        panel.appendChild(splitBtn);
-        panel.appendChild(pipBtn);
-        panel.appendChild(channelBtn);
-
-        panel.appendChild(mkSep());
-
-        // ── Sección AUDIO ──────────────────────────────────────────────
-        const audioSec = document.createElement('div');
-        audioSec.id = 'pmb-audio-switch';
-        audioSec.appendChild(mkLabel('Audio'));
-        const audioToggleBtn = document.createElement('button');
-        audioToggleBtn.id = 'pmb-audio-only-main';
-        audioToggleBtn.style.cssText = [
-          'display:block;width:100%;text-align:left;',
-          'padding:5px 8px;border-radius:7px;border:none;cursor:pointer;',
-          'font-size:0.65rem;font-weight:700;',
-          'transition:background 0.15s,color 0.15s;',
-        ].join('');
-        audioToggleBtn.innerHTML = _pipOnlyMainAudio ? '🔇 Solo principal' : '🔊 Ambos canales';
-        audioToggleBtn.style.background = _pipOnlyMainAudio ? 'rgba(255,255,255,0.07)' : 'rgba(16,185,129,0.88)';
-        audioToggleBtn.style.color = _pipOnlyMainAudio ? 'rgba(255,255,255,0.5)' : '#fff';
-        audioToggleBtn.addEventListener('click', () => {
-          _pipOnlyMainAudio = !_pipOnlyMainAudio;
-          try { localStorage.setItem(_PIP_AUDIO_KEY, String(_pipOnlyMainAudio)); } catch(_) {}
-          AudioManager.sync(streams);
-          _syncModeBar(streams);
-        });
-        audioSec.appendChild(audioToggleBtn);
-        panel.appendChild(audioSec);
-
-        panel.appendChild(mkSep());
-
-        // ── Sección PiP SELECTORS ──────────────────────────────────────
-        const selWrap = document.createElement('div');
-        selWrap.id = 'pmb-selectors';
-        selWrap.style.cssText = 'display:none;flex-direction:column;gap:4px;';
-        selWrap.appendChild(mkLabel('PiP'));
-
-        const mkRadioRow = (nameAttr, idPrefix, label, checkedIdx, onChange) => {
-          const wrap = document.createElement('div');
-          wrap.style.cssText = 'display:flex;flex-direction:column;gap:2px;';
-          const lbl = document.createElement('span');
-          lbl.style.cssText = 'font-size:0.55rem;color:rgba(255,255,255,0.38);font-weight:600;padding:0 2px;';
-          lbl.textContent = label;
-          wrap.appendChild(lbl);
-          const row = document.createElement('div');
-          row.style.cssText = 'display:flex;flex-wrap:wrap;gap:3px;';
-          streams.forEach((_, i) => {
-            const rl = document.createElement('label');
-            rl.style.cssText = 'display:flex;align-items:center;gap:3px;cursor:pointer;';
-            const r = document.createElement('input');
-            r.type = 'radio'; r.name = nameAttr; r.value = String(i);
-            r.id = idPrefix + '-r' + i;
-            r.checked = (i === checkedIdx);
-            r.style.cssText = 'accent-color:#10b981;cursor:pointer;width:11px;height:11px;';
-            r.addEventListener('change', () => onChange(i));
-            const rt = document.createElement('span');
-            rt.style.cssText = 'font-size:0.6rem;color:rgba(255,255,255,0.8);font-weight:600;';
-            rt.textContent = 'S' + (i + 1);
-            rl.appendChild(r); rl.appendChild(rt);
-            row.appendChild(rl);
-          });
-          wrap.appendChild(row);
-          return wrap;
-        };
-
-        selWrap.appendChild(mkRadioRow('pip-main', 'pmb-main', 'Principal', _pipMainIdx, i => {
-          _pipMainIdx = i;
-          if (_pipFloatIdx === _pipMainIdx) {
-            for (let j = 0; j < streams.length; j++) { if (j !== _pipMainIdx) { _pipFloatIdx = j; break; } }
-          }
-          _applyPipLayout(streams); AudioManager.sync(streams); _syncModeBar(streams);
-        }));
-        if (streams.length >= 3) {
-          selWrap.appendChild(mkRadioRow('pip-float', 'pmb-float', 'Flotante', _pipFloatIdx, i => {
-            if (i === _pipMainIdx) return;
-            _pipFloatIdx = i;
-            _applyPipLayout(streams); AudioManager.sync(streams); _syncModeBar(streams);
-          }));
-        }
-        panel.appendChild(selWrap);
-
-        // ── Sección CANAL CHIPS ────────────────────────────────────────
-        const chSection = document.createElement('div');
-        chSection.id = 'ctrl-channel-chips';
-        chSection.style.cssText = 'display:none;flex-direction:column;gap:3px;';
-        chSection.appendChild(mkLabel('Canal'));
-        const chRow = document.createElement('div');
-        chRow.style.cssText = 'display:flex;flex-wrap:wrap;gap:3px;';
-        streams.forEach((_, i) => {
-          const chip = document.createElement('button');
-          chip.id = 'ch-btn-' + i;
-          chip.textContent = 'S' + (i + 1);
-          chip.style.cssText = [
-            'padding:4px 9px;border-radius:6px;font-size:0.63rem;font-weight:700;',
-            'border:1px solid;cursor:pointer;',
-            'transition:background 0.15s,color 0.15s,border-color 0.15s;',
-            i === _channelIdx
-              ? 'background:rgba(16,185,129,0.88);color:#fff;border-color:rgba(16,185,129,0.45);'
-              : 'background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.5);border-color:rgba(255,255,255,0.08);',
-          ].join('');
-          chip.addEventListener('click', () => _switchChannel(i, streams));
-          chRow.appendChild(chip);
-        });
-        chSection.appendChild(chRow);
-        panel.appendChild(chSection);
-
-        // ── Listeners de modo ──────────────────────────────────────────
-        splitBtn.addEventListener('click', () => {
-          _viewMode = 'split';
-          _applySplitLayout(streams);
-          AudioManager.sync(streams);
-          _syncModeBar(streams);
-        });
-        pipBtn.addEventListener('click', () => {
-          _viewMode = 'pip';
-          if (_pipFloatIdx === _pipMainIdx || _pipFloatIdx >= streams.length) {
-            for (let j = 0; j < streams.length; j++) { if (j !== _pipMainIdx) { _pipFloatIdx = j; break; } }
-          }
-          _applyPipLayout(streams);
-          AudioManager.sync(streams);
-          _syncModeBar(streams);
-        });
-        channelBtn.addEventListener('click', () => {
-          _viewMode = 'channel';
-          const saved = parseInt(localStorage.getItem(_CHANNEL_KEY));
-          if (!isNaN(saved) && saved >= 0 && saved < streams.length) _channelIdx = saved;
-          else _channelIdx = 0;
-          _applyChannelLayout(streams);
-          AudioManager.sync(streams);
-          _syncModeBar(streams);
-        });
-
-        // ── Toggle open/close ──────────────────────────────────────────
-        function openPanel() {
-          _panelOpen = true;
-          panel.style.maxHeight = '520px';
-          panel.style.opacity = '1';
-          panel.style.pointerEvents = 'auto';
-          toggle.style.background = 'rgba(16,185,129,0.78)';
-          toggle.style.color = '#fff';
-          toggle.style.borderColor = 'rgba(16,185,129,0.35)';
-          toggle.style.transform = 'rotate(90deg)';
-        }
-        function closePanel() {
-          _panelOpen = false;
-          panel.style.maxHeight = '0';
-          panel.style.opacity = '0';
-          panel.style.pointerEvents = 'none';
-          toggle.style.background = 'rgba(8,14,36,0.68)';
-          toggle.style.color = 'rgba(255,255,255,0.55)';
-          toggle.style.borderColor = 'rgba(255,255,255,0.10)';
-          toggle.style.transform = 'rotate(0deg)';
-        }
-
-        toggle.addEventListener('click', () => _panelOpen ? closePanel() : openPanel());
-
-        viewerView.appendChild(panel);
-        viewerView.appendChild(toggle);
-        _syncModeBar(streams);
-      }
-      // ═══════════════════════════════════════════════════════════════════
-      //  END PICTURE IN PICTURE MODE
-      // ═══════════════════════════════════════════════════════════════════
-
-      // 1. Detectar modo (Admin, Visor o Expirado)
+      // ══════════════════════════════════════════════════════════
+      //  RUTEO
+      // ══════════════════════════════════════════════════════════
       const params = new URLSearchParams(window.location.search);
       const slug = params.get('slug');
-      const s1 = params.get('s1');
-      const s2 = params.get('s2');
-      const s3 = params.get('s3');
-      const s4 = params.get('s4');
-      const s5 = params.get('s5');
+      const s1 = params.get('s1'), s2 = params.get('s2');
       const linkId = params.get('linkId');
+      const firstParamStream = (s1 && safeDecode(s1)) || (s2 && safeDecode(s2)) || null;
 
       if (slug) {
-        // Enlace corto tipo /tv2/mar-vs-arg -> buscar el slug en Firestore
         try {
-          const snap = await getDocs(linksCol);
-          const linkData = snap.docs
-            .map(d => d.data())
-            .filter(d => d.slug === slug)
-            .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0))[0];
-
-          if (linkData) {
-            // Restaurar la URL limpia en la barra de direcciones
+          const mSnap = await getDocs(matchesCol);
+          const matchDoc = mSnap.docs.find(d => d.data().slug === slug);
+          if (matchDoc) {
             try { history.replaceState(null, '', getBaseDir() + slug); } catch (_) {}
-
-            const expiresAt = new Date(linkData.expiresAt.seconds * 1000);
-            if (new Date() > expiresAt) {
-              expiredView.classList.remove('hidden');
-            } else {
-              const streams = [
-                linkData.s1 ? safeDecode(linkData.s1) : null,
-                linkData.s2 ? safeDecode(linkData.s2) : null
-              ].filter(Boolean);
-              loadViewer(streams);
-              _buildModeSelector(streams);
-            }
+            openMatch(matchDoc.id);
           } else {
-            // Slug inexistente -> mostrar vista de expirado/no encontrado
-            expiredView.classList.remove('hidden');
+            const lSnap = await getDocs(linksCol);
+            const linkData = lSnap.docs.map(d => d.data()).filter(d => d.slug === slug)
+              .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0))[0];
+            if (linkData) { try { history.replaceState(null, '', getBaseDir() + slug); } catch (_) {} playLegacyLink(linkData); }
+            else showExpired();
           }
-        } catch (e) {
-          console.error('Error cargando slug:', e);
-          expiredView.classList.remove('hidden');
-        }
+        } catch (e) { console.error('Error de ruteo (slug):', e); showExpired(); }
       } else if (linkId) {
-        // Verificar si el enlace ha expirado
         try {
-          const docRef = await getDocs(linksCol);
-          const linkDoc = docRef.docs.find(doc => doc.id === linkId);
-          
-          if (linkDoc) {
-            const linkData = linkDoc.data();
-            const expiresAt = new Date(linkData.expiresAt.seconds * 1000);
-            
-            if (new Date() > expiresAt) {
-              expiredView.classList.remove('hidden');
-            } else {
-              // Usar los streams del enlace guardado
-              const streams = [
-                linkData.s1 ? decodeURIComponent(linkData.s1) : null,
-                linkData.s2 ? decodeURIComponent(linkData.s2) : null
-              ].filter(Boolean);
-
-              loadViewer(streams);
-              _buildModeSelector(streams);
-            }
-          } else {
-            expiredView.classList.remove('hidden');
-          }
-        } catch (e) {
-          console.error('Error checking link:', e);
-          // Fallback: cargar desde s1/s2
-          const streams = [
-            s1 ? decodeURIComponent(s1) : null,
-            s2 ? decodeURIComponent(s2) : null,
-            s3 ? decodeURIComponent(s3) : null,
-            s4 ? decodeURIComponent(s4) : null,
-            s5 ? decodeURIComponent(s5) : null,
-          ].filter(Boolean);
-          if (streams.length > 0) {
-            loadViewer(streams);
-            _buildModeSelector(streams);
-          } else {
-            adminView.classList.remove('hidden');
-          }
-        }
-      } else if (s1 || s2 || s3 || s4 || s5) {
-        const streams = [
-          s1 ? decodeURIComponent(s1) : null,
-          s2 ? decodeURIComponent(s2) : null,
-          s3 ? decodeURIComponent(s3) : null,
-          s4 ? decodeURIComponent(s4) : null,
-          s5 ? decodeURIComponent(s5) : null,
-        ].filter(Boolean);
-        loadViewer(streams);
-        _buildModeSelector(streams);
+          const lSnap = await getDocs(linksCol);
+          const linkDoc = lSnap.docs.find(d => d.id === linkId);
+          if (linkDoc) playLegacyLink(linkDoc.data());
+          else if (firstParamStream) playSingle(firstParamStream);
+          else showExpired();
+        } catch (e) { console.error('Error de ruteo (linkId):', e); firstParamStream ? playSingle(firstParamStream) : startHome(); }
+      } else if (firstParamStream) {
+        playSingle(firstParamStream);
       } else {
-        adminView.classList.remove('hidden');
+        startHome();
       }
 
-      // Función para resetear el modo de edición
-      const resetEditMode = () => {
-        editingLinkId = null;
-        btnGenerate.innerHTML = `
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-9 h-9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
-            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
-          </svg>
-          🚀 Generar Enlace y Guardar
-        `;
-        btnGenerate.classList.add('pulse-glow');
-        btnCancelEdit.classList.add('hidden');
-        linkNameInput.value = '';
-        slugPreview.textContent = '';
-      };
-      
-      // Botón de cancelar edición
-      btnCancelEdit.addEventListener('click', resetEditMode);
-      
-      // Generar/Actualizar enlace y guardar
-      btnGenerate.addEventListener('click', async () => {
-        const s1Value = input1.value.trim();
-        const s2Value = input2.value.trim();
-
-        // Usar nombre manual o generar uno automático
-        let finalLinkName = linkNameInput.value.trim();
-        if (!finalLinkName) {
-          const linkNameParts = [];
-          if (stream1Select.selectedIndex > 0) linkNameParts.push(stream1Select.options[stream1Select.selectedIndex].text.replace('⚽ ', ''));
-          if (stream2Select.selectedIndex > 0) linkNameParts.push(stream2Select.options[stream2Select.selectedIndex].text.replace('⚽ ', ''));
-          finalLinkName = linkNameParts.length > 0 ? linkNameParts.join(' vs ') : 'partido';
-        }
-
-        // Slug corto y escribible; si queda vacío usar un código aleatorio
-        let slugValue = slugify(finalLinkName);
-        if (!slugValue) slugValue = Math.random().toString(36).slice(2, 7);
-
-        // URL corta: https://.../tv2/mar-vs-arg
-        const shortUrl = window.location.origin + getBaseDir() + slugValue;
-        urlOutput.value = shortUrl;
-        resultBox.classList.remove('hidden');
-
-        // Guardar en Firestore con expiración
-        const expirationHours = parseInt(expirationSelect.value);
-        const expiresAt = new Date();
-        expiresAt.setHours(expiresAt.getHours() + expirationHours);
-
-        const payload = {
-          name: finalLinkName,
-          slug: slugValue,
-          s1: s1Value || null,
-          s2: s2Value || null,
-          url: shortUrl,
-          expiresAt: expiresAt,
-          expirationHours: expirationHours
-        };
-
-        try {
-          // Reutilizar el doc si estamos editando o si el slug ya existe (evita duplicados)
-          let targetId = editingLinkId;
-          if (!targetId) {
-            const snap = await getDocs(linksCol);
-            const existing = snap.docs.find(d => d.data().slug === slugValue);
-            if (existing) targetId = existing.id;
-          }
-
-          if (targetId) {
-            await updateDoc(doc(db, "generatedLinks", targetId), payload);
-            if (editingLinkId) {
-              alert('Enlace actualizado correctamente!');
-              resetEditMode();
-            }
-          } else {
-            await addDoc(linksCol, { ...payload, createdAt: new Date() });
-          }
-        } catch (e) {
-          console.error('Error saving link:', e);
-        }
-
-        btnCopy.classList.remove('bg-green-500');
-        btnCopy.classList.add('bg-gradient-to-r', 'from-blue-600', 'to-indigo-600');
-        textCopy.textContent = '📋 Copiar';
-        iconCopy.innerHTML = '<rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>';
-      });
-
-      btnCopy.addEventListener('click', () => {
-        const copySuccess = () => {
-          btnCopy.classList.remove('bg-gradient-to-r', 'from-blue-600', 'to-indigo-600');
-          btnCopy.classList.add('bg-green-600');
-          textCopy.textContent = '✅ ¡Copiado!';
-          iconCopy.innerHTML = '<path d="M20 6 9 17l-5-5"/>';
-          
-          setTimeout(() => {
-            btnCopy.classList.remove('bg-green-600');
-            btnCopy.classList.add('bg-gradient-to-r', 'from-blue-600', 'to-indigo-600');
-            textCopy.textContent = '📋 Copiar';
-            iconCopy.innerHTML = '<rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>';
-          }, 3000);
-        };
-
-        if (navigator.clipboard && window.isSecureContext) {
-          navigator.clipboard.writeText(urlOutput.value).then(copySuccess);
-        } else {
-          urlOutput.select();
-          document.execCommand('copy');
-          copySuccess();
-        }
-      });
-
-      btnWhatsapp.addEventListener('click', () => {
-        const message = `¡Mira los partidos del Mundial! 🏆⚽\n\n${urlOutput.value}`;
-        window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
-      });
-
-      // Funcionalidad de Pantalla Completa
+      // ══════════════════════════════════════════════════════════
+      //  PANTALLA COMPLETA
+      // ══════════════════════════════════════════════════════════
       const iconFullscreen = document.getElementById('icon-fullscreen');
       const textFullscreen = document.getElementById('text-fullscreen');
-
       const updateFullscreenUI = () => {
-        const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
-        
-        if (isFullscreen) {
+        const isF = document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
+        if (isF) {
           iconFullscreen.innerHTML = '<path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/>';
           textFullscreen.textContent = 'Salir';
         } else {
@@ -2154,29 +455,14 @@
           textFullscreen.textContent = 'Pantalla Completa';
         }
       };
-
       btnFullscreen.addEventListener('click', () => {
         const elem = viewerView;
-        
         if (document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement) {
-          if (document.exitFullscreen) {
-            document.exitFullscreen();
-          } else if (document.webkitExitFullscreen) {
-            document.webkitExitFullscreen();
-          } else if (document.msExitFullscreen) {
-            document.msExitFullscreen();
-          }
+          (document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen).call(document);
         } else {
-          if (elem.requestFullscreen) {
-            elem.requestFullscreen();
-          } else if (elem.webkitRequestFullscreen) {
-            elem.webkitRequestFullscreen();
-          } else if (elem.msRequestFullscreen) {
-            elem.msRequestFullscreen();
-          }
+          (elem.requestFullscreen || elem.webkitRequestFullscreen || elem.msRequestFullscreen).call(elem);
         }
       });
-
       document.addEventListener('fullscreenchange', updateFullscreenUI);
       document.addEventListener('webkitfullscreenchange', updateFullscreenUI);
       document.addEventListener('msfullscreenchange', updateFullscreenUI);
