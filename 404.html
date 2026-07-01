@@ -7,14 +7,14 @@
   <script>
     // GitHub Pages sirve este 404.html cuando la ruta no existe como archivo.
     // Ej: el usuario escribe  https://ujose6018-pixel.github.io/tv2/mar-vs-arg
-    // Aquí extraemos el slug ("mar-vs-arg") y redirigimos a index.html?slug=mar-vs-arg
+    // Extraemos el slug ("mar-vs-arg") y lo abrimos en el REPRODUCTOR aislado.
     (function () {
       var parts = location.pathname.split('/').filter(Boolean); // ['tv2', 'mar-vs-arg']
       var repo = parts[0] || '';                                // 'tv2'
       var slug = parts.slice(1).join('-');                      // 'mar-vs-arg'
       var base = repo ? '/' + repo + '/' : '/';
       if (slug) {
-        location.replace(base + '?slug=' + encodeURIComponent(slug));
+        location.replace(base + 'reproductor.html?slug=' + encodeURIComponent(slug));
       } else {
         location.replace(base);
       }

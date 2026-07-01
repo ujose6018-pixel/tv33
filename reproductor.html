@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reproductor · TV Mundial 2026</title>
+  <link rel="icon" href="https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/2026_FIFA_World_Cup_emblem.svg/1920px-2026_FIFA_World_Cup_emblem.svg.png" type="image/png">
+
+  <!-- Firebase (lo único externo; necesario para saber qué señal transmite el admin) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
+    import { getFirestore } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
+    const firebaseConfig = {
+      apiKey: "AIzaSyAp1IAukg9FGiOHGsRvvapN6QYzLOYDrOY",
+      authDomain: "tvmundial-b190a.firebaseapp.com",
+      projectId: "tvmundial-b190a",
+      storageBucket: "tvmundial-b190a.firebasestorage.app",
+      messagingSenderId: "324034223779",
+      appId: "1:324034223779:web:49e679e822c4ae99762916"
+    };
+    const app = initializeApp(firebaseConfig);
+    getFirestore(app);
+  </script>
+
+  <!-- CSS propio y mínimo. SIN Tailwind, SIN animaciones de fondo, SIN blur:
+       página ligerísima para Smart TV. Solo el video + 2 botones. -->
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; height: 100%; }
+    body { background: #000; color: #fff; font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
+    .hidden { display: none !important; }
+
+    #viewer-view { position: fixed; inset: 0; width: 100%; height: 100%; background: #000; }
+    #video-container { width: 100%; height: 100%; }
+    .player-wrap { position: relative; width: 100%; height: 100%; }
+    .player-wrap > iframe, .player-wrap > video {
+      position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: #000;
+    }
+
+    .viewer-btn {
+      position: absolute; z-index: 50; display: flex; align-items: center; justify-content: center;
+      width: 44px; height: 44px; border: none; cursor: pointer;
+      background: rgba(0,0,0,0.72); color: #fff; border-radius: 12px; opacity: 0.55;
+      transition: opacity .2s; box-shadow: 0 3px 14px rgba(0,0,0,0.5); text-decoration: none;
+    }
+    .viewer-btn:hover, .viewer-btn:focus { opacity: 0.95; }
+    .viewer-btn svg { width: 22px; height: 22px; }
+    #btn-home { top: 16px; left: 16px; }
+    #btn-fullscreen { bottom: 16px; left: 16px; }
+
+    #match-overlay { position: fixed; inset: 0; z-index: 40; padding: 24px; text-align: center;
+      background: linear-gradient(135deg,#020617,#0f172a); display: flex; align-items: center; justify-content: center; }
+    .mo-badge { display:inline-block; padding:6px 16px; border-radius:999px; font-weight:700; font-size:14px; margin-bottom:16px;
+      background: rgba(245,158,11,0.18); color:#fcd34d; }
+    .mo-time { font-size: 26px; font-weight: 900; margin: 6px 0; }
+    .mo-note { color:#94a3b8; font-size:14px; margin-top:12px; }
+    .mo-btn { display:inline-block; margin-top:28px; padding:12px 30px; border-radius:16px; font-weight:700;
+      color:#0f172a; text-decoration:none; background: linear-gradient(135deg,#f59e0b,#fcd34d); }
+
+    #expired-view { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; padding: 24px;
+      background: linear-gradient(135deg,#7f1d1d,#020617); text-align: center; }
+    .exp-card { background: rgba(15,23,42,0.92); border:1px solid rgba(239,68,68,0.3); border-radius: 24px; padding: 40px; max-width: 420px; }
+    .exp-card h2 { color:#f87171; font-size:32px; font-weight:900; margin:0 0 10px; }
+    .exp-card p { color:#cbd5e1; margin:0 0 24px; }
+    .exp-btn { display:inline-block; padding:14px 32px; border-radius:16px; font-weight:700; color:#0f172a; text-decoration:none; background: linear-gradient(135deg,#f59e0b,#fcd34d); }
+  </style>
+</head>
+<body>
+
+  <!-- Visor (una sola señal) -->
+  <div id="viewer-view" class="hidden">
+    <a href="index.html" id="btn-home" class="viewer-btn" title="Inicio">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+    </a>
+    <button id="btn-fullscreen" class="viewer-btn" title="Pantalla completa">
+      <svg id="icon-fullscreen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
+    </button>
+    <div id="video-container"></div>
+  </div>
+
+  <!-- Overlay pre-partido / finalizado -->
+  <div id="match-overlay" class="hidden"><div id="mo-content"></div></div>
+
+  <!-- Enlace expirado / no disponible -->
+  <div id="expired-view" class="hidden">
+    <div class="exp-card">
+      <div style="font-size:56px;margin-bottom:12px;">⏳</div>
+      <h2>¡Enlace no disponible!</h2>
+      <p>Este enlace ha caducado o no existe</p>
+      <a href="index.html" class="exp-btn">🏠 Volver al Inicio</a>
+    </div>
+  </div>
+
+  <script type="module">
+    import { getFirestore, collection, getDocs, onSnapshot, doc } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const db = getFirestore();
+      const matchesCol = collection(db, "matches");
+      const linksCol = collection(db, "generatedLinks");
+
+      const $ = id => document.getElementById(id);
+      const viewerView = $('viewer-view');
+      const videoContainer = $('video-container');
+      const expiredView = $('expired-view');
+      const matchOverlay = $('match-overlay');
+      const moContent = $('mo-content');
+      const btnFullscreen = $('btn-fullscreen');
+
+      const safeDecode = (v) => { try { return decodeURIComponent(v); } catch (_) { return v; } };
+      const getBaseDir = () => { const p = window.location.pathname; return p.substring(0, p.lastIndexOf('/') + 1); };
+      const esc = (s) => (s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+      const isToday = (d) => { const n = new Date(); return d.getDate()===n.getDate() && d.getMonth()===n.getMonth() && d.getFullYear()===n.getFullYear(); };
+      const timeLabel = (m) => {
+        if (!m.kickoff?.seconds) return '';
+        const d = new Date(m.kickoff.seconds * 1000);
+        const hm = new Intl.DateTimeFormat('es-ES', { hour:'2-digit', minute:'2-digit' }).format(d);
+        return isToday(d) ? 'Hoy ' + hm : new Intl.DateTimeFormat('es-ES', { day:'2-digit', month:'2-digit' }).format(d) + ' ' + hm;
+      };
+
+      // Bloquear popups (ads de iframes)
+      window.open = function () { return null; };
+
+      // ── Reproductor de una sola señal ──
+      let _hlsReady = false, _hlsQ = [];
+      function _ensureHLS(cb) {
+        if (_hlsReady) { cb(); return; }
+        _hlsQ.push(cb);
+        if (!window._hlsLoading) {
+          window._hlsLoading = true;
+          const s = document.createElement('script');
+          s.src = 'https://cdn.jsdelivr.net/npm/hls.js@latest/dist/hls.min.js';
+          s.onload = () => { _hlsReady = true; _hlsQ.forEach(f => f()); _hlsQ = []; };
+          document.head.appendChild(s);
+        }
+      }
+
+      function detectStreamType(url) {
+        if (/youtube\.com|youtube-nocookie\.com|youtu\.be/.test(url)) return 'youtube';
+        if (/twitch\.tv/.test(url)) return 'twitch';
+        if (/\.(m3u8|m3u|mp4|ts|webm)(\?|$)/i.test(url)) return 'direct';
+        return 'iframe';
+      }
+
+      function mountSingle(url) {
+        videoContainer.innerHTML = '';
+        const wrap = document.createElement('div');
+        wrap.className = 'player-wrap';
+        const type = detectStreamType(url);
+
+        if (type === 'youtube') {
+          let embed = url
+            .replace(/youtube\.com\/watch\?v=([^&]+)/, 'youtube.com/embed/$1')
+            .replace(/youtu\.be\/([^?]+)/, 'youtube.com/embed/$1')
+            .replace(/youtube-nocookie\.com\/watch\?v=([^&]+)/, 'youtube-nocookie.com/embed/$1');
+          embed += (embed.includes('?') ? '&' : '?') + 'autoplay=1&playsinline=1';
+          wrap.innerHTML = `<iframe src="${esc(embed)}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+
+        } else if (type === 'twitch') {
+          let channel = '', video = '';
+          try {
+            const u = new URL(url.startsWith('http') ? url : 'https://' + url);
+            const vP = u.searchParams.get('video'), chP = u.searchParams.get('channel');
+            const pp = u.pathname.split('/').filter(Boolean);
+            if (vP) video = vP;
+            else if (chP) channel = chP;
+            else if (pp[0] === 'videos' && pp[1]) video = pp[1];
+            else if (pp[0]) channel = pp[0];
+          } catch (_) {}
+          const parent = window.location.hostname || 'localhost';
+          let src = 'https://player.twitch.tv/?parent=' + parent + '&autoplay=true';
+          if (video) src += '&video=' + video; else if (channel) src += '&channel=' + channel;
+          wrap.innerHTML = `<iframe src="${esc(src)}" allowfullscreen allow="autoplay; fullscreen"></iframe>`;
+
+        } else if (type === 'direct') {
+          const v = document.createElement('video');
+          v.autoplay = true; v.controls = true; v.setAttribute('playsinline', '');
+          wrap.appendChild(v);
+          if (/\.m3u8?(\?|$)/i.test(url)) {
+            _ensureHLS(() => {
+              if (window.Hls && Hls.isSupported()) { const hls = new Hls(); hls.loadSource(url); hls.attachMedia(v); }
+              else if (v.canPlayType('application/vnd.apple.mpegurl')) { v.src = url; }
+            });
+          } else { v.src = url; }
+
+        } else {
+          wrap.innerHTML = `<iframe src="${esc(url)}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>`;
+        }
+        videoContainer.appendChild(wrap);
+      }
+
+      function stopPlayer() { videoContainer.innerHTML = ''; }
+      function showViewer() { matchOverlay.classList.add('hidden'); expiredView.classList.add('hidden'); viewerView.classList.remove('hidden'); }
+      function showMatchOverlay(html) {
+        stopPlayer(); currentSignalUrl = null;
+        viewerView.classList.add('hidden'); expiredView.classList.add('hidden');
+        moContent.innerHTML = html; matchOverlay.classList.remove('hidden');
+      }
+      function showExpired() { stopPlayer(); viewerView.classList.add('hidden'); matchOverlay.classList.add('hidden'); expiredView.classList.remove('hidden'); }
+
+      // ── Visor de partido (la señal la decide el admin) ──
+      let currentSignalUrl = null;
+
+      function teamsBlock(m) {
+        const badge = (name, logo) => `
+          <div style="display:flex;flex-direction:column;align-items:center;gap:8px;width:110px;">
+            ${logo ? `<img src="${esc(logo)}" style="width:64px;height:64px;object-fit:contain;" onerror="this.style.display='none'">` : `<div style="width:64px;height:64px;border-radius:50%;background:#334155;display:flex;align-items:center;justify-content:center;font-size:26px;">⚽</div>`}
+            <span style="font-weight:700;font-size:14px;text-align:center;">${esc(name || '')}</span>
+          </div>`;
+        return `<div style="display:flex;align-items:center;justify-content:center;gap:16px;">${badge(m.home, m.homeLogo)}<span style="font-size:22px;font-weight:900;color:#64748b;">VS</span>${badge(m.away, m.awayLogo)}</div>`;
+      }
+
+      function applyMatchState(m) {
+        document.title = (m.title || 'Partido') + ' · En Vivo';
+
+        if (m.status === 'finished') {
+          showMatchOverlay(`
+            <div style="max-width:520px;">
+              <div style="font-size:56px;margin-bottom:12px;">🏁</div>
+              <h2 style="font-size:28px;font-weight:900;margin:0 0 8px;color:#e2e8f0;">Transmisión finalizada</h2>
+              <p style="color:#94a3b8;margin:0 0 24px;">${esc(m.title || '')}</p>
+              ${teamsBlock(m)}
+              <a href="index.html" class="mo-btn">🏠 Ver otros partidos</a>
+            </div>`);
+          return;
+        }
+        if (m.status !== 'live') {
+          showMatchOverlay(`
+            <div style="max-width:520px;">
+              <span class="mo-badge">🕐 PRÓXIMAMENTE</span>
+              <div style="margin-bottom:18px;">${teamsBlock(m)}</div>
+              <p style="color:#94a3b8;font-size:14px;margin:0;">${esc(m.competition || '')}</p>
+              <p class="mo-time">${timeLabel(m) || 'Muy pronto'}</p>
+              <p class="mo-note">La transmisión comenzará pronto. Esta página se actualiza sola. ⚡</p>
+              <a href="index.html" class="mo-btn">🏠 Ver otros partidos</a>
+            </div>`);
+          return;
+        }
+
+        const signals = m.signals || [];
+        const sig = signals[m.activeSignal || 0] || signals[0];
+        if (!sig || !sig.url) {
+          showMatchOverlay(`
+            <div style="max-width:520px;">
+              <div style="font-size:56px;margin-bottom:12px;">📡</div>
+              <h2 style="font-size:24px;font-weight:900;color:#e2e8f0;">Señal no disponible</h2>
+              <p style="color:#94a3b8;margin-top:8px;">El administrador aún no ha asignado una señal.</p>
+              <a href="index.html" class="mo-btn">🏠 Ver otros partidos</a>
+            </div>`);
+          return;
+        }
+        showViewer();
+        if (currentSignalUrl !== sig.url) { currentSignalUrl = sig.url; mountSingle(sig.url); }
+      }
+
+      function openMatch(matchId) {
+        onSnapshot(doc(db, 'matches', matchId), (snap) => {
+          if (!snap.exists()) { showMatchOverlay(`<div style="max-width:520px;"><div style="font-size:56px;">❌</div><h2 style="font-size:24px;font-weight:900;color:#e2e8f0;">Partido no encontrado</h2><a href="index.html" class="mo-btn">🏠 Ver otros partidos</a></div>`); return; }
+          applyMatchState(snap.data());
+        });
+      }
+
+      // ── Enlaces legacy (una sola señal) ──
+      function playSingle(url) {
+        if (!url) { showExpired(); return; }
+        currentSignalUrl = url; showViewer(); mountSingle(url);
+      }
+      function playLegacyLink(linkData) {
+        const expiresAt = new Date(linkData.expiresAt.seconds * 1000);
+        if (new Date() > expiresAt) { showExpired(); return; }
+        playSingle((linkData.s1 && safeDecode(linkData.s1)) || (linkData.s2 && safeDecode(linkData.s2)) || null);
+      }
+
+      // ── Ruteo ──
+      const params = new URLSearchParams(window.location.search);
+      const slug = params.get('slug');
+      const s1 = params.get('s1'), s2 = params.get('s2');
+      const linkId = params.get('linkId');
+      const firstParamStream = (s1 && safeDecode(s1)) || (s2 && safeDecode(s2)) || null;
+
+      if (slug) {
+        try {
+          const mSnap = await getDocs(matchesCol);
+          const matchDoc = mSnap.docs.find(d => d.data().slug === slug);
+          if (matchDoc) {
+            try { history.replaceState(null, '', getBaseDir() + slug); } catch (_) {}
+            openMatch(matchDoc.id);
+          } else {
+            const lSnap = await getDocs(linksCol);
+            const linkData = lSnap.docs.map(d => d.data()).filter(d => d.slug === slug)
+              .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0))[0];
+            if (linkData) { try { history.replaceState(null, '', getBaseDir() + slug); } catch (_) {} playLegacyLink(linkData); }
+            else showExpired();
+          }
+        } catch (e) { console.error('Error de ruteo (slug):', e); showExpired(); }
+      } else if (linkId) {
+        try {
+          const lSnap = await getDocs(linksCol);
+          const linkDoc = lSnap.docs.find(d => d.id === linkId);
+          if (linkDoc) playLegacyLink(linkDoc.data());
+          else if (firstParamStream) playSingle(firstParamStream);
+          else showExpired();
+        } catch (e) { console.error('Error de ruteo (linkId):', e); firstParamStream ? playSingle(firstParamStream) : showExpired(); }
+      } else if (firstParamStream) {
+        playSingle(firstParamStream);
+      } else {
+        // Sin nada que reproducir → a la lista
+        window.location.replace('index.html');
+      }
+
+      // ── Pantalla completa ──
+      const iconFullscreen = $('icon-fullscreen');
+      const updateFullscreenUI = () => {
+        const isF = document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
+        iconFullscreen.innerHTML = isF
+          ? '<path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/>'
+          : '<path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/>';
+      };
+      btnFullscreen.addEventListener('click', () => {
+        const elem = viewerView;
+        if (document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement) {
+          (document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen).call(document);
+        } else {
+          (elem.requestFullscreen || elem.webkitRequestFullscreen || elem.msRequestFullscreen).call(elem);
+        }
+      });
+      document.addEventListener('fullscreenchange', updateFullscreenUI);
+      document.addEventListener('webkitfullscreenchange', updateFullscreenUI);
+      document.addEventListener('msfullscreenchange', updateFullscreenUI);
+    });
+  </script>
+</body>
+</html>
