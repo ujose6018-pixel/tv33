@@ -64,6 +64,31 @@
     .exp-card h2 { color:#f87171; font-size:32px; font-weight:900; margin:0 0 10px; }
     .exp-card p { color:#cbd5e1; margin:0 0 24px; }
     .exp-btn { display:inline-block; padding:14px 32px; border-radius:16px; font-weight:700; color:#0f172a; text-decoration:none; background: linear-gradient(135deg,#f59e0b,#fcd34d); }
+
+    /* ── Pantalla de despedida (partido finalizado) ── */
+    .fin-wrap { max-width: 560px; width: 100%; }
+    .fin-thanks { color:#9fb0e6; font-size:14px; margin: 2px 0 14px; }
+    .fin-board { display:flex; align-items:center; justify-content:center; gap:16px; margin: 6px 0 4px; }
+    .fin-team { display:flex; flex-direction:column; align-items:center; gap:8px; width:120px; }
+    .fin-team img { width:60px; height:60px; border-radius:50%; object-fit:cover; background:#223; }
+    .fin-team .noimg { width:60px; height:60px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:26px; background:#223; }
+    .fin-team span { font-weight:700; font-size:14px; text-align:center; }
+    .fin-score { font-size:44px; font-weight:900; letter-spacing:2px; font-variant-numeric:tabular-nums; }
+    .fin-score i { color:#64748b; font-style:normal; margin:0 8px; }
+    .fin-comp { color:#94a3b8; font-size:13px; margin-top:4px; }
+    .fin-stats { margin: 16px auto 0; max-width: 380px; text-align:left; }
+    .stat-row { display:grid; grid-template-columns: 46px 1fr 46px; align-items:center; padding:7px 0; border-bottom:1px solid rgba(255,255,255,0.08); font-size:13px; }
+    .stat-row b { text-align:center; color:#cbd5e1; font-weight:600; }
+    .stat-row span { color:#fff; font-weight:800; }
+    .stat-row span:last-child { text-align:right; }
+    .next-card { margin-top: 22px; background: rgba(30,46,140,0.35); border:1px solid rgba(99,120,240,0.35); border-radius:16px; padding:14px 16px; }
+    .next-card .lbl { color:#9fb0e6; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; }
+    .next-card .nm { font-weight:800; font-size:16px; margin:4px 0; }
+    .next-card .tm { color:#9fb0e6; font-size:13px; }
+    .next-actions { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top:12px; }
+    .next-actions a { flex:1; min-width:130px; text-align:center; padding:11px 14px; border-radius:12px; font-weight:800; font-size:14px; }
+    .btn-primary { background: linear-gradient(135deg,#2563eb,#3b82f6); color:#fff; }
+    .btn-remind { background: rgba(255,255,255,0.12); color:#fff; border:1px solid rgba(255,255,255,0.2); }
   </style>
 </head>
 <body>
@@ -230,6 +255,81 @@
         el.textContent = ko ? formatCountdown(ko - Date.now()) : '';
       }
 
+      // ── Cierre post-partido / despedida (solo lee de Firebase) ──
+      const closesAtMillis = (m) => (m.closesAt?.seconds ? m.closesAt.seconds * 1000 : null);
+      function isFinished(m) {
+        if (m.status === 'finished') return true;
+        const ca = closesAtMillis(m);
+        return ca != null && Date.now() > ca;   // pasó la ventana de gracia
+      }
+      let closeTimer = null;
+      const clearCloseTimer = () => { if (closeTimer) { clearTimeout(closeTimer); closeTimer = null; } };
+      const dtShort = (m) => {
+        if (!m.kickoff?.seconds) return '';
+        const d = new Date(m.kickoff.seconds * 1000);
+        const p = n => String(n).padStart(2, '0');
+        return `${d.getDate()}/${d.getMonth() + 1} ${p(d.getHours())}:${p(d.getMinutes())}`;
+      };
+      function gcalUrl(m) {
+        if (!m.kickoff?.seconds) return null;
+        const start = new Date(m.kickoff.seconds * 1000);
+        const end = new Date(start.getTime() + 2 * 3600000);
+        const fmt = d => d.toISOString().replace(/[-:]|\.\d{3}/g, '');
+        return 'https://calendar.google.com/calendar/render?action=TEMPLATE'
+          + '&text=' + encodeURIComponent(m.title || 'Partido')
+          + '&dates=' + fmt(start) + '/' + fmt(end)
+          + '&details=' + encodeURIComponent('Míralo en vivo en la plataforma');
+      }
+      function finTeam(name, logo) {
+        return `<div class="fin-team">
+          ${logo ? `<img src="${esc(logo)}" onerror="this.outerHTML='<div class=&quot;noimg&quot;>⚽</div>'">` : `<div class="noimg">⚽</div>`}
+          <span>${esc(name || '')}</span></div>`;
+      }
+      async function showFinishedScreen(m) {
+        const fs = m.finalScore || {};
+        const hasScore = fs.home != null && fs.away != null && fs.home !== '' && fs.away !== '';
+        const scoreHtml = hasScore
+          ? `<div class="fin-board">${finTeam(m.home, m.homeLogo)}<div class="fin-score">${esc(String(fs.home))}<i>-</i>${esc(String(fs.away))}</div>${finTeam(m.away, m.awayLogo)}</div>`
+          : `<div style="margin:8px 0;">${teamsBlock(m)}</div>`;
+        const stats = Array.isArray(m.stats) ? m.stats.filter(s => s && s.label) : [];
+        const statsHtml = stats.length
+          ? `<div class="fin-stats">${stats.map(s => `<div class="stat-row"><span>${esc(String(s.home ?? ''))}</span><b>${esc(s.label)}</b><span>${esc(String(s.away ?? ''))}</span></div>`).join('')}</div>`
+          : '';
+        showMatchOverlay(`
+          <div class="fin-wrap">
+            <div style="font-size:52px;margin-bottom:6px;">🏁</div>
+            <h2 style="font-size:26px;font-weight:900;margin:0;color:#e2e8f0;">El partido ha finalizado</h2>
+            <p class="fin-thanks">¡Gracias por verlo a través de nuestra plataforma! 🙌</p>
+            ${scoreHtml}
+            <div class="fin-comp">${esc(m.competition || '')}${m.round ? ' · ' + esc(m.round) : ''}</div>
+            ${statsHtml}
+            <div id="next-slot"></div>
+            <a href="index.html" class="mo-btn" style="margin-top:22px;">🏠 Volver al inicio</a>
+          </div>`);
+        // Próximo partido: UNA sola consulta (sin sondeo en segundo plano)
+        try {
+          const snap = await getDocs(matchesCol);
+          const now = Date.now();
+          const next = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+            .filter(x => x.slug !== m.slug && x.status !== 'finished' && x.kickoff?.seconds && x.kickoff.seconds * 1000 > now)
+            .sort((a, b) => a.kickoff.seconds - b.kickoff.seconds)[0];
+          const slot = document.getElementById('next-slot');
+          if (slot && next) {
+            const gc = gcalUrl(next);
+            slot.innerHTML = `
+              <div class="next-card">
+                <div class="lbl">▶️ Próximo partido</div>
+                <div class="nm">${esc(next.title || [next.home, next.away].filter(Boolean).join(' vs '))}</div>
+                <div class="tm">${esc(next.competition || '')} · 🕐 ${esc(dtShort(next))}</div>
+                <div class="next-actions">
+                  <a class="btn-primary" href="reproductor.html?slug=${encodeURIComponent(next.slug)}">Ver partido</a>
+                  ${gc ? `<a class="btn-remind" href="${gc}" target="_blank" rel="noopener">🔔 Recordarme</a>` : ''}
+                </div>
+              </div>`;
+          }
+        } catch (_) {}
+      }
+
       function teamsBlock(m) {
         const badge = (name, logo) => `
           <div style="display:flex;flex-direction:column;align-items:center;gap:8px;width:110px;">
@@ -241,20 +341,12 @@
 
       function applyMatchState(m) {
         clearCountdown();
+        clearCloseTimer();
         window._m = m;
         document.title = (m.title || 'Partido') + ' · En Vivo';
 
-        if (m.status === 'finished') {
-          showMatchOverlay(`
-            <div style="max-width:520px;">
-              <div style="font-size:56px;margin-bottom:12px;">🏁</div>
-              <h2 style="font-size:28px;font-weight:900;margin:0 0 8px;color:#e2e8f0;">Transmisión finalizada</h2>
-              <p style="color:#94a3b8;margin:0 0 24px;">${esc(m.title || '')}</p>
-              ${teamsBlock(m)}
-              <a href="index.html" class="mo-btn">🏠 Ver otros partidos</a>
-            </div>`);
-          return;
-        }
+        // ¿Partido finalizado (o pasó la ventana de gracia)? → despedida
+        if (isFinished(m)) { showFinishedScreen(m); return; }
 
         // ¿Toca reproducir? (admin en vivo, o faltan <= AUTO_PLAY_MIN min)
         if (shouldPlay(m)) {
@@ -272,6 +364,9 @@
           }
           showViewer();
           if (currentSignalUrl !== sig.url) { currentSignalUrl = sig.url; mountSingle(sig.url); }
+          // Cierre programado: un solo temporizador (no es sondeo continuo)
+          const ca = closesAtMillis(m);
+          if (ca && ca > Date.now()) closeTimer = setTimeout(() => applyMatchState(window._m), ca - Date.now() + 500);
           return;
         }
 
