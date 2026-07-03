@@ -164,20 +164,6 @@
                 <p id="m-slug-preview" class="text-sm text-pink-200/80 break-all font-mono min-h-[1.25rem]"></p>
               </div>
 
-              <!-- Auto-finalizar con TheSportsDB (opcional) -->
-              <div class="bg-slate-800/40 rounded-3xl p-5 border border-blue-500/30 space-y-3">
-                <div>
-                  <h4 class="text-base font-bold text-blue-300">🤖 Auto-finalizar <span class="text-slate-500 font-normal text-sm">(opcional)</span></h4>
-                  <p class="text-slate-400 text-xs">Vincula el partido con TheSportsDB: cuando el marcador diga "Finalizado", el stream se cierra solo tras 10 min.</p>
-                </div>
-                <div class="flex gap-2">
-                  <input id="tsdb-query" type="text" placeholder="Ej: Spain vs Austria (en inglés)" class="flex-1 bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-3 text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500">
-                  <button id="tsdb-search" type="button" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 rounded-xl text-sm">🔎 Buscar</button>
-                </div>
-                <div id="tsdb-results" class="space-y-2"></div>
-                <p id="tsdb-linked" class="text-sm text-emerald-300 hidden"></p>
-              </div>
-
               <!-- Acciones -->
               <div class="flex flex-col sm:flex-row gap-3">
                 <button id="m-save" class="flex-1 btn-gold text-slate-900 font-black text-lg py-5 px-6 rounded-3xl shadow-2xl pulse-glow flex items-center justify-center gap-3">
@@ -286,8 +272,7 @@
       const streamsCol = collection(db, "streams");
       const linksCol = collection(db, "generatedLinks");
       const matchesCol = collection(db, "matches");
-      const CLOSE_DELAY_MIN = 10;   // minutos de gracia tras finalizar antes de cerrar el stream
-      let currentMatches = [];      // último snapshot de partidos (para timers)
+      const AUTO_LIVE_MIN = 10;   // un partido se muestra "EN VIVO" 10 min antes de su hora
 
       // ── Helpers ───────────────────────────────────────────────
       const $ = id => document.getElementById(id);
@@ -401,48 +386,14 @@
       };
       ['m-home', 'm-away', 'm-slug'].forEach(id => $(id).addEventListener('input', updateMatchSlug));
 
-      // ── TheSportsDB (auto-finalizar) ──
-      const TSDB_KEY = '3';
-      const TSDB_FINISHED = /^(FT|AET|PEN|AP|AW|FT_PEN|Match Finished|Finished)/i;
-      let tsdbEventId = null;
-      function setTsdbLinked(text) {
-        const el = $('tsdb-linked');
-        if (text) { el.textContent = text; el.classList.remove('hidden'); }
-        else { el.textContent = ''; el.classList.add('hidden'); }
-      }
-      $('tsdb-search').addEventListener('click', async () => {
-        const q = ($('tsdb-query').value.trim() || `${$('m-home').value.trim()} vs ${$('m-away').value.trim()}`).trim();
-        const res = $('tsdb-results');
-        if (!q || q === 'vs') { res.innerHTML = '<p class="text-amber-300 text-xs">Escribe los equipos (en inglés).</p>'; return; }
-        res.innerHTML = '<p class="text-slate-400 text-xs">Buscando…</p>';
-        try {
-          const term = q.replace(/\s+vs\.?\s+/i, '_vs_').replace(/\s+/g, '_');
-          const j = await (await fetch(`https://www.thesportsdb.com/api/v1/json/${TSDB_KEY}/searchevents.php?e=${encodeURIComponent(term)}`)).json();
-          const events = (j.event || []).slice(0, 6);
-          if (!events.length) { res.innerHTML = '<p class="text-amber-300 text-xs">Sin resultados. Prueba con nombres en inglés (ej: Spain vs Austria).</p>'; return; }
-          res.innerHTML = events.map((ev, i) => `
-            <button type="button" data-i="${i}" class="tsdb-pick w-full text-left bg-slate-900/70 hover:bg-slate-700 border border-slate-700 rounded-xl px-3 py-2 text-xs">
-              <span class="text-white font-bold">${esc(ev.strEvent || '')}</span>
-              <span class="text-slate-400 block">${esc(ev.strLeague || '')} · ${esc(ev.dateEvent || '')} · ${esc(ev.strStatus || 'NS')}</span>
-            </button>`).join('');
-          res.querySelectorAll('.tsdb-pick').forEach(btn => btn.addEventListener('click', () => {
-            const ev = events[Number(btn.dataset.i)];
-            tsdbEventId = ev.idEvent;
-            setTsdbLinked(`✅ Vinculado: ${ev.strEvent || ev.idEvent} (${ev.dateEvent || ''})`);
-            res.innerHTML = '';
-          }));
-        } catch (e) { console.error(e); res.innerHTML = '<p class="text-red-400 text-xs">Error al buscar. Revisa tu conexión.</p>'; }
-      });
-
       let editingMatchId = null;
 
       function resetMatchForm() {
         editingMatchId = null;
-        ['m-competition','m-round','m-home','m-home-logo','m-away','m-away-logo','m-kickoff','m-slug','tsdb-query'].forEach(id => $(id).value = '');
+        ['m-competition','m-round','m-home','m-home-logo','m-away','m-away-logo','m-kickoff','m-slug'].forEach(id => $(id).value = '');
         $('m-status').value = 'upcoming';
         signalsList.innerHTML = '';
         createSignalRow('Señal 1', '', true);
-        tsdbEventId = null; setTsdbLinked(''); $('tsdb-results').innerHTML = '';
         $('m-slug-preview').textContent = '';
         $('m-result').classList.add('hidden');
         $('m-cancel').classList.add('hidden');
@@ -470,7 +421,6 @@
           awayLogo: $('m-away-logo').value.trim(),
           competition: $('m-competition').value.trim(),
           round: $('m-round').value.trim(),
-          tsdbEventId: tsdbEventId || null,
           title: [home, away].filter(Boolean).join(' vs '),
           kickoff,
           status: $('m-status').value,
@@ -520,22 +470,18 @@
         catch (e) { console.error(e); alert('Error al cambiar la señal'); }
       };
       window.setMatchStatus = async (id, status) => {
-        // Al reactivar, limpiar el cierre programado para que no se auto-finalice
-        const extra = (status === 'live' || status === 'upcoming') ? { closesAt: null, finishedAt: null } : {};
-        try { await updateDoc(doc(db, 'matches', id), { status, ...extra, updatedAt: new Date() }); }
+        try { await updateDoc(doc(db, 'matches', id), { status, updatedAt: new Date() }); }
         catch (e) { console.error(e); alert('Error al cambiar el estado'); }
       };
-      // Marca fin del partido: mantiene el stream CLOSE_DELAY_MIN min más y luego cierra
+      // Finalizar: cierra la transmisión y guarda el marcador final (para la despedida)
       window.finishMatch = async (id) => {
         const raw = prompt('Marcador final (ej: 2-1). Déjalo vacío si no lo sabes:', '');
         if (raw === null) return; // cancelado
-        const payload = { finishedAt: new Date(), closesAt: new Date(Date.now() + CLOSE_DELAY_MIN * 60000), updatedAt: new Date() };
+        const payload = { status: 'finished', updatedAt: new Date() };
         const mm = raw.match(/(\d+)\s*[-:xX]\s*(\d+)/);
         if (mm) payload.finalScore = { home: Number(mm[1]), away: Number(mm[2]) };
-        try {
-          await updateDoc(doc(db, 'matches', id), payload);
-          alert(`Partido marcado como finalizado. El stream se cerrará solo en ${CLOSE_DELAY_MIN} minutos.`);
-        } catch (e) { console.error(e); alert('Error al finalizar'); }
+        try { await updateDoc(doc(db, 'matches', id), payload); }
+        catch (e) { console.error(e); alert('Error al finalizar'); }
       };
       window.deleteMatch = async (id) => {
         if (!confirm('¿Eliminar este partido?')) return;
@@ -557,9 +503,6 @@
           $('m-slug').value = m.slug || '';
           $('m-status').value = m.status || 'upcoming';
           if (m.kickoff?.seconds) $('m-kickoff').value = toLocalInput(new Date(m.kickoff.seconds * 1000));
-          tsdbEventId = m.tsdbEventId || null;
-          setTsdbLinked(tsdbEventId ? `✅ Vinculado (ID: ${tsdbEventId})` : '');
-          $('tsdb-results').innerHTML = '';
           signalsList.innerHTML = '';
           (m.signals || []).forEach((s, i) => createSignalRow(s.name || '', s.url || '', i === (m.activeSignal || 0)));
           if (signalsList.children.length === 0) createSignalRow('Señal 1', '', true);
@@ -572,23 +515,31 @@
       };
 
       // ── Render lista de partidos (sidebar) ────────────────────
-      const statusBadge = (s) => s === 'live'
+      // "En vivo" se calcula por horario (igual que el cliente): status 'live'
+      // o faltan <= AUTO_LIVE_MIN min para el inicio. Así el panel se muestra
+      // en vivo solo, sin escribir nada ni depender de un servidor.
+      const matchLive = (m) => {
+        if (m.status === 'finished') return false;
+        if (m.status === 'live') return true;
+        const ko = m.kickoff?.seconds ? m.kickoff.seconds * 1000 : null;
+        return ko != null && Date.now() >= ko - AUTO_LIVE_MIN * 60000;
+      };
+      const statusBadge = (m) => matchLive(m)
         ? '<span class="px-2 py-0.5 bg-red-500/20 text-red-400 text-xs rounded-full font-bold animate-pulse">🔴 EN VIVO</span>'
-        : s === 'finished'
+        : m.status === 'finished'
           ? '<span class="px-2 py-0.5 bg-slate-500/20 text-slate-400 text-xs rounded-full font-bold">✅ Fin</span>'
           : '<span class="px-2 py-0.5 bg-amber-500/20 text-amber-300 text-xs rounded-full font-bold">🕐 Próximo</span>';
 
-      onSnapshot(matchesCol, (snap) => {
-        currentMatches = snap.docs.map(d => ({ id: d.id, ...d.data() }))
-          .sort((a, b) => (a.kickoff?.seconds || 0) - (b.kickoff?.seconds || 0));
-        const matches = currentMatches;
+      let matchesSnapshot = [];
+      function renderMatches() {
         const cont = $('matches-container');
-        if (matches.length === 0) { cont.innerHTML = '<div class="text-center text-slate-400 py-10 text-sm">No hay partidos aún</div>'; return; }
-        cont.innerHTML = matches.map(m => {
+        if (matchesSnapshot.length === 0) { cont.innerHTML = '<div class="text-center text-slate-400 py-10 text-sm">No hay partidos aún</div>'; return; }
+        cont.innerHTML = matchesSnapshot.map(m => {
           const url = shortUrlFor(m.slug);
           const when = m.kickoff?.seconds ? fmtDateTime(new Date(m.kickoff.seconds * 1000)) : '';
           const sigOptions = (m.signals || []).map((s, i) =>
             `<option value="${i}" ${i === (m.activeSignal || 0) ? 'selected' : ''}>${esc(s.name || ('Señal ' + (i + 1)))}</option>`).join('');
+          const live = matchLive(m);
           return `
             <div class="bg-slate-800/80 rounded-2xl border border-slate-700 p-3 space-y-2">
               <div class="flex items-start justify-between gap-2">
@@ -596,7 +547,7 @@
                   <h4 class="text-sm font-bold text-white truncate">${esc(m.title || 'Partido')}</h4>
                   <p class="text-xs text-slate-400 truncate">${esc(m.competition || '')} ${when ? '· ' + when : ''}</p>
                 </div>
-                ${statusBadge(m.status)}
+                ${statusBadge(m)}
               </div>
               <div class="flex items-center gap-2">
                 <span class="text-xs text-slate-400 shrink-0">📶</span>
@@ -604,13 +555,10 @@
                   ${sigOptions || '<option>Sin señales</option>'}
                 </select>
               </div>
-              ${(m.closesAt?.seconds && m.status !== 'finished' && m.closesAt.seconds * 1000 > Date.now())
-                ? `<p class="text-xs text-amber-300">🏁 Finalizado · cierra ~${new Date(m.closesAt.seconds * 1000).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</p>`
-                : m.tsdbEventId ? `<p class="text-xs text-blue-300/80">🤖 Auto-finalizar activo</p>` : ''}
               <div class="flex flex-wrap gap-1.5">
                 ${m.status === 'finished'
                   ? `<button onclick="setMatchStatus('${m.id}','live')" class="flex-1 bg-red-600 hover:bg-red-500 text-white py-1.5 rounded-lg text-xs font-bold">▶️ Reabrir</button>`
-                  : m.status === 'live'
+                  : live
                     ? `<button onclick="finishMatch('${m.id}')" class="flex-1 bg-slate-600 hover:bg-slate-500 text-white py-1.5 rounded-lg text-xs font-bold">🏁 Finalizar</button>`
                     : `<button onclick="setMatchStatus('${m.id}','live')" class="flex-1 bg-red-600 hover:bg-red-500 text-white py-1.5 rounded-lg text-xs font-bold">▶️ En vivo</button>`}
                 <button onclick="navigator.clipboard.writeText('${url}').then(()=>alert('Enlace copiado'))" class="bg-slate-700 hover:bg-slate-600 text-white px-2.5 py-1.5 rounded-lg text-xs">📋</button>
@@ -620,7 +568,14 @@
               </div>
             </div>`;
         }).join('');
+      }
+      onSnapshot(matchesCol, (snap) => {
+        matchesSnapshot = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+          .sort((a, b) => (a.kickoff?.seconds || 0) - (b.kickoff?.seconds || 0));
+        renderMatches();
       });
+      // Refresco ligero para que el badge "EN VIVO" aparezca solo al llegar la hora
+      setInterval(renderMatches, 30000);
 
       // ══════════════════════════════════════════════════════════
       //  STREAMS GUARDADOS + ENLACES (legacy)
@@ -667,44 +622,6 @@
         try { await addDoc(streamsCol, { title: title.trim(), url, createdAt: new Date() }); alert('¡Stream guardado! ⚽'); }
         catch (e) { console.error(e); alert('Error al guardar'); }
       });
-
-      // ══════════════════════════════════════════════════════════
-      //  AUTO-CIERRE + SONDEO TheSportsDB (solo con el panel abierto)
-      // ══════════════════════════════════════════════════════════
-      async function tsdbCheck(m) {
-        try {
-          const j = await (await fetch(`https://www.thesportsdb.com/api/v1/json/${TSDB_KEY}/lookupevent.php?id=${m.tsdbEventId}`)).json();
-          const e = (j.events || [])[0]; if (!e) return;
-          if (TSDB_FINISHED.test((e.strStatus || '').trim()) && e.intHomeScore != null && e.intAwayScore != null) {
-            await updateDoc(doc(db, 'matches', m.id), {
-              finalScore: { home: Number(e.intHomeScore), away: Number(e.intAwayScore) },
-              finishedAt: new Date(),
-              closesAt: new Date(Date.now() + CLOSE_DELAY_MIN * 60000),
-              updatedAt: new Date()
-            });
-          }
-        } catch (_) { /* la API puede fallar; se reintenta al siguiente ciclo */ }
-      }
-
-      // Cada 15s: cerrar los partidos cuya ventana de gracia ya pasó
-      setInterval(() => {
-        const now = Date.now();
-        currentMatches.forEach(m => {
-          if (m.status !== 'finished' && m.closesAt?.seconds && now > m.closesAt.seconds * 1000) {
-            updateDoc(doc(db, 'matches', m.id), { status: 'finished', updatedAt: new Date() }).catch(() => {});
-          }
-        });
-      }, 15000);
-
-      // Cada 90s: sondear TheSportsDB solo para partidos vinculados en ventana de juego
-      setInterval(() => {
-        const now = Date.now();
-        currentMatches.forEach(m => {
-          if (!m.tsdbEventId || m.status === 'finished' || m.closesAt) return;
-          const ko = m.kickoff?.seconds ? m.kickoff.seconds * 1000 : null;
-          if (ko && now > ko - 5 * 60000 && now < ko + 4 * 3600000) tsdbCheck(m);
-        });
-      }, 90000);
 
       // Inicial
       resetMatchForm();
