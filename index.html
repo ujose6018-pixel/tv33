@@ -261,7 +261,7 @@
   </div>
 
   <script type="module">
-    import { getFirestore, collection, getDocs, getDoc, doc } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
+    import { getFirestore, collection, getDocs, getDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
 
     document.addEventListener('DOMContentLoaded', () => {
       const db = getFirestore();
@@ -425,33 +425,26 @@
       $('arrow-left').addEventListener('click', () => scroller.scrollBy({ left: -330, behavior: 'smooth' }));
       $('arrow-right').addEventListener('click', () => scroller.scrollBy({ left: 330, behavior: 'smooth' }));
 
-      // ── Datos: 1 solo documento agregado (public/schedule) para NO leer toda
-      //     la colección con cada visita (estable ante mucho tráfico). Se relee
-      //     cada 60 s + al volver a la pestaña. Si el agregado no existe, cae a
-      //     la colección una sola vez (arranque). ──
-      let lastScheduleStamp = null;
-      async function loadSchedule() {
-        try {
-          const snap = await getDoc(doc(db, 'public', 'schedule'));
-          if (snap.exists() && Array.isArray(snap.data().matches)) {
-            const data = snap.data();
-            if (data.updatedAt === lastScheduleStamp) return; // sin cambios → no re-render
-            lastScheduleStamp = data.updatedAt || null;
-            allMatches = data.matches;
-            renderGrid();
-            return;
-          }
-        } catch (e) { console.error('loadSchedule', e); }
-        // Fallback: leer la colección una vez si aún no hay agregado
+      // ── Datos: escuchamos EN VIVO el único documento agregado (public/schedule).
+      //     Es un solo doc (no toda la colección), así que sigue siendo ligerísimo,
+      //     pero ahora los cambios del panel (crear/editar partido, señales, estado)
+      //     aparecen al instante SIN refrescar la página. Si el agregado aún no
+      //     existe, caemos a la colección una sola vez (primer arranque). ──
+      async function loadFromCollectionOnce() {
         try {
           const qs = await getDocs(matchesCol);
           allMatches = qs.docs.map(d => ({ id: d.id, ...d.data() }));
           renderGrid();
         } catch (e) { console.error('fallback matches', e); }
       }
-      loadSchedule();
-      setInterval(loadSchedule, 60000);
-      document.addEventListener('visibilitychange', () => { if (!document.hidden) loadSchedule(); });
+      onSnapshot(doc(db, 'public', 'schedule'), (snap) => {
+        if (snap.exists() && Array.isArray(snap.data().matches)) {
+          allMatches = snap.data().matches;
+          renderGrid();
+        } else {
+          loadFromCollectionOnce();
+        }
+      }, (e) => { console.error('schedule onSnapshot', e); loadFromCollectionOnce(); });
 
       // Temporizador: actualiza cuentas regresivas cada segundo; re-renderiza al cambiar de fase
       setInterval(() => {

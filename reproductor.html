@@ -113,7 +113,7 @@
   </div>
 
   <script type="module">
-    import { getFirestore, collection, getDocs, getDoc, doc } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
+    import { getFirestore, collection, getDocs, getDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
 
     document.addEventListener('DOMContentLoaded', async () => {
       const db = getFirestore();
@@ -378,19 +378,21 @@
         return qs.docs.map(d => ({ id: d.id, ...d.data() }));
       }
 
-      // Visor de partido: lee el agregado y lo re-lee cada 60s (para captar
-      // cambios de señal o el fin del partido) sin escuchar toda la colección.
+      // Visor de partido: escucha EN VIVO el único doc agregado (public/schedule),
+      // NO toda la colección. Así, cuando el admin cambia la señal (recicla una URL
+      // temporal), finaliza el partido, etc., el reproductor reacciona al instante
+      // SIN refrescar. applyMatchState solo re-monta el <iframe> si la URL de la
+      // señal elegida cambió, así el video no se reinicia por cambios ajenos.
       function startMatchViewer(slug) {
-        const refresh = async () => {
-          try {
-            const matches = await readSchedule();
-            const m = matches.find(x => x.slug === slug);
-            if (!m) { showMatchOverlay(`<div style="max-width:520px;"><div style="font-size:56px;">❌</div><h2 style="font-size:24px;font-weight:900;color:#e2e8f0;">Partido no encontrado</h2><a href="index.html" class="mo-btn">🏠 Ver otros partidos</a></div>`); return; }
-            applyMatchState(m);
-          } catch (e) { console.error('viewer refresh', e); }
+        const handle = (matches) => {
+          const m = (matches || []).find(x => x.slug === slug);
+          if (!m) { showMatchOverlay(`<div style="max-width:520px;"><div style="font-size:56px;">❌</div><h2 style="font-size:24px;font-weight:900;color:#e2e8f0;">Partido no encontrado</h2><a href="index.html" class="mo-btn">🏠 Ver otros partidos</a></div>`); return; }
+          applyMatchState(m);
         };
-        refresh();
-        setInterval(refresh, 60000);
+        onSnapshot(doc(db, 'public', 'schedule'), (snap) => {
+          if (snap.exists() && Array.isArray(snap.data().matches)) handle(snap.data().matches);
+          else readSchedule().then(handle).catch(e => console.error('viewer fallback', e));
+        }, (e) => { console.error('viewer onSnapshot', e); readSchedule().then(handle).catch(() => {}); });
       }
 
       // ── Enlaces legacy (una sola señal) ──

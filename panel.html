@@ -96,7 +96,91 @@
                   <h3 class="text-xl font-black text-emerald-200">⚽ Partidos</h3>
                   <p class="text-emerald-100/70 text-xs">Crea uno nuevo o edita las señales de cada partido</p>
                 </div>
-                <button id="btn-create-match" class="btn-primary text-white font-bold py-3 px-5 rounded-2xl shadow-lg whitespace-nowrap">➕ Crear partido</button>
+                <div class="flex gap-2">
+                  <button id="btn-import-matches" class="bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-bold py-3 px-5 rounded-2xl shadow-lg whitespace-nowrap">📅 Importar partidos</button>
+                  <button id="btn-create-match" class="btn-primary text-white font-bold py-3 px-5 rounded-2xl shadow-lg whitespace-nowrap">➕ Crear partido</button>
+                </div>
+              </div>
+
+              <!-- Import Section -->
+              <div id="import-section" class="hidden space-y-5 mt-5">
+                <div class="bg-gradient-to-r from-indigo-900/50 to-blue-900/50 border border-indigo-500/40 rounded-3xl p-5">
+                  <div class="flex items-center justify-between">
+                    <div class="flex gap-4 items-center">
+                      <span class="text-3xl">📅</span>
+                      <div>
+                        <h3 class="text-lg font-bold text-indigo-200">Importar partidos desde API</h3>
+                        <p class="text-indigo-100/80 text-sm">Busca una liga y agenda partidos automáticamente</p>
+                      </div>
+                    </div>
+                    <button id="btn-close-import" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded-xl">✕ Cerrar</button>
+                  </div>
+                </div>
+
+                <!-- Liga (lista curada por ID — el buscador por nombre del plan gratis
+                     de TheSportsDB quedó capado a 5 ligas, así que elegimos por ID) -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-sm font-bold text-slate-300 mb-2">🏆 Liga / competición</label>
+                    <select id="league-select" class="w-full bg-slate-800/60 border border-slate-700 rounded-2xl px-5 py-4 text-white focus:outline-none focus:border-indigo-500 cursor-pointer">
+                      <option value="">-- Selecciona una liga --</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-bold text-slate-300 mb-2">🆔 ID de liga manual <span class="text-slate-500 font-normal">(opcional)</span></label>
+                    <input id="league-id" type="text" inputmode="numeric" placeholder="Ej: 4429 (tiene prioridad sobre la lista)" class="w-full bg-slate-800/60 border border-slate-700 rounded-2xl px-5 py-4 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500">
+                  </div>
+                </div>
+
+                <!-- Temporada + Ronda/Jornada -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-sm font-bold text-slate-300 mb-2">📅 Temporada</label>
+                    <input id="season-input" type="text" placeholder="Ej: 2026 · 2026-2027" class="w-full bg-slate-800/60 border border-slate-700 rounded-2xl px-5 py-4 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500">
+                  </div>
+                  <div>
+                    <label class="block text-sm font-bold text-slate-300 mb-2">🎯 Ronda / Jornada <span class="text-slate-500 font-normal">(opcional)</span></label>
+                    <select id="round-select" class="w-full bg-slate-800/60 border border-slate-700 rounded-2xl px-5 py-4 text-white focus:outline-none focus:border-indigo-500 cursor-pointer">
+                      <option value="">-- Toda la temporada --</option>
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <label class="block text-sm font-bold text-slate-300 mb-2">🔢 O nº de jornada/ronda manual <span class="text-slate-500 font-normal">(ligas — tiene prioridad)</span></label>
+                  <input id="round-input" type="text" inputmode="numeric" placeholder="Ej: 10 → jornada 10 de la liga" class="w-full bg-slate-800/60 border border-slate-700 rounded-2xl px-5 py-4 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500">
+                </div>
+
+                <!-- Botones de búsqueda -->
+                <div class="flex flex-col sm:flex-row gap-3">
+                  <button id="btn-search-next" class="flex-1 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black py-4 px-6 rounded-2xl shadow-lg">⚡ Traer próximos partidos</button>
+                  <button id="btn-search-matches" class="flex-1 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-bold py-4 px-6 rounded-2xl shadow-lg">🎯 Buscar ronda / temporada</button>
+                </div>
+                <p class="text-xs text-slate-400 -mt-2">💡 <b>⚡ Próximos</b> = los siguientes ya calendarizados. <b>🎯 Ronda/Jornada</b> = elige una fase (octavos, cuartos, semis…) o escribe el nº de jornada de una liga para traer TODOS sus partidos, aunque sean de días futuros. La cobertura del plan gratis varía.</p>
+
+                <!-- Loading -->
+                <div id="import-loading" class="hidden text-center py-10">
+                  <div class="text-4xl animate-spin">⏳</div>
+                  <p class="text-slate-400 mt-3">Buscando partidos...</p>
+                </div>
+
+                <!-- Matches Preview -->
+                <div id="matches-preview" class="hidden space-y-3">
+                  <div class="flex items-center justify-between">
+                    <h4 class="text-lg font-bold text-slate-200">Partidos encontrados</h4>
+                    <div class="flex gap-2">
+                      <button id="btn-select-all" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded-xl text-sm">✓ Seleccionar todos</button>
+                      <button id="btn-deselect-all" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded-xl text-sm">✕ Deseleccionar todos</button>
+                    </div>
+                  </div>
+                  <div id="preview-list" class="max-h-[400px] overflow-y-auto space-y-2"></div>
+                  <button id="btn-confirm-import" class="w-full btn-gold text-slate-900 font-black text-lg py-4 px-6 rounded-2xl shadow-lg pulse-glow mt-4">✅ Importar partidos seleccionados</button>
+                </div>
+
+                <!-- Error/Empty -->
+                <div id="import-message" class="hidden text-center py-10">
+                  <div class="text-4xl" id="import-message-icon">📭</div>
+                  <p class="text-slate-400 mt-3" id="import-message-text">No hay resultados</p>
+                </div>
               </div>
 
               <!-- Lista de partidos (vista por defecto) -->
@@ -635,9 +719,11 @@
             slug: m.slug || '', home: m.home || '', away: m.away || '',
             homeLogo: m.homeLogo || '', awayLogo: m.awayLogo || '',
             competition: m.competition || '', round: m.round || '',
+            title: m.title || [m.home, m.away].filter(Boolean).join(' vs '),
             status: m.status || 'upcoming',
             kickoff: m.kickoff?.seconds ? { seconds: m.kickoff.seconds } : null,
             signals: (m.signals || []).map(s => ({ name: s.name || '', url: s.url || '' })),
+            activeSignal: Number.isInteger(m.activeSignal) ? m.activeSignal : 0,
             finalScore: m.finalScore || null
           }));
           await setDoc(doc(db, 'public', 'schedule'), { matches: pub, updatedAt: Date.now() });
@@ -716,6 +802,339 @@
         if (!title || !title.trim()) return;
         try { await addDoc(streamsCol, { title: title.trim(), url, createdAt: new Date() }); alert('¡Stream guardado! ⚽'); }
         catch (e) { console.error(e); alert('Error al guardar'); }
+      });
+
+      // ========== IMPORTAR PARTIDOS (TheSportsDB) ==========
+      const API_BASE = 'https://www.thesportsdb.com/api/v1/json/3';
+
+      // El buscador de ligas del plan gratis (search_all_leagues.php) quedó
+      // capado a ~5 ligas, así que trabajamos con una lista curada por ID.
+      // Para agregar ligas nuevas: agrega { id, name, season } aquí.
+      const KNOWN_LEAGUES = [
+        { id: '4429', name: '🌎 Copa Mundial de la FIFA', season: '2026' },
+        { id: '4480', name: '🇪🇺 UEFA Champions League', season: '2026-2027' },
+        { id: '4481', name: '🇪🇺 UEFA Europa League',   season: '2026-2027' },
+        { id: '4328', name: '🏴 Premier League (Inglaterra)', season: '2026-2027' },
+        { id: '4335', name: '🇪🇸 La Liga (España)',      season: '2026-2027' },
+        { id: '4332', name: '🇮🇹 Serie A (Italia)',      season: '2026-2027' },
+        { id: '4331', name: '🇩🇪 Bundesliga (Alemania)', season: '2026-2027' },
+        { id: '4334', name: '🇫🇷 Ligue 1 (Francia)',     season: '2026-2027' },
+        { id: '4350', name: '🇲🇽 Liga MX (México)',       season: '2026-2027' },
+        { id: '4346', name: '🇺🇸 MLS (EE. UU.)',         season: '2026' },
+      ];
+
+      let foundMatches = [];
+      let selectedMatches = new Set();
+
+      const $btnImportMatches = $('btn-import-matches');
+      const $importSection = $('import-section');
+      const $btnCloseImport = $('btn-close-import');
+      const $leagueSelect = $('league-select');
+      const $leagueId = $('league-id');
+      const $seasonInput = $('season-input');
+      const $roundSelect = $('round-select');
+      const $roundInput = $('round-input');
+      const $btnSearchMatches = $('btn-search-matches');
+      const $btnSearchNext = $('btn-search-next');
+      const $importLoading = $('import-loading');
+      const $matchesPreview = $('matches-preview');
+      const $previewList = $('preview-list');
+      const $btnSelectAll = $('btn-select-all');
+      const $btnDeselectAll = $('btn-deselect-all');
+      const $btnConfirmImport = $('btn-confirm-import');
+      const $importMessage = $('import-message');
+      const $importMessageIcon = $('import-message-icon');
+      const $importMessageText = $('import-message-text');
+
+      // Poblar la lista curada de ligas (una vez)
+      $leagueSelect.innerHTML = '<option value="">-- Selecciona una liga --</option>' +
+        KNOWN_LEAGUES.map(l => `<option value="${l.id}" data-season="${l.season}">${esc(l.name)}</option>`).join('');
+      // Al elegir liga, prefijar su temporada por defecto
+      $leagueSelect.addEventListener('change', () => {
+        const opt = $leagueSelect.selectedOptions[0];
+        if (opt && opt.dataset.season && !$seasonInput.value.trim()) $seasonInput.value = opt.dataset.season;
+        $leagueId.value = ''; // la lista manda si eliges de la lista
+      });
+
+      // La id manual tiene prioridad; si no, la de la lista.
+      const activeLeagueId = () => ($leagueId.value.trim() || $leagueSelect.value || '').trim();
+
+      // Rondas: en TheSportsDB el parámetro r= es un NÚMERO (no el texto).
+      // Fase de grupos = jornada (1,2,3…); eliminatorias usan códigos fijos.
+      // (El Mundial a veces etiqueta octavos como 16 y otras como 125 → consultamos ambos.)
+      const ROUND_PRESETS = [
+        { label: 'Fase de grupos · Jornada 1', r: '1' },
+        { label: 'Fase de grupos · Jornada 2', r: '2' },
+        { label: 'Fase de grupos · Jornada 3', r: '3' },
+        { label: 'Octavos de final',  r: '125,16' },
+        { label: 'Cuartos de final',  r: '150' },
+        { label: 'Semifinales',       r: '160' },
+        { label: 'Tercer lugar',      r: '170' },
+        { label: 'Final',             r: '180' },
+      ];
+      $roundSelect.innerHTML = '<option value="">-- Toda la temporada --</option>' +
+        ROUND_PRESETS.map(p => `<option value="${p.r}">${esc(p.label)}</option>`).join('');
+      // Rondas activas: el número manual manda; si no, la(s) del preset (puede ser lista).
+      function activeRounds() {
+        const manual = $roundInput.value.trim();
+        if (manual) return manual.split(',').map(s => s.trim()).filter(Boolean);
+        return ($roundSelect.value ? $roundSelect.value.split(',').map(s => s.trim()).filter(Boolean) : []);
+      }
+
+      function showImportSection() {
+        $importSection.classList.remove('hidden');
+        $('matches-list-section').classList.add('hidden');
+        $('btn-create-match').classList.add('hidden');
+        $('match-form-section').classList.add('hidden');
+      }
+      function hideImportSection() {
+        $importSection.classList.add('hidden');
+        $('matches-list-section').classList.remove('hidden');
+        $('btn-create-match').classList.remove('hidden');
+        resetImportUI();
+      }
+      function resetImportUI() {
+        foundMatches = [];
+        selectedMatches = new Set();
+        $leagueSelect.value = '';
+        $leagueId.value = '';
+        $seasonInput.value = '';
+        $roundSelect.value = '';
+        $roundInput.value = '';
+        $importLoading.classList.add('hidden');
+        $matchesPreview.classList.add('hidden');
+        $importMessage.classList.add('hidden');
+      }
+      function showImportLoading() {
+        $importLoading.classList.remove('hidden');
+        $matchesPreview.classList.add('hidden');
+        $importMessage.classList.add('hidden');
+      }
+      function showImportMessage(icon, text) {
+        $importLoading.classList.add('hidden');
+        $matchesPreview.classList.add('hidden');
+        $importMessage.classList.remove('hidden');
+        $importMessageIcon.textContent = icon;
+        $importMessageText.textContent = text;
+      }
+
+      // TheSportsDB entrega strTimestamp en UTC pero SIN zona ("2026-07-06T00:00:00").
+      // new Date() lo tomaría como hora local → desfase. Forzamos UTC (añade 'Z').
+      function parseTsdbDate(ev) {
+        let ts = ev && ev.strTimestamp;
+        if (ts) {
+          ts = ts.replace(' ', 'T');
+          const hasTz = /([zZ])|([+-]\d{2}:?\d{2})$/.test(ts);
+          const d = new Date(hasTz ? ts : ts + 'Z');
+          if (!isNaN(d.getTime())) return d;
+        }
+        // Respaldo: dateEvent + strTime (también UTC)
+        if (ev && ev.dateEvent) {
+          const t = (ev.strTime && ev.strTime !== '00:00:00') ? ev.strTime : '00:00:00';
+          const d = new Date(`${ev.dateEvent}T${t}Z`);
+          if (!isNaN(d.getTime())) return d;
+        }
+        return null;
+      }
+
+      const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+      async function apiEvents(url) {
+        try {
+          const ctrl = new AbortController();
+          const t = setTimeout(() => ctrl.abort(), 12000);   // el key gratis a veces cuelga
+          const r = await fetch(url, { signal: ctrl.signal });
+          clearTimeout(t);
+          const data = await r.json();
+          return data.events || [];
+        } catch (e) { console.error('apiEvents', url, e); return null; } // null = error/timeout
+      }
+      const getNextEvents   = (id) => apiEvents(`${API_BASE}/eventsnextleague.php?id=${encodeURIComponent(id)}`);
+      const getSeasonEvents = (id, season) => apiEvents(`${API_BASE}/eventsseason.php?id=${encodeURIComponent(id)}&s=${encodeURIComponent(season)}`);
+      // Una o varias rondas (octavos = 125 y 16). Devuelve null solo si TODAS fallan.
+      async function getRoundEvents(id, season, rounds) {
+        const all = []; let anyOk = false;
+        for (const r of rounds) {
+          const ev = await apiEvents(`${API_BASE}/eventsround.php?id=${encodeURIComponent(id)}&r=${encodeURIComponent(r)}&s=${encodeURIComponent(season)}`);
+          if (ev === null) continue;
+          anyOk = true; all.push(...ev);
+          if (rounds.length > 1) await sleep(250);   // gentil con el rate-limit
+        }
+        return anyOk ? dedupeEvents(all) : null;
+      }
+      function dedupeEvents(events) {
+        const seen = new Set(); const out = [];
+        for (const e of events) {
+          const k = e.idEvent || `${e.strHomeTeam}|${e.strAwayTeam}|${e.strTimestamp}`;
+          if (seen.has(k)) continue; seen.add(k); out.push(e);
+        }
+        return out;
+      }
+
+      // Próximos + en curso: dejamos pasar partidos que empezaron hace < 3 h
+      // (así "una jornada en curso" muestra también los que ya arrancaron hoy).
+      function filterUpcoming(events) {
+        const cutoff = Date.now() - 3 * 3600000;
+        return events
+          .map(e => ({ e, ko: parseTsdbDate(e) }))
+          .filter(x => x.ko && x.ko.getTime() > cutoff)
+          .sort((a, b) => a.ko - b.ko)
+          .map(x => ({ ...x.e, _ko: x.ko }));   // _ko: Date ya parseada en UTC
+      }
+      const formatEventDate = (ev) => { const d = ev._ko || parseTsdbDate(ev); return d ? fmtDateTime(d) : 'Horario por confirmar'; };
+
+      // ── Anti-duplicados: mismo par de equipos el mismo día = el mismo partido ──
+      const sameDayUTC = (aMs, bMs) => {
+        const a = new Date(aMs), b = new Date(bMs);
+        return a.getUTCFullYear() === b.getUTCFullYear() && a.getUTCMonth() === b.getUTCMonth() && a.getUTCDate() === b.getUTCDate();
+      };
+      function findDuplicate(home, away, koMs) {
+        const hs = slugify(home), as = slugify(away);
+        return matchesSnapshot.find(x =>
+          slugify(x.home || '') === hs && slugify(x.away || '') === as &&
+          (koMs && x.kickoff?.seconds ? sameDayUTC(koMs, x.kickoff.seconds * 1000) : true));
+      }
+      // Slug único: "home-vs-away"; si ya existe (otra fecha, p. ej. ida/vuelta) le añade el día.
+      function uniqueSlug(home, away, koMs, taken) {
+        let base = slugify(`${home}-vs-${away}`) || ('partido-' + Math.random().toString(36).slice(2, 7));
+        if (!taken.has(base)) return base;
+        if (koMs) { const d = new Date(koMs); base = `${base}-${d.getUTCDate()}-${d.getUTCMonth() + 1}`; }
+        let s = base, i = 2;
+        while (taken.has(s)) s = `${base}-${i++}`;
+        return s;
+      }
+
+      function renderMatchesPreview(matches) {
+        foundMatches = matches;
+        selectedMatches = new Set();
+
+        if (matches.length === 0) {
+          showImportMessage('📭', 'No se encontraron partidos próximos. Prueba con otra temporada, otra liga o el ID manual (la cobertura del plan gratis varía).');
+          return;
+        }
+
+        $importLoading.classList.add('hidden');
+        $importMessage.classList.add('hidden');
+        $matchesPreview.classList.remove('hidden');
+
+        $previewList.innerHTML = matches.map((m, idx) => {
+          const koMs = m._ko ? m._ko.getTime() : null;
+          const exists = !!findDuplicate(m.strHomeTeam || '', m.strAwayTeam || '', koMs);
+          return `
+            <div class="bg-slate-800/80 rounded-2xl border border-slate-700 p-4 ${exists ? 'opacity-60' : ''}">
+              <label class="flex items-start gap-4 cursor-pointer">
+                <input type="checkbox" class="preview-checkbox mt-1 w-5 h-5 accent-indigo-500" data-idx="${idx}" ${exists ? 'disabled' : ''}>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <span class="font-bold text-white">${esc(m.strHomeTeam || 'Local')}</span>
+                    <span class="text-slate-500">vs</span>
+                    <span class="font-bold text-white">${esc(m.strAwayTeam || 'Visitante')}</span>
+                    ${exists ? '<span class="text-xs bg-amber-500/20 text-amber-300 px-2 py-1 rounded-full">⚠️ Ya existe</span>' : ''}
+                  </div>
+                  <div class="flex items-center gap-3 mt-2 text-sm text-slate-400 flex-wrap">
+                    <span>🕐 ${esc(formatEventDate(m))}</span>
+                    ${m.strRound ? `<span class="text-indigo-300">🎯 ${esc(m.strRound)}</span>` : ''}
+                    ${m.strLeague ? `<span class="text-emerald-300">🏆 ${esc(m.strLeague)}</span>` : ''}
+                  </div>
+                </div>
+              </label>
+            </div>`;
+        }).join('');
+
+        document.querySelectorAll('.preview-checkbox').forEach(cb => {
+          cb.addEventListener('change', (e) => {
+            const idx = parseInt(e.target.dataset.idx);
+            if (e.target.checked) selectedMatches.add(idx); else selectedMatches.delete(idx);
+          });
+        });
+      }
+
+      // Event listeners
+      $btnImportMatches.addEventListener('click', showImportSection);
+      $btnCloseImport.addEventListener('click', hideImportSection);
+
+      const NET_ERR = ['📡', 'No se pudo conectar con la API (o tardó demasiado). Revisa tu conexión e intenta de nuevo.'];
+
+      $btnSearchNext.addEventListener('click', async () => {
+        const leagueId = activeLeagueId();
+        if (!leagueId) { alert('Elige una liga de la lista o escribe un ID'); return; }
+        showImportLoading();
+        const events = await getNextEvents(leagueId);
+        if (events === null) { showImportMessage(...NET_ERR); return; }
+        renderMatchesPreview(filterUpcoming(events));
+      });
+
+      // 🎯 Ronda/Jornada: si hay ronda(s), usa eventsround (trae TODOS los partidos de
+      // esa fase/jornada aunque sean de días futuros); si no, toda la temporada.
+      $btnSearchMatches.addEventListener('click', async () => {
+        const leagueId = activeLeagueId();
+        const season = $seasonInput.value.trim();
+        const rounds = activeRounds();
+        if (!leagueId) { alert('Elige una liga de la lista o escribe un ID'); return; }
+        if (!season) { alert('Escribe una temporada (ej: 2026 o 2026-2027)'); return; }
+        showImportLoading();
+        const events = rounds.length
+          ? await getRoundEvents(leagueId, season, rounds)
+          : await getSeasonEvents(leagueId, season);
+        if (events === null) { showImportMessage(...NET_ERR); return; }
+        renderMatchesPreview(filterUpcoming(events));
+      });
+
+      $btnSelectAll.addEventListener('click', () => {
+        document.querySelectorAll('.preview-checkbox:not([disabled])').forEach(cb => {
+          cb.checked = true; selectedMatches.add(parseInt(cb.dataset.idx));
+        });
+      });
+      $btnDeselectAll.addEventListener('click', () => {
+        document.querySelectorAll('.preview-checkbox').forEach(cb => cb.checked = false);
+        selectedMatches = new Set();
+      });
+
+      $btnConfirmImport.addEventListener('click', async () => {
+        if (selectedMatches.size === 0) { alert('Marca al menos un partido para importar'); return; }
+        if (!confirm(`¿Agendar ${selectedMatches.size} partido(s) del listado?`)) return;
+
+        // Conjunto de slugs ya usados (existentes + los que vamos creando ahora)
+        const taken = new Set(matchesSnapshot.map(x => x.slug).filter(Boolean));
+        let imported = 0, skipped = 0;
+        try {
+          for (const idx of selectedMatches) {
+            const m = foundMatches[idx];
+            if (!m) continue;
+            const home = m.strHomeTeam || 'Local';
+            const away = m.strAwayTeam || 'Visitante';
+            const koDate = m._ko || parseTsdbDate(m);
+            const koMs = koDate ? koDate.getTime() : null;
+
+            // No duplicar: mismos equipos el mismo día
+            if (findDuplicate(home, away, koMs)) { skipped++; continue; }
+
+            const slug = uniqueSlug(home, away, koMs, taken);
+            taken.add(slug);
+
+            await addDoc(matchesCol, {
+              home, away,
+              homeLogo: m.strHomeTeamBadge || '',
+              awayLogo: m.strAwayTeamBadge || '',
+              competition: m.strLeague || '',
+              round: m.strRound || '',
+              title: `${home} vs ${away}`,
+              kickoff: koDate || new Date(),
+              status: 'upcoming',
+              slug,
+              signals: [],          // el admin las agrega luego (editor 📶)
+              activeSignal: 0,
+              createdAt: new Date(),
+              updatedAt: new Date()
+            });
+            imported++;
+          }
+          const extra = skipped ? ` (${skipped} ya existían, se omitieron)` : '';
+          alert(`✅ ${imported} partido(s) agendados${extra}. Ahora agrégales las señales con 📶.`);
+          hideImportSection();
+        } catch (e) {
+          console.error('Error importing matches:', e);
+          alert('Error al importar partidos: ' + (e && e.message ? e.message : e));
+        }
       });
 
       // Inicial
