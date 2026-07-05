@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Reproductor · TV Mundial 2026</title>
-  <link rel="icon" href="https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/2026_FIFA_World_Cup_emblem.svg/1920px-2026_FIFA_World_Cup_emblem.svg.png" type="image/png">
+  <title>TOP FUT · Reproductor</title>
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
 
   <!-- Firebase (lo único externo; necesario para saber qué señal transmite el admin) -->
   <script type="module">
@@ -51,19 +51,19 @@
     #match-overlay { position: fixed; inset: 0; z-index: 40; padding: 24px; text-align: center;
       background: linear-gradient(135deg,#020617,#0f172a); display: flex; align-items: center; justify-content: center; }
     .mo-badge { display:inline-block; padding:6px 16px; border-radius:999px; font-weight:700; font-size:14px; margin-bottom:16px;
-      background: rgba(245,158,11,0.18); color:#fcd34d; }
+      background: rgba(132,204,22,0.16); color:#b6f05c; }
     .mo-time { font-size: 26px; font-weight: 900; margin: 6px 0; }
-    .cd-clock { font-size: 46px; font-weight: 900; letter-spacing: 2px; margin: 12px 0 6px; color: #fcd34d; font-variant-numeric: tabular-nums; }
+    .cd-clock { font-size: 46px; font-weight: 900; letter-spacing: 2px; margin: 12px 0 6px; color: #a3e635; font-variant-numeric: tabular-nums; }
     .mo-note { color:#94a3b8; font-size:14px; margin-top:12px; }
     .mo-btn { display:inline-block; margin-top:28px; padding:12px 30px; border-radius:16px; font-weight:700;
-      color:#0f172a; text-decoration:none; background: linear-gradient(135deg,#f59e0b,#fcd34d); }
+      color:#0c1502; text-decoration:none; background: linear-gradient(135deg,#a3e635,#65a30d); }
 
     #expired-view { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; padding: 24px;
       background: linear-gradient(135deg,#7f1d1d,#020617); text-align: center; }
     .exp-card { background: rgba(15,23,42,0.92); border:1px solid rgba(239,68,68,0.3); border-radius: 24px; padding: 40px; max-width: 420px; }
     .exp-card h2 { color:#f87171; font-size:32px; font-weight:900; margin:0 0 10px; }
     .exp-card p { color:#cbd5e1; margin:0 0 24px; }
-    .exp-btn { display:inline-block; padding:14px 32px; border-radius:16px; font-weight:700; color:#0f172a; text-decoration:none; background: linear-gradient(135deg,#f59e0b,#fcd34d); }
+    .exp-btn { display:inline-block; padding:14px 32px; border-radius:16px; font-weight:700; color:#0c1502; text-decoration:none; background: linear-gradient(135deg,#a3e635,#65a30d); }
 
     /* ── Pantalla de despedida (partido finalizado) ── */
     .fin-wrap { max-width: 560px; width: 100%; }
@@ -82,7 +82,7 @@
     .next-card .tm { color:#9fb0e6; font-size:13px; }
     .next-actions { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top:12px; }
     .next-actions a { flex:1; min-width:130px; text-align:center; padding:11px 14px; border-radius:12px; font-weight:800; font-size:14px; }
-    .btn-primary { background: linear-gradient(135deg,#2563eb,#3b82f6); color:#fff; }
+    .btn-primary { background: linear-gradient(135deg,#a3e635,#65a30d); color:#0c1502; }
     .btn-remind { background: rgba(255,255,255,0.12); color:#fff; border:1px solid rgba(255,255,255,0.2); }
   </style>
 </head>
@@ -113,7 +113,7 @@
   </div>
 
   <script type="module">
-    import { getFirestore, collection, getDocs, onSnapshot, doc } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
+    import { getFirestore, collection, getDocs, getDoc, doc } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
 
     document.addEventListener('DOMContentLoaded', async () => {
       const db = getFirestore();
@@ -332,7 +332,8 @@
         // ¿Toca reproducir? (admin en vivo, o faltan <= AUTO_PLAY_MIN min)
         if (shouldPlay(m)) {
           const signals = m.signals || [];
-          const sig = signals[m.activeSignal || 0] || signals[0];
+          // El cliente eligió la señal en el index (?s=0 o ?s=1). Si no, la por defecto.
+          const sig = signals[sIdx != null ? sIdx : (m.activeSignal || 0)] || signals[0];
           if (!sig || !sig.url) {
             showMatchOverlay(`
               <div style="max-width:520px;">
@@ -367,11 +368,29 @@
         }, 1000);
       }
 
-      function openMatch(matchId) {
-        onSnapshot(doc(db, 'matches', matchId), (snap) => {
-          if (!snap.exists()) { showMatchOverlay(`<div style="max-width:520px;"><div style="font-size:56px;">❌</div><h2 style="font-size:24px;font-weight:900;color:#e2e8f0;">Partido no encontrado</h2><a href="index.html" class="mo-btn">🏠 Ver otros partidos</a></div>`); return; }
-          applyMatchState(snap.data());
-        });
+      // Lee el agregado público (1 doc); si no existe, cae a la colección.
+      async function readSchedule() {
+        try {
+          const snap = await getDoc(doc(db, 'public', 'schedule'));
+          if (snap.exists() && Array.isArray(snap.data().matches)) return snap.data().matches;
+        } catch (e) { console.error('readSchedule', e); }
+        const qs = await getDocs(matchesCol);
+        return qs.docs.map(d => ({ id: d.id, ...d.data() }));
+      }
+
+      // Visor de partido: lee el agregado y lo re-lee cada 60s (para captar
+      // cambios de señal o el fin del partido) sin escuchar toda la colección.
+      function startMatchViewer(slug) {
+        const refresh = async () => {
+          try {
+            const matches = await readSchedule();
+            const m = matches.find(x => x.slug === slug);
+            if (!m) { showMatchOverlay(`<div style="max-width:520px;"><div style="font-size:56px;">❌</div><h2 style="font-size:24px;font-weight:900;color:#e2e8f0;">Partido no encontrado</h2><a href="index.html" class="mo-btn">🏠 Ver otros partidos</a></div>`); return; }
+            applyMatchState(m);
+          } catch (e) { console.error('viewer refresh', e); }
+        };
+        refresh();
+        setInterval(refresh, 60000);
       }
 
       // ── Enlaces legacy (una sola señal) ──
@@ -388,17 +407,19 @@
       // ── Ruteo ──
       const params = new URLSearchParams(window.location.search);
       const slug = params.get('slug');
+      let sIdx = parseInt(params.get('s'));
+      if (isNaN(sIdx)) sIdx = null;   // señal elegida por el cliente (0 o 1)
       const s1 = params.get('s1'), s2 = params.get('s2');
       const linkId = params.get('linkId');
       const firstParamStream = (s1 && safeDecode(s1)) || (s2 && safeDecode(s2)) || null;
 
       if (slug) {
         try {
-          const mSnap = await getDocs(matchesCol);
-          const matchDoc = mSnap.docs.find(d => d.data().slug === slug);
-          if (matchDoc) {
+          const matches = await readSchedule();
+          const m = matches.find(x => x.slug === slug);
+          if (m) {
             try { history.replaceState(null, '', getBaseDir() + slug); } catch (_) {}
-            openMatch(matchDoc.id);
+            startMatchViewer(slug);
           } else {
             const lSnap = await getDocs(linksCol);
             const linkData = lSnap.docs.map(d => d.data()).filter(d => d.slug === slug)

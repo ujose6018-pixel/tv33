@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Panel Admin - TV Mundial 2026</title>
-  <link rel="icon" href="https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/2026_FIFA_World_Cup_emblem.svg/1920px-2026_FIFA_World_Cup_emblem.svg.png" type="image/png">
+  <title>TOP FUT · Panel Admin</title>
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
   <script src="https://cdn.tailwindcss.com"></script>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
@@ -60,12 +60,12 @@
       <!-- Encabezado -->
       <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
         <div class="flex items-center gap-4">
-          <div class="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-2xl p-1.5">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/2026_FIFA_World_Cup_emblem.svg/1920px-2026_FIFA_World_Cup_emblem.svg.png" alt="Mundial 2026" class="w-full h-full object-contain">
+          <div class="w-16 h-16 rounded-2xl flex items-center justify-center shadow-2xl overflow-hidden">
+            <img src="icon.svg" alt="TOP FUT" class="w-full h-full object-cover">
           </div>
           <div>
-            <h1 class="text-3xl md:text-4xl font-black bg-gradient-to-r from-yellow-300 via-orange-400 to-yellow-500 bg-clip-text text-transparent">PANEL ADMIN</h1>
-            <p class="text-emerald-300 text-sm font-semibold">⚽ Gestión de la plataforma de streaming</p>
+            <h1 class="text-3xl md:text-4xl font-black bg-gradient-to-r from-yellow-300 via-orange-400 to-yellow-500 bg-clip-text text-transparent">TOP FUT · ADMIN</h1>
+            <p class="text-emerald-300 text-sm font-semibold">⚽ Panel de administración</p>
           </div>
         </div>
         <a href="index.html" target="_blank" class="btn-gold text-slate-900 font-bold py-3 px-6 rounded-2xl shadow-lg flex items-center gap-2 text-sm">
@@ -89,12 +89,30 @@
 
           <!-- ============ PANEL: PARTIDOS ============ -->
           <div id="panel-matches" class="bg-slate-900/90 backdrop-blur-xl rounded-3xl card-glow border border-emerald-500/30 overflow-hidden">
-            <div class="p-6 sm:p-8 space-y-6">
+            <div class="p-5 sm:p-6 space-y-5">
+              <!-- Toolbar -->
+              <div class="flex items-center justify-between gap-3 flex-wrap">
+                <div>
+                  <h3 class="text-xl font-black text-emerald-200">⚽ Partidos</h3>
+                  <p class="text-emerald-100/70 text-xs">Crea uno nuevo o edita las señales de cada partido</p>
+                </div>
+                <button id="btn-create-match" class="btn-primary text-white font-bold py-3 px-5 rounded-2xl shadow-lg whitespace-nowrap">➕ Crear partido</button>
+              </div>
+
+              <!-- Lista de partidos (vista por defecto) -->
+              <div id="matches-list-section">
+                <div id="matches-container" class="space-y-3 max-h-[72vh] overflow-y-auto pr-1">
+                  <div class="text-center text-slate-400 py-10 text-sm">No hay partidos aún</div>
+                </div>
+              </div>
+
+              <!-- Formulario (oculto por defecto — se abre con "Crear" o "Editar") -->
+              <div id="match-form-section" class="hidden space-y-5">
               <div class="bg-gradient-to-r from-emerald-900/50 to-teal-900/50 border border-emerald-500/40 rounded-3xl p-5 flex gap-4">
                 <span class="text-3xl">⚽</span>
                 <div>
-                  <h3 class="text-lg font-bold text-emerald-200">Crear / editar partido</h3>
-                  <p class="text-emerald-100/80 text-sm">Agrega varias señales y elige cuál se transmite. Puedes cambiarla en vivo.</p>
+                  <h3 id="form-title" class="text-lg font-bold text-emerald-200">Crear partido</h3>
+                  <p class="text-emerald-100/80 text-sm">Carga los datos y las señales (botones) del partido.</p>
                 </div>
               </div>
 
@@ -145,7 +163,7 @@
                 <div class="flex items-center justify-between gap-3 flex-wrap">
                   <div>
                     <h4 class="text-base font-bold text-purple-300">📶 Señales del partido</h4>
-                    <p class="text-slate-400 text-xs">Marca con ⭐ la señal que se transmite ahora</p>
+                    <p class="text-slate-400 text-xs">Cada señal es un botón que el cliente elige (Señal 1 / Señal 2). La ⭐ es la que abre por defecto.</p>
                   </div>
                   <select id="m-add-saved" class="bg-slate-900/60 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-purple-500 cursor-pointer">
                     <option value="">➕ Agregar desde stream guardado</option>
@@ -182,6 +200,7 @@
                   <a id="m-open" href="#" target="_blank" class="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-2xl font-bold btn-gold text-slate-900 text-center">▶️ Abrir</a>
                 </div>
               </div>
+              </div><!-- /match-form-section -->
             </div>
           </div>
 
@@ -209,17 +228,6 @@
 
         <!-- Columna lateral -->
         <div class="lg:col-span-1 space-y-6">
-          <!-- Lista de partidos -->
-          <div id="side-matches" class="bg-slate-900/90 backdrop-blur-xl rounded-3xl card-glow border border-emerald-500/30 overflow-hidden">
-            <div class="p-5 border-b border-emerald-500/20 bg-gradient-to-r from-emerald-900/40 to-teal-900/40">
-              <h3 class="text-lg font-bold text-emerald-200">⚽ Partidos</h3>
-              <p class="text-emerald-100/70 text-xs">Cambia la señal en vivo desde aquí</p>
-            </div>
-            <div id="matches-container" class="p-4 max-h-[500px] overflow-y-auto space-y-3">
-              <div class="text-center text-slate-400 py-10 text-sm">No hay partidos aún</div>
-            </div>
-          </div>
-
           <!-- Streams guardados -->
           <div class="bg-slate-900/90 backdrop-blur-xl rounded-3xl card-glow border border-emerald-500/30 overflow-hidden">
             <div class="p-5 border-b border-emerald-500/20 bg-gradient-to-r from-emerald-900/40 to-teal-900/40">
@@ -236,7 +244,7 @@
   </div>
 
   <script type="module">
-    import { getFirestore, collection, addDoc, getDocs, getDoc, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, getDocs, getDoc, setDoc, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
 
     document.addEventListener('DOMContentLoaded', async () => {
       const db = getFirestore();
@@ -306,7 +314,6 @@
           b.classList.toggle('text-slate-400', !active);
         });
         Object.entries(panels).forEach(([k, el]) => el.classList.toggle('hidden', k !== tab));
-        $('side-matches').classList.toggle('hidden', tab !== 'matches');
       }));
 
       // ══════════════════════════════════════════════════════════
@@ -394,13 +401,28 @@
         $('m-status').value = 'upcoming';
         signalsList.innerHTML = '';
         createSignalRow('Señal 1', '', true);
+        createSignalRow('Señal 2', '', false);
         $('m-slug-preview').textContent = '';
         $('m-result').classList.add('hidden');
-        $('m-cancel').classList.add('hidden');
+        $('form-title').textContent = 'Crear partido';
         $('m-save').textContent = '💾 Guardar partido';
       }
 
-      $('m-cancel').addEventListener('click', resetMatchForm);
+      // ── Vistas del panel: lista ⇄ formulario (sin ventanas emergentes) ──
+      function showForm() {
+        $('matches-list-section').classList.add('hidden');
+        $('btn-create-match').classList.add('hidden');
+        $('match-form-section').classList.remove('hidden');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+      function showList() {
+        $('match-form-section').classList.add('hidden');
+        $('matches-list-section').classList.remove('hidden');
+        $('btn-create-match').classList.remove('hidden');
+        renderMatches();
+      }
+      $('btn-create-match').addEventListener('click', () => { resetMatchForm(); showForm(); });
+      $('m-cancel').addEventListener('click', () => { resetMatchForm(); showList(); });
 
       $('m-save').addEventListener('click', async () => {
         const home = $('m-home').value.trim();
@@ -447,7 +469,7 @@
           $('m-open').href = url;
           $('m-result').classList.remove('hidden');
           $('m-result').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-          if (editingMatchId) { resetMatchForm(); }
+          if (editingMatchId) { resetMatchForm(); showList(); }
         } catch (e) {
           console.error('Error guardando partido:', e);
           alert('Error al guardar el partido');
@@ -465,10 +487,6 @@
       });
 
       // ── Acciones en vivo sobre partidos ───────────────────────
-      window.switchSignal = async (id, idx) => {
-        try { await updateDoc(doc(db, 'matches', id), { activeSignal: Number(idx), updatedAt: new Date() }); }
-        catch (e) { console.error(e); alert('Error al cambiar la señal'); }
-      };
       window.setMatchStatus = async (id, status) => {
         try { await updateDoc(doc(db, 'matches', id), { status, updatedAt: new Date() }); }
         catch (e) { console.error(e); alert('Error al cambiar el estado'); }
@@ -477,7 +495,7 @@
       window.finishMatch = async (id) => {
         const raw = prompt('Marcador final (ej: 2-1). Déjalo vacío si no lo sabes:', '');
         if (raw === null) return; // cancelado
-        const payload = { status: 'finished', updatedAt: new Date() };
+        const payload = { status: 'finished', finishedAt: new Date(), updatedAt: new Date() };
         const mm = raw.match(/(\d+)\s*[-:xX]\s*(\d+)/);
         if (mm) payload.finalScore = { home: Number(mm[1]), away: Number(mm[2]) };
         try { await updateDoc(doc(db, 'matches', id), payload); }
@@ -507,11 +525,34 @@
           (m.signals || []).forEach((s, i) => createSignalRow(s.name || '', s.url || '', i === (m.activeSignal || 0)));
           if (signalsList.children.length === 0) createSignalRow('Señal 1', '', true);
           updateMatchSlug();
+          $('form-title').textContent = 'Editar partido';
           $('m-save').textContent = '🔄 Actualizar partido';
-          $('m-cancel').classList.remove('hidden');
           mainTabs.forEach(b => { if (b.dataset.tab === 'matches') b.click(); });
-          window.scrollTo({ top: 0, behavior: 'smooth' });
+          showForm();
         } catch (e) { console.error(e); }
+      };
+
+      // ── Edición rápida de señales SIN abrir el formulario completo ──
+      window.toggleSigEdit = (id) => {
+        const box = $('sigedit-' + id);
+        if (!box) return;
+        const willOpen = box.classList.contains('hidden');
+        // cerrar cualquier otro editor abierto
+        document.querySelectorAll('[id^="sigedit-"]').forEach(b => b.classList.add('hidden'));
+        if (willOpen) { box.classList.remove('hidden'); sigEditId = id; } else { sigEditId = null; }
+      };
+      window.fillSigFromSaved = (id, idx, url) => { if (url) $(`se-${id}-${idx}`).value = url; };
+      window.saveSigs = async (id) => {
+        const m = matchesSnapshot.find(x => x.id === id);
+        const names = (m && m.signals || []).map(s => s.name);
+        const sigs = [0, 1].map(i => ({
+          name: names[i] || ('Señal ' + (i + 1)),
+          url: ($(`se-${id}-${i}`)?.value || '').trim()
+        })).filter(s => s.url);
+        if (sigs.length === 0) { alert('Escribe al menos una señal'); return; }
+        sigEditId = null;
+        try { await updateDoc(doc(db, 'matches', id), { signals: sigs, updatedAt: new Date() }); }
+        catch (e) { console.error(e); alert('Error al guardar las señales'); }
       };
 
       // ── Render lista de partidos (sidebar) ────────────────────
@@ -531,36 +572,53 @@
           : '<span class="px-2 py-0.5 bg-amber-500/20 text-amber-300 text-xs rounded-full font-bold">🕐 Próximo</span>';
 
       let matchesSnapshot = [];
+      let sigEditId = null;   // id del partido con el editor de señales inline abierto
+      // No re-renderizar (perder edición) mientras se edita una señal o el formulario está abierto
+      const uiBusy = () => sigEditId !== null || !$('match-form-section').classList.contains('hidden');
+
       function renderMatches() {
         const cont = $('matches-container');
-        if (matchesSnapshot.length === 0) { cont.innerHTML = '<div class="text-center text-slate-400 py-10 text-sm">No hay partidos aún</div>'; return; }
+        if (matchesSnapshot.length === 0) { cont.innerHTML = '<div class="text-center text-slate-400 py-10 text-sm">No hay partidos aún. Toca "Crear partido".</div>'; return; }
+        const savedOpts = savedStreams.map(s => `<option value="${esc(s.url)}">⚽ ${esc(s.title)}</option>`).join('');
         cont.innerHTML = matchesSnapshot.map(m => {
           const url = shortUrlFor(m.slug);
           const when = m.kickoff?.seconds ? fmtDateTime(new Date(m.kickoff.seconds * 1000)) : '';
-          const sigOptions = (m.signals || []).map((s, i) =>
-            `<option value="${i}" ${i === (m.activeSignal || 0) ? 'selected' : ''}>${esc(s.name || ('Señal ' + (i + 1)))}</option>`).join('');
           const live = matchLive(m);
+          const sigNames = (m.signals || []).map(s => s.name || 'Señal').join(' · ') || 'Sin señales';
+          const score = (m.status === 'finished' && m.finalScore) ? ` · ${m.finalScore.home}-${m.finalScore.away}` : '';
+          const sigEditor = `
+            <div id="sigedit-${m.id}" class="hidden bg-slate-900/70 rounded-xl border border-purple-500/30 p-3 space-y-3">
+              ${[0, 1].map(i => `
+                <div class="space-y-1">
+                  <label class="text-xs text-purple-300 font-bold">Señal ${i + 1}</label>
+                  <input id="se-${m.id}-${i}" type="text" value="${esc((m.signals && m.signals[i] && m.signals[i].url) || '')}" placeholder="URL de la señal ${i + 1}" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-purple-500">
+                  <select onchange="fillSigFromSaved('${m.id}',${i},this.value); this.selectedIndex=0;" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-slate-300 text-xs focus:outline-none focus:border-purple-500 cursor-pointer">
+                    <option value="">📺 Usar un stream guardado…</option>${savedOpts}
+                  </select>
+                </div>`).join('')}
+              <div class="flex gap-2">
+                <button onclick="saveSigs('${m.id}')" class="flex-1 btn-primary text-white font-bold py-2 rounded-lg text-xs">💾 Guardar señales</button>
+                <button onclick="toggleSigEdit('${m.id}')" class="px-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-xs">Cerrar</button>
+              </div>
+            </div>`;
           return `
             <div class="bg-slate-800/80 rounded-2xl border border-slate-700 p-3 space-y-2">
               <div class="flex items-start justify-between gap-2">
                 <div class="min-w-0">
                   <h4 class="text-sm font-bold text-white truncate">${esc(m.title || 'Partido')}</h4>
-                  <p class="text-xs text-slate-400 truncate">${esc(m.competition || '')} ${when ? '· ' + when : ''}</p>
+                  <p class="text-xs text-slate-400 truncate">${esc(m.competition || '')} ${when ? '· ' + when : ''}${score}</p>
+                  <p class="text-xs text-purple-300/80 truncate">📶 ${esc(sigNames)}</p>
                 </div>
                 ${statusBadge(m)}
               </div>
-              <div class="flex items-center gap-2">
-                <span class="text-xs text-slate-400 shrink-0">📶</span>
-                <select onchange="switchSignal('${m.id}', this.value)" class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-white text-xs focus:outline-none focus:border-emerald-500 cursor-pointer">
-                  ${sigOptions || '<option>Sin señales</option>'}
-                </select>
-              </div>
+              ${sigEditor}
               <div class="flex flex-wrap gap-1.5">
                 ${m.status === 'finished'
                   ? `<button onclick="setMatchStatus('${m.id}','live')" class="flex-1 bg-red-600 hover:bg-red-500 text-white py-1.5 rounded-lg text-xs font-bold">▶️ Reabrir</button>`
                   : live
                     ? `<button onclick="finishMatch('${m.id}')" class="flex-1 bg-slate-600 hover:bg-slate-500 text-white py-1.5 rounded-lg text-xs font-bold">🏁 Finalizar</button>`
                     : `<button onclick="setMatchStatus('${m.id}','live')" class="flex-1 bg-red-600 hover:bg-red-500 text-white py-1.5 rounded-lg text-xs font-bold">▶️ En vivo</button>`}
+                <button onclick="toggleSigEdit('${m.id}')" title="Cambiar señales" class="bg-purple-600 hover:bg-purple-500 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold">📶</button>
                 <button onclick="navigator.clipboard.writeText('${url}').then(()=>alert('Enlace copiado'))" class="bg-slate-700 hover:bg-slate-600 text-white px-2.5 py-1.5 rounded-lg text-xs">📋</button>
                 <a href="${url}" target="_blank" class="btn-gold text-slate-900 px-2.5 py-1.5 rounded-lg text-xs font-bold text-center">▶️</a>
                 <button onclick="editMatch('${m.id}')" class="bg-blue-600 hover:bg-blue-500 text-white px-2.5 py-1.5 rounded-lg text-xs">✏️</button>
@@ -569,13 +627,49 @@
             </div>`;
         }).join('');
       }
+
+      // ── Agregado público (1 solo doc) para que el cliente NO lea toda la colección ──
+      async function publishSchedule() {
+        try {
+          const pub = matchesSnapshot.map(m => ({
+            slug: m.slug || '', home: m.home || '', away: m.away || '',
+            homeLogo: m.homeLogo || '', awayLogo: m.awayLogo || '',
+            competition: m.competition || '', round: m.round || '',
+            status: m.status || 'upcoming',
+            kickoff: m.kickoff?.seconds ? { seconds: m.kickoff.seconds } : null,
+            signals: (m.signals || []).map(s => ({ name: s.name || '', url: s.url || '' })),
+            finalScore: m.finalScore || null
+          }));
+          await setDoc(doc(db, 'public', 'schedule'), { matches: pub, updatedAt: Date.now() });
+        } catch (e) { console.error('publishSchedule', e); }
+      }
+
+      // ── Borrado automático de partidos finalizados hace > 48 h ──
+      async function purgeOldFinished() {
+        const cutoff = Date.now() - 48 * 3600000;
+        try {
+          const snap = await getDocs(matchesCol);
+          for (const d of snap.docs) {
+            const m = d.data();
+            if (m.status !== 'finished') continue;
+            const t = m.finishedAt?.seconds ? m.finishedAt.seconds * 1000
+              : (m.updatedAt?.seconds ? m.updatedAt.seconds * 1000 : null);
+            if (t != null && t < cutoff) await deleteDoc(doc(db, 'matches', d.id));
+          }
+        } catch (e) { console.error('purgeOldFinished', e); }
+      }
+
       onSnapshot(matchesCol, (snap) => {
         matchesSnapshot = snap.docs.map(d => ({ id: d.id, ...d.data() }))
           .sort((a, b) => (a.kickoff?.seconds || 0) - (b.kickoff?.seconds || 0));
-        renderMatches();
+        if (!uiBusy()) renderMatches();
+        publishSchedule();   // mantener el agregado público al día
       });
       // Refresco ligero para que el badge "EN VIVO" aparezca solo al llegar la hora
-      setInterval(renderMatches, 30000);
+      setInterval(() => { if (!uiBusy()) renderMatches(); }, 30000);
+      // Limpieza de finalizados viejos (al entrar y cada 6 h)
+      purgeOldFinished();
+      setInterval(purgeOldFinished, 6 * 3600000);
 
       // ══════════════════════════════════════════════════════════
       //  STREAMS GUARDADOS + ENLACES (legacy)
@@ -600,6 +694,7 @@
               </div>
               <button onclick="deleteStream('${s.id}')" class="shrink-0 w-9 h-9 bg-red-600 hover:bg-red-500 rounded-xl">🗑️</button>
             </div>`).join('');
+        if (!uiBusy()) renderMatches();   // refrescar dropdowns de "stream guardado" en las tarjetas
       });
 
       window.deleteStream = async (id) => { if (confirm('¿Eliminar este stream?')) { try { await deleteDoc(doc(db, 'streams', id)); } catch (e) { console.error(e); } } };

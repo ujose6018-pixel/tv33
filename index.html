@@ -3,8 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TV Mundial 2026 - Fútbol en Vivo</title>
-  <link rel="icon" href="https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/2026_FIFA_World_Cup_emblem.svg/1920px-2026_FIFA_World_Cup_emblem.svg.png" type="image/png">
+  <title>TOP FUT · Fútbol en Vivo</title>
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0a0a0c">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="TOP FUT">
+  <meta name="description" content="TOP FUT — agenda de partidos con enlaces de terceros. Fútbol en vivo.">
+
+  <!-- Aplicar el tema guardado antes de pintar (evita parpadeo) -->
+  <script>try{if(localStorage.getItem('topfut-theme')==='dark')document.documentElement.classList.add('theme-dark');}catch(e){}</script>
 
   <!-- Si llega un enlace de partido, mandarlo al reproductor aislado (antes de cargar nada) -->
   <script>
@@ -42,16 +52,16 @@
     .hidden { display: none !important; }
     a { text-decoration: none; color: inherit; }
 
-    /* ── Navbar ── */
-    .navbar { position: sticky; top: 0; z-index: 40; background: linear-gradient(180deg, #1e2ee6 0%, #1523c0 100%); box-shadow: 0 4px 20px rgba(0,0,0,0.35); }
+    /* ── Navbar (negro + verde, identidad TOP FUT) ── */
+    .navbar { position: sticky; top: 0; z-index: 40; background: linear-gradient(180deg, #131316 0%, #060607 100%); border-bottom: 2px solid #84cc16; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
     .navbar-inner { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; gap: 20px; padding: 0 18px; height: 60px; }
-    .brand { display: flex; align-items: center; gap: 10px; font-weight: 900; font-size: 20px; letter-spacing: .5px; }
-    .brand img { width: 34px; height: 34px; object-fit: contain; background: #fff; border-radius: 8px; padding: 3px; }
-    .brand .b1 { color: #fff; } .brand .b2 { color: #ffd21e; }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 900; font-size: 20px; letter-spacing: .5px; font-style: italic; }
+    .brand img { width: 36px; height: 36px; object-fit: contain; border-radius: 9px; }
+    .brand .b1 { color: #fff; } .brand .b2 { color: #a3e635; }
     .nav-links { display: flex; gap: 6px; margin-left: 14px; flex: 1; }
-    .nav-link { padding: 20px 14px; font-weight: 800; font-size: 14px; letter-spacing: .5px; color: #c7cffc; cursor: pointer; border: none; background: none; border-bottom: 3px solid transparent; }
+    .nav-link { padding: 20px 14px; font-weight: 800; font-size: 14px; letter-spacing: .5px; color: #9aa3b2; cursor: pointer; border: none; background: none; border-bottom: 3px solid transparent; }
     .nav-link:hover { color: #fff; }
-    .nav-link.active { color: #fff; border-bottom-color: #ffd21e; }
+    .nav-link.active { color: #fff; border-bottom-color: #a3e635; }
     .nav-icons { display: flex; align-items: center; gap: 4px; }
     .icon-btn { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: transparent; border: none; color: #dfe4ff; cursor: pointer; }
     .icon-btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
@@ -73,7 +83,7 @@
       background-size: auto, 24px 24px, auto;
       display: flex; align-items: center; gap: 20px;
     }
-    .hero-inner img { width: 74px; height: 74px; object-fit: contain; background: #fff; border-radius: 14px; padding: 6px; }
+    .hero-inner img { width: 74px; height: 74px; object-fit: contain; border-radius: 16px; box-shadow: 0 6px 20px rgba(0,0,0,0.4); }
     .hero h2 { margin: 0; font-size: 26px; font-weight: 900; }
     .hero p { margin: 4px 0 0; color: #bcc7f7; font-weight: 600; }
 
@@ -85,25 +95,25 @@
     .scroller::-webkit-scrollbar { height: 8px; }
     .scroller::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.25); border-radius: 10px; }
     .scroll-arrow { position: absolute; top: 42%; transform: translateY(-50%); z-index: 6; width: 38px; height: 38px; border-radius: 10px; border: none; cursor: pointer; background: rgba(10,16,60,0.85); color: #fff; font-size: 20px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(0,0,0,0.4); }
-    .scroll-arrow:hover { background: #1e2ee6; }
+    .scroll-arrow:hover { background: #65a30d; }
     .scroll-arrow.left { left: -6px; } .scroll-arrow.right { right: -6px; }
 
-    /* ── Tarjeta de evento (estilo Tigo) ── */
-    .event-card { flex: 0 0 300px; max-width: 300px; cursor: pointer; transition: transform .2s; }
+    /* ── Tarjeta de evento ── */
+    .event-card { flex: 0 0 300px; max-width: 300px; transition: transform .2s; }
     .event-card:hover { transform: translateY(-4px); }
-    .event-card.locked { cursor: default; opacity: 0.72; }
+    .event-card.locked { opacity: 0.72; }
     .event-card.locked:hover { transform: none; }
     .event-top {
       position: relative; border-radius: 16px 16px 0 0; padding: 16px 14px 18px; overflow: hidden;
-      background-color: #163092;
+      background-color: #141a12;
       background-image:
-        repeating-linear-gradient(120deg, rgba(255,255,255,0.06) 0 2px, transparent 2px 26px),
-        radial-gradient(rgba(255,255,255,0.11) 1px, transparent 1.5px);
+        repeating-linear-gradient(120deg, rgba(163,230,53,0.07) 0 2px, transparent 2px 26px),
+        radial-gradient(rgba(255,255,255,0.10) 1px, transparent 1.5px);
       background-size: auto, 22px 22px;
     }
     .comp-title { text-align: center; color: #fff; font-weight: 800; font-style: italic; font-size: 15px; text-shadow: 0 2px 6px rgba(0,0,0,0.4); margin-bottom: 12px; min-height: 20px; line-height: 1.1; }
     .crest-panel { position: relative; background: rgba(255,255,255,0.95); border-radius: 12px; padding: 20px 10px 12px; margin-top: 8px; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05); }
-    .round-badge { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); white-space: nowrap; background: linear-gradient(180deg,#ffd21e,#f5a800); color: #14267a; font-weight: 900; font-size: 11px; letter-spacing: .4px; padding: 5px 14px; border-radius: 999px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); text-transform: uppercase; }
+    .round-badge { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); white-space: nowrap; background: linear-gradient(180deg,#a3e635,#65a30d); color: #0c1502; font-weight: 900; font-size: 11px; letter-spacing: .4px; padding: 5px 14px; border-radius: 999px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); text-transform: uppercase; }
     .round-badge.live { background: linear-gradient(180deg,#ff3b46,#d61120); color: #fff; }
     .crests { display: flex; align-items: center; justify-content: center; gap: 10px; }
     .crest { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1; min-width: 0; }
@@ -114,10 +124,16 @@
     .event-meta { background: rgba(9,14,52,0.72); border-radius: 0 0 16px 16px; padding: 12px 14px; }
     .event-name { font-weight: 800; font-size: 15px; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .event-time { color: #9fb0e6; font-size: 12.5px; margin-top: 3px; font-variant-numeric: tabular-nums; }
-    .event-time .cd { color: #ffd21e; font-weight: 700; }
+    .event-time .cd { color: #a3e635; font-weight: 700; }
     .event-time .live { color: #ff5964; font-weight: 800; }
     @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:.35;} }
     .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #ff3b46; margin-right: 4px; animation: blink 1.1s infinite; }
+    /* Botones de señal (el cliente elige Señal 1 / 2) */
+    .event-actions { display: flex; gap: 8px; margin-top: 12px; }
+    .sig-btn { flex: 1; border: none; cursor: pointer; border-radius: 12px; padding: 10px 8px; font-weight: 800; font-size: 13px; color: #0c1502; background: linear-gradient(135deg,#a3e635,#65a30d); transition: transform .15s, box-shadow .15s; }
+    .sig-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(132,204,22,0.35); }
+    .sig-btn.alt { background: linear-gradient(135deg,#e2e8f0,#94a3b8); color:#0f172a; }
+    .locked-btn { flex: 1; text-align: center; border-radius: 12px; padding: 10px 8px; font-weight: 800; font-size: 13px; color: #94a3b8; background: rgba(148,163,184,0.12); margin-top: 12px; }
 
     .empty { text-align: center; color: #9fb0e6; padding: 60px 0; width: 100%; }
     footer { max-width: 1200px; margin: 40px auto 0; padding: 24px 18px; color: #6b78ba; font-size: 12px; text-align: center; }
@@ -137,6 +153,43 @@
       .section-title { font-size: 19px; }
       .event-card { flex-basis: 270px; max-width: 270px; }
     }
+
+    /* ── Tema DARK (el "Original" es el azul por defecto) ── */
+    .theme-dark body { background: radial-gradient(1200px 600px at 50% -8%, #1c1f16 0%, #101210 45%, #070708 100%) fixed, #070708; }
+    .theme-dark .nav-link.active { border-bottom-color: #a3e635; }
+    .theme-dark .hero-inner {
+      background-color: #1c2029;
+      background-image:
+        repeating-linear-gradient(120deg, rgba(255,255,255,0.04) 0 2px, transparent 2px 24px),
+        radial-gradient(rgba(255,255,255,0.07) 1px, transparent 1.6px),
+        linear-gradient(120deg, #1c1f28, #2a2e3a 60%, #1c1f28);
+    }
+    .theme-dark .event-top {
+      background-color: #1c2029;
+      background-image:
+        repeating-linear-gradient(120deg, rgba(255,255,255,0.05) 0 2px, transparent 2px 26px),
+        radial-gradient(rgba(255,255,255,0.08) 1px, transparent 1.5px);
+    }
+    .theme-dark .event-meta { background: rgba(0,0,0,0.72); }
+    .theme-dark .scroll-arrow { background: rgba(18,19,25,0.9); }
+    .theme-dark .scroll-arrow:hover { background: #33363f; }
+
+    /* ── Botón instalar ── */
+    #install-btn { display: none; align-items: center; gap: 6px; background: linear-gradient(180deg,#a3e635,#65a30d); color: #0c1502; font-weight: 800; font-size: 12.5px; border: none; border-radius: 999px; padding: 8px 14px; cursor: pointer; }
+    #install-btn.show { display: inline-flex; }
+
+    /* ── Modal legal ── */
+    .modal { position: fixed; inset: 0; z-index: 60; background: rgba(2,6,23,0.8); display: none; align-items: center; justify-content: center; padding: 18px; }
+    .modal.open { display: flex; }
+    .modal-card { background: #0f1633; border: 1px solid rgba(120,140,255,0.25); border-radius: 18px; max-width: 560px; width: 100%; max-height: 86vh; overflow-y: auto; padding: 24px; }
+    .theme-dark .modal-card { background: #16181f; border-color: rgba(255,255,255,0.12); }
+    .modal-card h3 { margin: 0 0 4px; font-size: 20px; }
+    .modal-card h4 { margin: 18px 0 6px; font-size: 15px; color: #a3e635; }
+    .modal-card p { margin: 0 0 10px; color: #c7cffc; font-size: 13.5px; line-height: 1.55; }
+    .theme-dark .modal-card p { color: #b8bcc6; }
+    .modal-close { margin-top: 16px; width: 100%; background: linear-gradient(180deg,#a3e635,#65a30d); color: #0c1502; font-weight: 800; border: none; border-radius: 12px; padding: 12px; cursor: pointer; }
+    footer a { color: #9fb0e6; text-decoration: underline; cursor: pointer; }
+    footer .sep { margin: 0 8px; opacity: .5; }
   </style>
 </head>
 <body>
@@ -145,8 +198,8 @@
   <nav class="navbar">
     <div class="navbar-inner">
       <div class="brand">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/2026_FIFA_World_Cup_emblem.svg/1920px-2026_FIFA_World_Cup_emblem.svg.png" alt="">
-        <span><span class="b1">MUNDIAL</span> <span class="b2">2026</span></span>
+        <img src="icon.svg" alt="">
+        <span><span class="b1">TOP</span> <span class="b2">FUT</span></span>
       </div>
       <div class="nav-links">
         <button class="nav-link active" data-filter="all">INICIO</button>
@@ -160,6 +213,10 @@
         <button class="icon-btn" id="search-btn" title="Buscar">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.3-4.3"/></svg>
         </button>
+        <button class="icon-btn" id="theme-btn" title="Cambiar tema">
+          <svg id="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+        <button id="install-btn" title="Instalar app">⬇️ Instalar</button>
       </div>
     </div>
   </nav>
@@ -167,10 +224,10 @@
   <!-- ── Hero ── -->
   <div class="hero">
     <div class="hero-inner">
-      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/2026_FIFA_World_Cup_emblem.svg/1920px-2026_FIFA_World_Cup_emblem.svg.png" alt="">
+      <img src="icon.svg" alt="">
       <div>
-        <h2>Copa Mundial de la FIFA 2026™</h2>
-        <p>Todos los partidos en vivo, en un solo lugar ⚽</p>
+        <h2>TOP <span style="color:#a3e635;">FUT</span> ⚽</h2>
+        <p>Streaming de partidos en vivo</p>
       </div>
     </div>
   </div>
@@ -187,10 +244,24 @@
     </div>
   </div>
 
-  <footer>⚽ MUNDIAL 2026 · Transmisiones en vivo</footer>
+  <footer>
+    ⚽ TOP FUT · Agenda de partidos<br>
+    <a id="link-terms">Términos</a><span class="sep">·</span><a id="link-privacy">Privacidad</a>
+    <p style="margin:10px 0 0;opacity:.75;max-width:640px;margin-left:auto;margin-right:auto;">
+      TOP FUT no aloja ni retransmite contenido. Solo enlaza fuentes de terceros.
+    </p>
+  </footer>
+
+  <!-- ── Modal legal ── -->
+  <div class="modal" id="legal-modal">
+    <div class="modal-card">
+      <div id="legal-content"></div>
+      <button class="modal-close" id="legal-close">Entendido</button>
+    </div>
+  </div>
 
   <script type="module">
-    import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
+    import { getFirestore, collection, getDocs, getDoc, doc } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
 
     document.addEventListener('DOMContentLoaded', () => {
       const db = getFirestore();
@@ -239,7 +310,10 @@
       let visibleList = [];
       let phaseCache = {};
 
-      window.goMatch = (slug) => { window.location.href = 'reproductor.html?slug=' + encodeURIComponent(slug); };
+      window.goMatch = (slug, sIdx) => {
+        const s = (sIdx == null) ? '' : '&s=' + sIdx;
+        window.location.href = 'reproductor.html?slug=' + encodeURIComponent(slug) + s;
+      };
 
       function crest(name, logo) {
         return `<div class="crest">
@@ -257,21 +331,34 @@
         if (phase === 'live') badge = `<div class="round-badge live">● EN VIVO</div>`;
         else if (m.round) badge = `<div class="round-badge">${esc(m.round)}</div>`;
 
+        const key = esc(m.slug || '');
         let timeLine;
         if (phase === 'live') {
           timeLine = `<span class="live"><span class="dot"></span>EN VIVO AHORA</span>`;
         } else if (phase === 'locked') {
-          timeLine = `${esc(dt(m))} · 🔒 <span class="cd" id="cd-${m.id}" data-ko="${ko}">${formatCountdown(ko - now)}</span>`;
+          timeLine = `${esc(dt(m))} · 🔒 <span class="cd" id="cd-${key}" data-ko="${ko}">${formatCountdown(ko - now)}</span>`;
         } else {
-          timeLine = `${esc(dt(m))}${ko ? ` · ⏱ <span class="cd" id="cd-${m.id}" data-ko="${ko}">${formatCountdown(ko - now)}</span>` : ''}`;
+          timeLine = `${esc(dt(m))}${ko ? ` · ⏱ <span class="cd" id="cd-${key}" data-ko="${ko}">${formatCountdown(ko - now)}</span>` : ''}`;
         }
 
         const clickable = phase !== 'locked';
         const name = [m.home, m.away].filter(Boolean).join(' vs. ') || (m.title || 'Partido');
+        const sigs = m.signals || [];
+        let actions;
+        if (!clickable) {
+          actions = `<div class="locked-btn">🔒 Disponible pronto</div>`;
+        } else if (sigs.length >= 2) {
+          actions = `<div class="event-actions">
+            <button class="sig-btn" onclick="goMatch('${key}',0)">▶️ ${esc(sigs[0].name || 'Señal 1')}</button>
+            <button class="sig-btn alt" onclick="goMatch('${key}',1)">▶️ ${esc(sigs[1].name || 'Señal 2')}</button>
+          </div>`;
+        } else {
+          actions = `<div class="event-actions"><button class="sig-btn" onclick="goMatch('${key}',0)">▶️ Ver ahora</button></div>`;
+        }
         return `
-          <div class="event-card ${clickable ? '' : 'locked'}" ${clickable ? `onclick="goMatch('${esc(m.slug)}')"` : ''}>
+          <div class="event-card ${clickable ? '' : 'locked'}">
             <div class="event-top">
-              <div class="comp-title">${esc(m.competition || 'COPA MUNDIAL DE LA FIFA')}</div>
+              <div class="comp-title">${esc(m.competition || 'TOP FUT')}</div>
               <div class="crest-panel">
                 ${badge}
                 <div class="crests">
@@ -284,6 +371,7 @@
             <div class="event-meta">
               <p class="event-name">${esc(name)}</p>
               <div class="event-time">${timeLine}</div>
+              ${actions}
             </div>
           </div>`;
       }
@@ -307,7 +395,7 @@
 
         visibleList = list;
         phaseCache = {};
-        list.forEach(m => phaseCache[m.id] = computePhase(m));
+        list.forEach(m => phaseCache[m.slug] = computePhase(m));
 
         sectionTitle.textContent = currentFilter === 'live' ? '🔴 En vivo' : currentFilter === 'upcoming' ? 'Próximos eventos' : 'Eventos';
 
@@ -337,22 +425,89 @@
       $('arrow-left').addEventListener('click', () => scroller.scrollBy({ left: -330, behavior: 'smooth' }));
       $('arrow-right').addEventListener('click', () => scroller.scrollBy({ left: 330, behavior: 'smooth' }));
 
-      // Datos en tiempo real
-      onSnapshot(matchesCol, (snap) => {
-        allMatches = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        renderGrid();
-      });
+      // ── Datos: 1 solo documento agregado (public/schedule) para NO leer toda
+      //     la colección con cada visita (estable ante mucho tráfico). Se relee
+      //     cada 60 s + al volver a la pestaña. Si el agregado no existe, cae a
+      //     la colección una sola vez (arranque). ──
+      let lastScheduleStamp = null;
+      async function loadSchedule() {
+        try {
+          const snap = await getDoc(doc(db, 'public', 'schedule'));
+          if (snap.exists() && Array.isArray(snap.data().matches)) {
+            const data = snap.data();
+            if (data.updatedAt === lastScheduleStamp) return; // sin cambios → no re-render
+            lastScheduleStamp = data.updatedAt || null;
+            allMatches = data.matches;
+            renderGrid();
+            return;
+          }
+        } catch (e) { console.error('loadSchedule', e); }
+        // Fallback: leer la colección una vez si aún no hay agregado
+        try {
+          const qs = await getDocs(matchesCol);
+          allMatches = qs.docs.map(d => ({ id: d.id, ...d.data() }));
+          renderGrid();
+        } catch (e) { console.error('fallback matches', e); }
+      }
+      loadSchedule();
+      setInterval(loadSchedule, 60000);
+      document.addEventListener('visibilitychange', () => { if (!document.hidden) loadSchedule(); });
 
       // Temporizador: actualiza cuentas regresivas cada segundo; re-renderiza al cambiar de fase
       setInterval(() => {
         for (const m of visibleList) {
-          if (computePhase(m) !== phaseCache[m.id]) { renderGrid(); return; }
+          if (computePhase(m) !== phaseCache[m.slug]) { renderGrid(); return; }
         }
         for (const m of visibleList) {
-          const el = document.getElementById('cd-' + m.id);
+          const el = document.getElementById('cd-' + (m.slug || ''));
           if (el) el.textContent = formatCountdown(Number(el.dataset.ko) - Date.now());
         }
       }, 1000);
+
+      // ── Tema (Original / Dark) ──
+      const themeIcon = () => {
+        const dark = document.documentElement.classList.contains('theme-dark');
+        $('theme-icon').innerHTML = dark
+          ? '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/>'
+          : '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+      };
+      themeIcon();
+      $('theme-btn').addEventListener('click', () => {
+        const dark = document.documentElement.classList.toggle('theme-dark');
+        try { localStorage.setItem('topfut-theme', dark ? 'dark' : 'original'); } catch (e) {}
+        themeIcon();
+      });
+
+      // ── Modal legal ──
+      const LEGAL = {
+        terms: `<h3>Términos y condiciones</h3>
+          <p>TOP FUT es únicamente un <b>agregador de enlaces</b>. No alojamos, subimos, grabamos ni retransmitimos ningún contenido de audio o video.</p>
+          <p>Todos los enlaces provienen de <b>fuentes de terceros</b>, alojadas y transmitidas por dichos terceros, quienes son los únicos responsables de su contenido, legalidad y disponibilidad.</p>
+          <p>Si eres titular de derechos y consideras que un enlace infringe los tuyos, dirígete al proveedor de origen que aloja el contenido. El uso de esta plataforma implica la aceptación de estos términos.</p>`,
+        privacy: `<h3>Política de privacidad</h3>
+          <p>TOP FUT <b>no solicita ni almacena datos personales ni sensibles</b> de los usuarios: sin registro, sin nombres, correos, contraseñas ni datos de pago.</p>
+          <p>La plataforma solo almacena <b>enlaces de terceros</b> y la <b>programación de partidos</b> (equipos y horarios).</p>
+          <p>Tus preferencias (como el tema) se guardan localmente en tu dispositivo y nunca se envían a ningún servidor.</p>`
+      };
+      const legalModal = $('legal-modal');
+      const openLegal = (k) => { $('legal-content').innerHTML = LEGAL[k]; legalModal.classList.add('open'); };
+      $('link-terms').addEventListener('click', () => openLegal('terms'));
+      $('link-privacy').addEventListener('click', () => openLegal('privacy'));
+      $('legal-close').addEventListener('click', () => legalModal.classList.remove('open'));
+      legalModal.addEventListener('click', (e) => { if (e.target === legalModal) legalModal.classList.remove('open'); });
+
+      // ── PWA (instalable, solo la interfaz de cliente) ──
+      if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+      let deferredPrompt = null;
+      const installBtn = $('install-btn');
+      window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; installBtn.classList.add('show'); });
+      installBtn.addEventListener('click', async () => {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        await deferredPrompt.userChoice;
+        deferredPrompt = null; installBtn.classList.remove('show');
+      });
+      window.addEventListener('appinstalled', () => installBtn.classList.remove('show'));
     });
   </script>
 </body>
