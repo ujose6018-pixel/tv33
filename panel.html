@@ -117,6 +117,19 @@
                   </div>
                 </div>
 
+                <!-- ⚙️ Fuente de datos: proxy opcional para rondas/jornadas COMPLETAS -->
+                <div class="bg-slate-800/50 border border-slate-700 rounded-2xl p-4 space-y-2">
+                  <div class="flex items-center justify-between gap-2 flex-wrap">
+                    <label class="text-sm font-bold text-slate-200">⚙️ Fuente de datos</label>
+                    <span id="src-status" class="text-xs font-semibold px-2 py-1 rounded-full bg-slate-700 text-slate-300">TheSportsDB (gratis · tope ~15)</span>
+                  </div>
+                  <div class="flex flex-col sm:flex-row gap-2">
+                    <input id="worker-url" type="text" placeholder="URL del proxy (Cloudflare Worker) — opcional, para partidos completos" class="flex-1 bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-3 text-white text-sm placeholder-slate-500 focus:outline-none focus:border-indigo-500">
+                    <button id="btn-save-worker" class="px-4 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-sm whitespace-nowrap">💾 Guardar proxy</button>
+                  </div>
+                  <p class="text-xs text-slate-500">Con proxy (football-data.org) trae rondas/jornadas <b>completas</b> del Mundial y ligas top. Sin proxy usa TheSportsDB. Guía: <span class="text-slate-400 font-mono">proxy/README.md</span></p>
+                </div>
+
                 <!-- Liga (lista curada por ID — el buscador por nombre del plan gratis
                      de TheSportsDB quedó capado a 5 ligas, así que elegimos por ID) -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -247,7 +260,7 @@
                 <div class="flex items-center justify-between gap-3 flex-wrap">
                   <div>
                     <h4 class="text-base font-bold text-purple-300">📶 Señales del partido</h4>
-                    <p class="text-slate-400 text-xs">Cada señal es un botón que el cliente elige (Señal 1 / Señal 2). La ⭐ es la que abre por defecto.</p>
+                    <p class="text-slate-400 text-xs">Cada señal es un botón que el cliente elige (hasta 3: Señal 1 / 2 / 3). La ⭐ es la que abre por defecto. Las vacías no aparecen.</p>
                   </div>
                   <select id="m-add-saved" class="bg-slate-900/60 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-purple-500 cursor-pointer">
                     <option value="">➕ Agregar desde stream guardado</option>
@@ -486,6 +499,7 @@
         signalsList.innerHTML = '';
         createSignalRow('Señal 1', '', true);
         createSignalRow('Señal 2', '', false);
+        createSignalRow('Señal 3', '', false);
         $('m-slug-preview').textContent = '';
         $('m-result').classList.add('hidden');
         $('form-title').textContent = 'Crear partido';
@@ -625,12 +639,17 @@
         document.querySelectorAll('[id^="sigedit-"]').forEach(b => b.classList.add('hidden'));
         if (willOpen) { box.classList.remove('hidden'); sigEditId = id; } else { sigEditId = null; }
       };
-      window.fillSigFromSaved = (id, idx, url) => { if (url) $(`se-${id}-${idx}`).value = url; };
+      // Elegir un stream guardado rellena URL Y nombre del botón (el cliente ve ese nombre).
+      window.fillSigFromSaved = (id, idx, sIdx) => {
+        if (sIdx === '') return;
+        const s = savedStreams[Number(sIdx)];
+        if (!s) return;
+        $(`se-${id}-${idx}`).value = s.url || '';
+        $(`sen-${id}-${idx}`).value = s.title || '';
+      };
       window.saveSigs = async (id) => {
-        const m = matchesSnapshot.find(x => x.id === id);
-        const names = (m && m.signals || []).map(s => s.name);
-        const sigs = [0, 1].map(i => ({
-          name: names[i] || ('Señal ' + (i + 1)),
+        const sigs = [0, 1, 2].map(i => ({
+          name: ($(`sen-${id}-${i}`)?.value || '').trim() || ('Señal ' + (i + 1)),
           url: ($(`se-${id}-${i}`)?.value || '').trim()
         })).filter(s => s.url);
         if (sigs.length === 0) { alert('Escribe al menos una señal'); return; }
@@ -663,7 +682,7 @@
       function renderMatches() {
         const cont = $('matches-container');
         if (matchesSnapshot.length === 0) { cont.innerHTML = '<div class="text-center text-slate-400 py-10 text-sm">No hay partidos aún. Toca "Crear partido".</div>'; return; }
-        const savedOpts = savedStreams.map(s => `<option value="${esc(s.url)}">⚽ ${esc(s.title)}</option>`).join('');
+        const savedOpts = savedStreams.map((s, i) => `<option value="${i}">⚽ ${esc(s.title)}</option>`).join('');
         cont.innerHTML = matchesSnapshot.map(m => {
           const url = shortUrlFor(m.slug);
           const when = m.kickoff?.seconds ? fmtDateTime(new Date(m.kickoff.seconds * 1000)) : '';
@@ -672,12 +691,15 @@
           const score = (m.status === 'finished' && m.finalScore) ? ` · ${m.finalScore.home}-${m.finalScore.away}` : '';
           const sigEditor = `
             <div id="sigedit-${m.id}" class="hidden bg-slate-900/70 rounded-xl border border-purple-500/30 p-3 space-y-3">
-              ${[0, 1].map(i => `
+              ${[0, 1, 2].map(i => `
                 <div class="space-y-1">
                   <label class="text-xs text-purple-300 font-bold">Señal ${i + 1}</label>
-                  <input id="se-${m.id}-${i}" type="text" value="${esc((m.signals && m.signals[i] && m.signals[i].url) || '')}" placeholder="URL de la señal ${i + 1}" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-purple-500">
+                  <div class="flex flex-col sm:flex-row gap-2">
+                    <input id="sen-${m.id}-${i}" type="text" value="${esc((m.signals && m.signals[i] && m.signals[i].name) || '')}" placeholder="Nombre del botón" class="w-full sm:w-36 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-purple-500">
+                    <input id="se-${m.id}-${i}" type="text" value="${esc((m.signals && m.signals[i] && m.signals[i].url) || '')}" placeholder="URL de la señal ${i + 1}" class="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-purple-500">
+                  </div>
                   <select onchange="fillSigFromSaved('${m.id}',${i},this.value); this.selectedIndex=0;" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-slate-300 text-xs focus:outline-none focus:border-purple-500 cursor-pointer">
-                    <option value="">📺 Usar un stream guardado…</option>${savedOpts}
+                    <option value="">📺 Usar un stream guardado (pone nombre + URL)…</option>${savedOpts}
                   </select>
                 </div>`).join('')}
               <div class="flex gap-2">
@@ -769,21 +791,79 @@
         testerSelect.innerHTML = '<option value="">-- 📺 Selecciona un stream guardado --</option>' + savedStreams.map(opt).join('');
         mAddSaved.innerHTML = '<option value="">➕ Agregar desde stream guardado</option>' + savedStreams.map((s, i) => `<option value="${i}">⚽ ${esc(s.title)}</option>`).join('');
 
+        renderStreams();
+        if (!uiBusy()) renderMatches();   // refrescar dropdowns de "stream guardado" en las tarjetas
+      });
+
+      // ── Streams guardados: lista con edición inline (✏️). Editar la URL aquí
+      //    permite "reciclar" señales: si partidos la usan, se les actualiza también
+      //    (con confirmación) y el cambio llega EN VIVO vía el agregado. ──
+      let streamEditId = null;   // id del stream con editor abierto (no re-render mientras)
+      function renderStreams() {
+        if (streamEditId !== null) return;   // no pisar una edición abierta
         const sc = $('streams-container');
         sc.innerHTML = savedStreams.length === 0
           ? '<div class="text-center text-slate-400 py-10 text-sm">No hay streams aún</div>'
           : savedStreams.map(s => `
-            <div class="bg-slate-800/80 rounded-xl border border-slate-700 p-3 flex items-start justify-between gap-2">
-              <div class="min-w-0">
-                <h4 class="text-sm font-bold text-emerald-200 truncate">${esc(s.title)}</h4>
-                <p class="text-xs text-slate-400 truncate">${esc(s.url)}</p>
+            <div class="bg-slate-800/80 rounded-xl border border-slate-700 p-3 space-y-2">
+              <div class="flex items-start justify-between gap-2">
+                <div class="min-w-0">
+                  <h4 class="text-sm font-bold text-emerald-200 truncate">${esc(s.title)}</h4>
+                  <p class="text-xs text-slate-400 truncate">${esc(s.url)}</p>
+                </div>
+                <div class="flex gap-1 shrink-0">
+                  <button onclick="toggleStreamEdit('${s.id}')" title="Editar nombre/URL" class="w-9 h-9 bg-blue-600 hover:bg-blue-500 rounded-xl">✏️</button>
+                  <button onclick="deleteStream('${s.id}')" class="w-9 h-9 bg-red-600 hover:bg-red-500 rounded-xl">🗑️</button>
+                </div>
               </div>
-              <button onclick="deleteStream('${s.id}')" class="shrink-0 w-9 h-9 bg-red-600 hover:bg-red-500 rounded-xl">🗑️</button>
+              <div id="stredit-${s.id}" class="hidden space-y-2">
+                <input id="st-name-${s.id}" type="text" value="${esc(s.title || '')}" placeholder="Nombre" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-blue-500">
+                <input id="st-url-${s.id}" type="text" value="${esc(s.url || '')}" placeholder="URL del stream" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-blue-500">
+                <div class="flex gap-2">
+                  <button onclick="saveStream('${s.id}')" class="flex-1 btn-primary text-white font-bold py-2 rounded-lg text-xs">💾 Guardar</button>
+                  <button onclick="toggleStreamEdit('${s.id}')" class="px-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-xs">Cerrar</button>
+                </div>
+              </div>
             </div>`).join('');
-        if (!uiBusy()) renderMatches();   // refrescar dropdowns de "stream guardado" en las tarjetas
-      });
+      }
+      window.toggleStreamEdit = (id) => {
+        const box = $('stredit-' + id);
+        if (!box) return;
+        const willOpen = box.classList.contains('hidden');
+        document.querySelectorAll('[id^="stredit-"]').forEach(b => b.classList.add('hidden'));
+        if (willOpen) { box.classList.remove('hidden'); streamEditId = id; }
+        else { streamEditId = null; renderStreams(); }
+      };
+      window.saveStream = async (id) => {
+        const s = savedStreams.find(x => x.id === id);
+        if (!s) return;
+        const title = ($('st-name-' + id)?.value || '').trim() || s.title || 'Stream';
+        const url = ($('st-url-' + id)?.value || '').trim();
+        if (!url) { alert('Escribe la URL del stream'); return; }
+        const oldUrl = s.url, oldTitle = s.title;
+        // Partidos que tienen configurada la URL vieja de esta señal
+        const affected = (url !== oldUrl || title !== oldTitle)
+          ? matchesSnapshot.filter(m => (m.signals || []).some(sig => sig.url === oldUrl))
+          : [];
+        let alsoMatches = false;
+        if (affected.length) {
+          alsoMatches = confirm(`Esta señal está configurada en ${affected.length} partido(s). ¿Actualizarla también en esos partidos? (el cambio llega en vivo)`);
+        }
+        streamEditId = null;
+        try {
+          await updateDoc(doc(db, 'streams', id), { title, url });
+          if (alsoMatches) {
+            for (const m of affected) {
+              const sigs = (m.signals || []).map(sig => sig.url === oldUrl
+                ? { name: (sig.name === oldTitle ? title : sig.name), url }
+                : sig);
+              await updateDoc(doc(db, 'matches', m.id), { signals: sigs, updatedAt: new Date() });
+            }
+          }
+        } catch (e) { console.error(e); alert('Error al guardar el stream'); }
+      };
 
-      window.deleteStream = async (id) => { if (confirm('¿Eliminar este stream?')) { try { await deleteDoc(doc(db, 'streams', id)); } catch (e) { console.error(e); } } };
+      window.deleteStream = async (id) => { if (confirm('¿Eliminar este stream?')) { try { if (streamEditId === id) streamEditId = null; await deleteDoc(doc(db, 'streams', id)); } catch (e) { console.error(e); } } };
 
       // Tester
       testerSelect.addEventListener('change', () => { if (testerSelect.value) $('tester-input').value = testerSelect.value; });
@@ -810,17 +890,19 @@
       // El buscador de ligas del plan gratis (search_all_leagues.php) quedó
       // capado a ~5 ligas, así que trabajamos con una lista curada por ID.
       // Para agregar ligas nuevas: agrega { id, name, season } aquí.
+      // id = TheSportsDB (gratis). fd = código football-data.org (con proxy → datos completos).
+      // Las ligas sin fd usan TheSportsDB aunque haya proxy (football-data gratis no las cubre).
       const KNOWN_LEAGUES = [
-        { id: '4429', name: '🌎 Copa Mundial de la FIFA', season: '2026' },
-        { id: '4480', name: '🇪🇺 UEFA Champions League', season: '2026-2027' },
-        { id: '4481', name: '🇪🇺 UEFA Europa League',   season: '2026-2027' },
-        { id: '4328', name: '🏴 Premier League (Inglaterra)', season: '2026-2027' },
-        { id: '4335', name: '🇪🇸 La Liga (España)',      season: '2026-2027' },
-        { id: '4332', name: '🇮🇹 Serie A (Italia)',      season: '2026-2027' },
-        { id: '4331', name: '🇩🇪 Bundesliga (Alemania)', season: '2026-2027' },
-        { id: '4334', name: '🇫🇷 Ligue 1 (Francia)',     season: '2026-2027' },
-        { id: '4350', name: '🇲🇽 Liga MX (México)',       season: '2026-2027' },
-        { id: '4346', name: '🇺🇸 MLS (EE. UU.)',         season: '2026' },
+        { id: '4429', name: '🌎 Copa Mundial de la FIFA', season: '2026', fd: 'WC' },
+        { id: '4480', name: '🇪🇺 UEFA Champions League', season: '2026-2027', fd: 'CL' },
+        { id: '4481', name: '🇪🇺 UEFA Europa League',   season: '2026-2027', fd: '' },
+        { id: '4328', name: '🏴 Premier League (Inglaterra)', season: '2026-2027', fd: 'PL' },
+        { id: '4335', name: '🇪🇸 La Liga (España)',      season: '2026-2027', fd: 'PD' },
+        { id: '4332', name: '🇮🇹 Serie A (Italia)',      season: '2026-2027', fd: 'SA' },
+        { id: '4331', name: '🇩🇪 Bundesliga (Alemania)', season: '2026-2027', fd: 'BL1' },
+        { id: '4334', name: '🇫🇷 Ligue 1 (Francia)',     season: '2026-2027', fd: 'FL1' },
+        { id: '4350', name: '🇲🇽 Liga MX (México)',       season: '2026-2027', fd: '' },
+        { id: '4346', name: '🇺🇸 MLS (EE. UU.)',         season: '2026', fd: '' },
       ];
 
       let foundMatches = [];
@@ -846,39 +928,75 @@
       const $importMessageIcon = $('import-message-icon');
       const $importMessageText = $('import-message-text');
 
+      let workerUrl = '';   // URL del proxy (football-data.org). Vacío = solo TheSportsDB.
+
       // Poblar la lista curada de ligas (una vez)
       $leagueSelect.innerHTML = '<option value="">-- Selecciona una liga --</option>' +
-        KNOWN_LEAGUES.map(l => `<option value="${l.id}" data-season="${l.season}">${esc(l.name)}</option>`).join('');
+        KNOWN_LEAGUES.map(l => `<option value="${l.id}" data-season="${l.season}" data-fd="${l.fd || ''}">${esc(l.name)}</option>`).join('');
       // Al elegir liga, prefijar su temporada por defecto
       $leagueSelect.addEventListener('change', () => {
         const opt = $leagueSelect.selectedOptions[0];
         if (opt && opt.dataset.season && !$seasonInput.value.trim()) $seasonInput.value = opt.dataset.season;
         $leagueId.value = ''; // la lista manda si eliges de la lista
+        updateSrcStatus();
       });
+      $leagueId.addEventListener('input', updateSrcStatus);
 
       // La id manual tiene prioridad; si no, la de la lista.
       const activeLeagueId = () => ($leagueId.value.trim() || $leagueSelect.value || '').trim();
+      // football-data: código de la liga elegida (solo si NO hay ID manual y hay proxy).
+      const selectedFd = () => {
+        if ($leagueId.value.trim()) return '';
+        const opt = $leagueSelect.selectedOptions[0];
+        return (opt && opt.dataset.fd) ? opt.dataset.fd : '';
+      };
+      const useFd = () => !!workerUrl && !!selectedFd();
+      function updateSrcStatus() {
+        const el = $('src-status'); if (!el) return;
+        const base = 'text-xs font-semibold px-2 py-1 rounded-full ';
+        if (useFd()) { el.textContent = 'Proxy activo · football-data.org'; el.className = base + 'bg-emerald-500/20 text-emerald-300'; }
+        else if (workerUrl && $leagueSelect.value && !selectedFd()) { el.textContent = 'Esta liga no está en football-data · TheSportsDB'; el.className = base + 'bg-amber-500/20 text-amber-300'; }
+        else { el.textContent = 'TheSportsDB (gratis · tope ~15)'; el.className = base + 'bg-slate-700 text-slate-300'; }
+      }
+      // Cargar/guardar la URL del proxy (Firestore config/importer)
+      (async () => {
+        try {
+          const snap = await getDoc(doc(db, 'config', 'importer'));
+          if (snap.exists() && snap.data().workerUrl) { workerUrl = String(snap.data().workerUrl).trim(); $('worker-url').value = workerUrl; }
+        } catch (e) { console.error('load importer cfg', e); }
+        updateSrcStatus();
+      })();
+      $('btn-save-worker').addEventListener('click', async () => {
+        const v = $('worker-url').value.trim().replace(/\/+$/, '');
+        try {
+          await setDoc(doc(db, 'config', 'importer'), { workerUrl: v, updatedAt: new Date() });
+          workerUrl = v; updateSrcStatus();
+          alert(v ? '✅ Proxy guardado. Las ligas cubiertas traerán partidos completos.' : 'Proxy quitado. Se usará TheSportsDB.');
+        } catch (e) { console.error(e); alert('No se pudo guardar el proxy'); }
+      });
 
       // Rondas: en TheSportsDB el parámetro r= es un NÚMERO (no el texto).
       // Fase de grupos = jornada (1,2,3…); eliminatorias usan códigos fijos.
       // (El Mundial a veces etiqueta octavos como 16 y otras como 125 → consultamos ambos.)
+      // Cada preset mapea a TheSportsDB (número/s de ronda) y a football-data (stage o matchday).
       const ROUND_PRESETS = [
-        { label: 'Fase de grupos · Jornada 1', r: '1' },
-        { label: 'Fase de grupos · Jornada 2', r: '2' },
-        { label: 'Fase de grupos · Jornada 3', r: '3' },
-        { label: 'Octavos de final',  r: '125,16' },
-        { label: 'Cuartos de final',  r: '150' },
-        { label: 'Semifinales',       r: '160' },
-        { label: 'Tercer lugar',      r: '170' },
-        { label: 'Final',             r: '180' },
+        { label: 'Fase de grupos · Jornada 1', tsdb: '1', fd: { matchday: 1 } },
+        { label: 'Fase de grupos · Jornada 2', tsdb: '2', fd: { matchday: 2 } },
+        { label: 'Fase de grupos · Jornada 3', tsdb: '3', fd: { matchday: 3 } },
+        { label: 'Octavos de final',  tsdb: '125,16', fd: { stage: 'LAST_16' } },
+        { label: 'Cuartos de final',  tsdb: '150',    fd: { stage: 'QUARTER_FINALS' } },
+        { label: 'Semifinales',       tsdb: '160',    fd: { stage: 'SEMI_FINALS' } },
+        { label: 'Tercer lugar',      tsdb: '170',    fd: { stage: 'THIRD_PLACE' } },
+        { label: 'Final',             tsdb: '180',    fd: { stage: 'FINAL' } },
       ];
       $roundSelect.innerHTML = '<option value="">-- Toda la temporada --</option>' +
-        ROUND_PRESETS.map(p => `<option value="${p.r}">${esc(p.label)}</option>`).join('');
-      // Rondas activas: el número manual manda; si no, la(s) del preset (puede ser lista).
-      function activeRounds() {
+        ROUND_PRESETS.map((p, i) => `<option value="${i}">${esc(p.label)}</option>`).join('');
+      // Devuelve { manual: '<nº jornada>' } | { preset: {...} } | null
+      function activeRoundSpec() {
         const manual = $roundInput.value.trim();
-        if (manual) return manual.split(',').map(s => s.trim()).filter(Boolean);
-        return ($roundSelect.value ? $roundSelect.value.split(',').map(s => s.trim()).filter(Boolean) : []);
+        if (manual) return { manual };
+        const idx = $roundSelect.value;
+        return idx === '' ? null : { preset: ROUND_PRESETS[Number(idx)] };
       }
 
       function showImportSection() {
@@ -970,16 +1088,46 @@
         return out;
       }
 
-      // Próximos + en curso: dejamos pasar partidos que empezaron hace < 3 h
-      // (así "una jornada en curso" muestra también los que ya arrancaron hoy).
-      function filterUpcoming(events) {
+      // ── football-data.org (vía proxy). Devuelve { matches } o { error }. ──
+      const FD_ROUND_ES = { GROUP_STAGE:'Fase de grupos', LAST_16:'Octavos de final', QUARTER_FINALS:'Cuartos de final', SEMI_FINALS:'Semifinales', THIRD_PLACE:'Tercer lugar', FINAL:'Final', LEAGUE_STAGE:'Fase de liga', PLAYOFFS:'Repechaje' };
+      async function fdFetchMatches(code, qs) {
+        const base = workerUrl.replace(/\/+$/, '');
+        const url = `${base}/v4/competitions/${encodeURIComponent(code)}/matches${qs ? '?' + qs : ''}`;
+        try {
+          const ctrl = new AbortController();
+          const t = setTimeout(() => ctrl.abort(), 15000);
+          const r = await fetch(url, { signal: ctrl.signal });
+          clearTimeout(t);
+          const data = await r.json().catch(() => ({}));
+          if (!r.ok) return { error: data.message || ('HTTP ' + r.status) };
+          return { matches: Array.isArray(data.matches) ? data.matches : [] };
+        } catch (e) { console.error('fdFetchMatches', e); return { error: 'no se pudo contactar el proxy (o tardó demasiado)' }; }
+      }
+      function fdToEvents(matches) {
+        return (matches || []).map(m => ({
+          idEvent: 'fd-' + m.id,
+          strHomeTeam: m.homeTeam?.name || '',
+          strAwayTeam: m.awayTeam?.name || '',
+          strHomeTeamBadge: m.homeTeam?.crest || '',
+          strAwayTeamBadge: m.awayTeam?.crest || '',
+          strLeague: m.competition?.name || '',
+          strRound: FD_ROUND_ES[m.stage] || (m.matchday ? 'Jornada ' + m.matchday : (m.stage || '')),
+          strTimestamp: m.utcDate || '',   // ISO con Z → parseTsdbDate lo maneja
+        }));
+      }
+
+      // Prepara eventos: parsea fecha (_ko), ordena y (opcional) filtra a próximos+en curso.
+      // upcomingOnly=false → muestra la ronda/jornada COMPLETA (para "la jornada completa").
+      // "en curso": deja pasar partidos que empezaron hace < 3 h.
+      function prepEvents(events, upcomingOnly) {
         const cutoff = Date.now() - 3 * 3600000;
         return events
           .map(e => ({ e, ko: parseTsdbDate(e) }))
-          .filter(x => x.ko && x.ko.getTime() > cutoff)
+          .filter(x => x.ko && (!upcomingOnly || x.ko.getTime() > cutoff))
           .sort((a, b) => a.ko - b.ko)
           .map(x => ({ ...x.e, _ko: x.ko }));   // _ko: Date ya parseada en UTC
       }
+      const filterUpcoming = (events) => prepEvents(events, true);
       const formatEventDate = (ev) => { const d = ev._ko || parseTsdbDate(ev); return d ? fmtDateTime(d) : 'Horario por confirmar'; };
 
       // ── Anti-duplicados: mismo par de equipos el mismo día = el mismo partido ──
@@ -1054,29 +1202,52 @@
 
       const NET_ERR = ['📡', 'No se pudo conectar con la API (o tardó demasiado). Revisa tu conexión e intenta de nuevo.'];
 
+      // ⚡ Próximos: con proxy trae la temporada de football-data y filtra a próximos;
+      // sin proxy usa eventsnextleague de TheSportsDB.
       $btnSearchNext.addEventListener('click', async () => {
+        const fd = useFd();
         const leagueId = activeLeagueId();
-        if (!leagueId) { alert('Elige una liga de la lista o escribe un ID'); return; }
+        if (!fd && !leagueId) { alert('Elige una liga de la lista o escribe un ID'); return; }
         showImportLoading();
-        const events = await getNextEvents(leagueId);
-        if (events === null) { showImportMessage(...NET_ERR); return; }
-        renderMatchesPreview(filterUpcoming(events));
+        let events;
+        if (fd) {
+          const season = $seasonInput.value.trim();
+          const res = await fdFetchMatches(selectedFd(), season ? 'season=' + encodeURIComponent(parseInt(season)) : '');
+          if (res.error) { showImportMessage('📡', 'Proxy/football-data: ' + res.error); return; }
+          events = fdToEvents(res.matches);
+        } else {
+          events = await getNextEvents(leagueId);
+          if (events === null) { showImportMessage(...NET_ERR); return; }
+        }
+        renderMatchesPreview(prepEvents(events, true));
       });
 
-      // 🎯 Ronda/Jornada: si hay ronda(s), usa eventsround (trae TODOS los partidos de
-      // esa fase/jornada aunque sean de días futuros); si no, toda la temporada.
+      // 🎯 Ronda/Jornada o temporada. Con ronda elegida trae la fase/jornada COMPLETA
+      // (aunque sean días futuros); con proxy (football-data) sale entera y de verdad.
       $btnSearchMatches.addEventListener('click', async () => {
+        const fd = useFd();
         const leagueId = activeLeagueId();
         const season = $seasonInput.value.trim();
-        const rounds = activeRounds();
-        if (!leagueId) { alert('Elige una liga de la lista o escribe un ID'); return; }
+        const spec = activeRoundSpec();
+        if (!fd && !leagueId) { alert('Elige una liga de la lista o escribe un ID'); return; }
         if (!season) { alert('Escribe una temporada (ej: 2026 o 2026-2027)'); return; }
         showImportLoading();
-        const events = rounds.length
-          ? await getRoundEvents(leagueId, season, rounds)
-          : await getSeasonEvents(leagueId, season);
-        if (events === null) { showImportMessage(...NET_ERR); return; }
-        renderMatchesPreview(filterUpcoming(events));
+        let events;
+        if (fd) {
+          let qs = 'season=' + encodeURIComponent(parseInt(season));
+          if (spec?.manual) qs += '&matchday=' + encodeURIComponent(spec.manual);
+          else if (spec?.preset?.fd?.stage) qs += '&stage=' + encodeURIComponent(spec.preset.fd.stage);
+          else if (spec?.preset?.fd?.matchday) qs += '&matchday=' + encodeURIComponent(spec.preset.fd.matchday);
+          const res = await fdFetchMatches(selectedFd(), qs);
+          if (res.error) { showImportMessage('📡', 'Proxy/football-data: ' + res.error); return; }
+          events = fdToEvents(res.matches);
+        } else {
+          const rounds = !spec ? [] : (spec.manual ? [spec.manual] : spec.preset.tsdb.split(',').map(s => s.trim()).filter(Boolean));
+          events = rounds.length ? await getRoundEvents(leagueId, season, rounds) : await getSeasonEvents(leagueId, season);
+          if (events === null) { showImportMessage(...NET_ERR); return; }
+        }
+        // Con ronda/jornada específica → mostramos la lista COMPLETA (no solo próximos).
+        renderMatchesPreview(prepEvents(events, !spec));
       });
 
       $btnSelectAll.addEventListener('click', () => {

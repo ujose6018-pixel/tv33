@@ -130,9 +130,11 @@
     .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #ff3b46; margin-right: 4px; animation: blink 1.1s infinite; }
     /* Botones de señal (el cliente elige Señal 1 / 2) */
     .event-actions { display: flex; gap: 8px; margin-top: 12px; }
-    .sig-btn { flex: 1; border: none; cursor: pointer; border-radius: 12px; padding: 10px 8px; font-weight: 800; font-size: 13px; color: #0c1502; background: linear-gradient(135deg,#a3e635,#65a30d); transition: transform .15s, box-shadow .15s; }
+    .sig-btn { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border: none; cursor: pointer; border-radius: 12px; padding: 10px 6px; font-weight: 800; font-size: 13px; color: #0c1502; background: linear-gradient(135deg,#a3e635,#65a30d); transition: transform .15s, box-shadow .15s; }
     .sig-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(132,204,22,0.35); }
     .sig-btn.alt { background: linear-gradient(135deg,#e2e8f0,#94a3b8); color:#0f172a; }
+    .sig-btn.alt2 { background: #1a2413; color: #a3e635; border: 1px solid rgba(163,230,53,0.6); }
+    .event-actions.three .sig-btn { font-size: 11.5px; padding: 10px 4px; letter-spacing: -0.2px; }
     .locked-btn { flex: 1; text-align: center; border-radius: 12px; padding: 10px 8px; font-weight: 800; font-size: 13px; color: #94a3b8; background: rgba(148,163,184,0.12); margin-top: 12px; }
 
     .empty { text-align: center; color: #9fb0e6; padding: 60px 0; width: 100%; }
@@ -348,10 +350,12 @@
         if (!clickable) {
           actions = `<div class="locked-btn">🔒 Disponible pronto</div>`;
         } else if (sigs.length >= 2) {
-          actions = `<div class="event-actions">
-            <button class="sig-btn" onclick="goMatch('${key}',0)">▶️ ${esc(sigs[0].name || 'Señal 1')}</button>
-            <button class="sig-btn alt" onclick="goMatch('${key}',1)">▶️ ${esc(sigs[1].name || 'Señal 2')}</button>
-          </div>`;
+          // Un botón por señal (hasta 3); el cliente elige y el reproductor abre esa (?s=i)
+          const cls = ['', ' alt', ' alt2'];
+          const shown = sigs.slice(0, 3);
+          actions = `<div class="event-actions${shown.length === 3 ? ' three' : ''}">` + shown.map((s, i) =>
+            `<button class="sig-btn${cls[i]}" onclick="goMatch('${key}',${i})">▶️ ${esc(s.name || ('Señal ' + (i + 1)))}</button>`
+          ).join('') + `</div>`;
         } else {
           actions = `<div class="event-actions"><button class="sig-btn" onclick="goMatch('${key}',0)">▶️ Ver ahora</button></div>`;
         }
