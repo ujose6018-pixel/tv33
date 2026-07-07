@@ -49,7 +49,8 @@
     #btn-fullscreen { bottom: 16px; left: 16px; }
 
     #match-overlay { position: fixed; inset: 0; z-index: 40; padding: 24px; text-align: center;
-      background: linear-gradient(135deg,#020617,#0f172a); display: flex; align-items: center; justify-content: center; }
+      background: linear-gradient(135deg,#020617,#0f172a); display: flex; justify-content: center; overflow-y: auto; }
+    #mo-content { margin: auto; width: 100%; }   /* centra si cabe, permite scroll si no */
     .mo-badge { display:inline-block; padding:6px 16px; border-radius:999px; font-weight:700; font-size:14px; margin-bottom:16px;
       background: rgba(132,204,22,0.16); color:#b6f05c; }
     .mo-time { font-size: 26px; font-weight: 900; margin: 6px 0; }
@@ -84,6 +85,11 @@
     .next-actions a { flex:1; min-width:130px; text-align:center; padding:11px 14px; border-radius:12px; font-weight:800; font-size:14px; }
     .btn-primary { background: linear-gradient(135deg,#a3e635,#65a30d); color:#0c1502; }
     .btn-remind { background: rgba(255,255,255,0.12); color:#fff; border:1px solid rgba(255,255,255,0.2); }
+
+    /* Resumen de YouTube en la despedida */
+    .fin-video { position: relative; width: 100%; aspect-ratio: 16/9; margin: 16px 0 4px; border-radius: 14px; overflow: hidden; background: #000; box-shadow: 0 8px 26px rgba(0,0,0,0.5); }
+    .fin-video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+    .fin-video-lbl { color:#9fb0e6; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; margin-top:14px; }
 
     /* ── Barra de señales flotante (cambiar de señal sin salir) ──
        Ligerísima: solo pills con opacity; sin blur ni animaciones continuas. */
@@ -146,7 +152,7 @@
   </div>
 
   <script type="module">
-    import { getFirestore, collection, getDocs, getDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
+    import { getFirestore, collection, getDocs, getDoc, doc, onSnapshot, setDoc, increment } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
 
     document.addEventListener('DOMContentLoaded', async () => {
       const db = getFirestore();
@@ -189,6 +195,50 @@
       // ── Estado de señales (para cambiar sin salir + auto-fallback) ──
       let currentSigIdx = null;          // señal elegida en esta sesión (null = usar la del ?s= / activeSignal)
       const failedSigs = new Set();      // índices de señales que dieron error de reproducción
+
+      // ── Analítica de vistas: solo ESCRIBE contadores (no lee). Cuenta una vista por
+      //    sesión por partido, y por señal usada ("en qué enlace vieron"). ──
+      function trackView(slug, sigIdx, title) {
+        if (!slug) return;
+        try {
+          const today = new Date().toISOString().slice(0, 10);
+          const updates = { updatedAt: Date.now() };
+          let changed = false;
+          const vkey = 'topfut-view-' + slug;
+          if (!sessionStorage.getItem(vkey)) {
+            sessionStorage.setItem(vkey, '1');
+            updates.viewsTotal = increment(1);
+            updates.daily = { [today]: { views: increment(1) } };
+            updates.matches = { [slug]: { views: increment(1), title: title || slug } };
+            changed = true;
+          }
+          const skey = 'topfut-sig-' + slug + '-' + sigIdx;
+          if (sigIdx != null && !sessionStorage.getItem(skey)) {
+            sessionStorage.setItem(skey, '1');
+            updates.matches = updates.matches || { [slug]: {} };
+            updates.matches[slug] = updates.matches[slug] || {};
+            updates.matches[slug].signals = { [String(sigIdx)]: increment(1) };
+            changed = true;
+          }
+          if (changed) setDoc(doc(db, 'public', 'stats'), updates, { merge: true }).catch(() => {});
+        } catch (e) {}
+      }
+
+      // ── Resumen de YouTube ──
+      function ytEmbed(url) {
+        if (!url) return '';
+        let id = '';
+        const m1 = url.match(/[?&]v=([^&]+)/);
+        const m2 = url.match(/youtu\.be\/([^?&/]+)/);
+        const m3 = url.match(/youtube\.com\/embed\/([^?&/]+)/);
+        if (m1) id = m1[1]; else if (m2) id = m2[1]; else if (m3) id = m3[1];
+        if (!id) return url;   // si ya es un embed u otro formato, úsalo tal cual
+        return 'https://www.youtube-nocookie.com/embed/' + id + '?rel=0&modestbranding=1&playsinline=1';
+      }
+      function ytSearchUrl(m) {
+        const q = [m.home, m.away].filter(Boolean).join(' vs ') + ' resumen highlights ' + (m.competition || '');
+        return 'https://www.youtube.com/results?search_query=' + encodeURIComponent(q.trim());
+      }
 
       // Próximo partido (para el acceso rápido ⏭ mientras se ve)
       function nextMatchSlug() {
@@ -395,6 +445,12 @@
         const scoreHtml = hasScore
           ? `<div class="fin-board">${finTeam(m.home, m.homeLogo)}<div class="fin-score">${esc(String(fs.home))}<i>-</i>${esc(String(fs.away))}</div>${finTeam(m.away, m.awayLogo)}</div>`
           : `<div style="margin:8px 0;">${teamsBlock(m)}</div>`;
+        // Resumen: si el admin ya guardó el highlights, se reproduce embebido;
+        // si no, ofrecemos abrir la búsqueda en YouTube (sin depender de API).
+        const highlightsHtml = m.highlightsUrl
+          ? `<div class="fin-video-lbl">🎬 Resumen del partido</div>
+             <div class="fin-video"><iframe src="${esc(ytEmbed(m.highlightsUrl))}" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe></div>`
+          : `<a class="mo-btn" style="margin-top:16px;background:rgba(255,255,255,0.12);color:#fff;border:1px solid rgba(255,255,255,0.2);" href="${esc(ytSearchUrl(m))}" target="_blank" rel="noopener">🎬 Ver resumen en YouTube</a>`;
         showMatchOverlay(`
           <div class="fin-wrap">
             <div style="font-size:52px;margin-bottom:6px;">🏁</div>
@@ -402,6 +458,7 @@
             <p class="fin-thanks">¡Gracias por verlo a través de nuestra plataforma! 🙌</p>
             ${scoreHtml}
             <div class="fin-comp">${esc(m.competition || '')}${m.round ? ' · ' + esc(m.round) : ''}</div>
+            ${highlightsHtml}
             <div id="next-slot"></div>
             <a href="index.html" class="mo-btn" style="margin-top:22px;">🏠 Volver al inicio</a>
           </div>`);
@@ -471,6 +528,7 @@
           showViewer();
           renderSignalBar(signals, idx);
           if (currentSignalUrl !== sig.url) { currentSignalUrl = sig.url; mountSingle(sig.url); }
+          trackView(m.slug, idx, m.title);   // cuenta la vista + la señal usada
           return;
         }
 

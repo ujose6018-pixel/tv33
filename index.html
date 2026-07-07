@@ -302,11 +302,27 @@
   </div>
 
   <script type="module">
-    import { getFirestore, collection, getDocs, getDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
+    import { getFirestore, collection, getDocs, getDoc, doc, onSnapshot, setDoc, increment } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
 
     document.addEventListener('DOMContentLoaded', () => {
       const db = getFirestore();
       const matchesCol = collection(db, "matches");
+
+      // ── Analítica de visitas (fire-and-forget, NO lee nada; 1 por día por dispositivo).
+      //    Solo escribe contadores con increment() en public/stats. El panel los lee/grafica. ──
+      (function trackVisit() {
+        try {
+          const today = new Date().toISOString().slice(0, 10);
+          const key = 'topfut-visit-' + today;
+          if (localStorage.getItem(key)) return;   // ya contado hoy en este dispositivo
+          localStorage.setItem(key, '1');
+          setDoc(doc(db, 'public', 'stats'), {
+            visitsTotal: increment(1),
+            daily: { [today]: { visits: increment(1) } },
+            updatedAt: Date.now()
+          }, { merge: true }).catch(() => {});
+        } catch (e) {}
+      })();
 
       const $ = id => document.getElementById(id);
       const scroller = $('scroller');

@@ -21,36 +21,82 @@
     getFirestore(app);
   </script>
   <style>
+    /* ── TOP FUT · Panel — estilo limpio y profesional (2026-07-06) ──
+       Superficies neutras, un solo acento verde, sin animaciones de fondo
+       ni "glow" pulsantes. Se conservan los nombres de clase para no romper el HTML. */
     .hidden { display: none !important; }
-    @keyframes pulse-glow { 0%,100%{box-shadow:0 0 20px rgba(251,191,36,0.4);} 50%{box-shadow:0 0 40px rgba(251,191,36,0.8);} }
-    @keyframes gradient-shift { 0%{background-position:0% 50%;} 50%{background-position:100% 50%;} 100%{background-position:0% 50%;} }
-    .pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
-    .gradient-bg { background: linear-gradient(-45deg,#020617,#0f172a,#020617,#1e293b); background-size:400% 400%; animation: gradient-shift 20s ease infinite; }
-    .btn-primary { background: linear-gradient(135deg,#059669 0%,#10b981 50%,#34d399 100%); transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
-    .btn-primary:hover { background: linear-gradient(135deg,#047857 0%,#059669 50%,#10b981 100%); transform: translateY(-3px); box-shadow:0 15px 40px rgba(5,150,105,0.5); }
-    .btn-gold { background: linear-gradient(135deg,#f59e0b 0%,#fbbf24 50%,#fcd34d 100%); transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
-    .btn-gold:hover { background: linear-gradient(135deg,#d97706 0%,#f59e0b 50%,#fbbf24 100%); transform: translateY(-3px); box-shadow:0 15px 40px rgba(245,158,11,0.6); }
-    .card-glow { box-shadow:0 30px 80px rgba(0,0,0,0.6); backdrop-filter: blur(20px); }
-    .tab-btn { transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
-    .tab-btn.active { box-shadow:0 4px 15px rgba(16,185,129,0.4); }
-    input, select, textarea { transition: all 0.2s cubic-bezier(0.4,0,0.2,1); }
-    ::-webkit-scrollbar { width:8px; }
-    ::-webkit-scrollbar-track { background: rgba(15,23,42,0.5); border-radius:10px; }
-    ::-webkit-scrollbar-thumb { background: linear-gradient(180deg,#10b981,#3b82f6); border-radius:10px; }
-    input[type="datetime-local"]::-webkit-calendar-picker-indicator { filter: invert(1); opacity:0.6; }
+    body { -webkit-font-smoothing: antialiased; }
+    .gradient-bg { background: radial-gradient(1100px 500px at 50% -10%, #12203a 0%, #0b0f17 55%, #090b11 100%) fixed, #090b11; }
+    .pulse-glow { box-shadow: 0 0 0 1px rgba(16,185,129,0.25); }   /* sin animación */
+    .btn-primary { background: #10b981; color: #06281d; transition: background .18s, box-shadow .18s; }
+    .btn-primary:hover { background: #34d399; box-shadow: 0 6px 18px rgba(16,185,129,0.3); }
+    .btn-gold { background: #f5b60b; color: #2a1c00; transition: background .18s, box-shadow .18s; }
+    .btn-gold:hover { background: #fbc531; box-shadow: 0 6px 18px rgba(245,182,11,0.3); }
+    .card-glow { box-shadow: 0 1px 0 rgba(255,255,255,0.03) inset, 0 10px 30px rgba(0,0,0,0.35); }
+    .tab-btn { transition: color .15s, background .15s; }
+    input, select, textarea { transition: border-color .15s, box-shadow .15s; }
+    input:focus, select:focus, textarea:focus { box-shadow: 0 0 0 3px rgba(16,185,129,0.18); }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #2a3446; border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: #3a4658; }
+    input[type="datetime-local"]::-webkit-calendar-picker-indicator { filter: invert(1); opacity: 0.6; }
+
+    /* Segmented control de pestañas */
+    .seg { background: #10151f; border: 1px solid #1e2636; border-radius: 14px; padding: 5px; display: flex; gap: 4px; }
+    .seg .main-tab { border-radius: 10px; padding: 11px 16px; font-weight: 700; font-size: 14px; color: #8a94a6; background: transparent; border: none; cursor: pointer; }
+    .seg .main-tab:hover { color: #d7deea; }
+    .seg .main-tab.active { color: #06281d; background: #10b981; }
+
+    /* KPIs y estadísticas */
+    .kpi { background: #10151f; border: 1px solid #1e2636; border-radius: 16px; padding: 18px 20px; }
+    .kpi .n { font-size: 30px; font-weight: 800; line-height: 1; color: #f1f5f9; letter-spacing: -0.5px; }
+    .kpi .l { font-size: 12px; font-weight: 600; color: #8a94a6; margin-top: 8px; text-transform: uppercase; letter-spacing: .5px; }
+    .kpi .d { font-size: 12px; font-weight: 700; margin-top: 6px; }
+    .kpi .d.up { color: #34d399; } .kpi .d.flat { color: #8a94a6; }
+    .panel-clean { background: #0e131d; border: 1px solid #1e2636; border-radius: 18px; }
+    .stat-row { display: grid; grid-template-columns: 1fr auto auto; gap: 10px; align-items: center; padding: 10px 12px; border-radius: 10px; }
+    .stat-row:nth-child(odd) { background: rgba(255,255,255,0.02); }
+    .bar-track { height: 8px; border-radius: 6px; background: #1a2233; overflow: hidden; }
+    .bar-fill { height: 100%; background: #10b981; border-radius: 6px; }
+    @media (prefers-reduced-motion: no-preference) { .bar-fill { transition: width .4s ease; } }
   </style>
 </head>
 <body class="gradient-bg text-white min-h-screen w-full font-sans selection:bg-emerald-500/50">
 
-  <!-- ── Puerta de acceso por PIN ── -->
-  <div id="pin-gate" class="fixed inset-0 z-50 flex items-center justify-center p-6" style="background:linear-gradient(135deg,#020617,#0f172a);">
-    <div class="bg-slate-900/95 border border-emerald-500/30 rounded-3xl p-8 max-w-sm w-full text-center card-glow">
-      <div class="text-5xl mb-3">🔒</div>
-      <h2 class="text-2xl font-black text-white mb-1">Panel privado</h2>
-      <p class="text-slate-400 text-sm mb-6">Ingresa el PIN de acceso</p>
-      <input id="pin-input" type="password" inputmode="numeric" maxlength="8" placeholder="••••" class="w-full text-center text-2xl tracking-[0.4em] bg-slate-800 border border-slate-700 rounded-2xl px-4 py-4 text-white focus:outline-none focus:border-emerald-500 mb-3">
-      <p id="pin-error" class="text-red-400 text-sm mb-3 hidden">PIN incorrecto</p>
-      <button id="pin-submit" class="btn-primary w-full text-white font-bold py-4 rounded-2xl">Entrar</button>
+  <!-- ── Puerta de acceso (Firebase Auth: usuario admin + PIN) ── -->
+  <div id="login-gate" class="fixed inset-0 z-50 flex items-center justify-center p-6" style="background:radial-gradient(1100px 500px at 50% -10%, #12203a 0%, #0b0f17 55%, #090b11 100%);">
+    <div class="w-full max-w-sm">
+      <div class="flex items-center gap-3 justify-center mb-6">
+        <div class="w-11 h-11 rounded-xl overflow-hidden border border-slate-700 bg-slate-900"><img src="icon.svg" alt="" class="w-full h-full object-cover"></div>
+        <div>
+          <div class="text-white font-extrabold text-lg leading-tight">TOP FUT <span class="text-emerald-400">Admin</span></div>
+          <div class="text-slate-500 text-xs">Panel privado</div>
+        </div>
+      </div>
+
+      <!-- Inicio rápido (dispositivo recordado, estilo Facebook) -->
+      <div id="quick-login" class="hidden bg-[#10151f] border border-[#1e2636] rounded-2xl p-6 text-center">
+        <div class="w-16 h-16 rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-3xl mx-auto mb-3">👤</div>
+        <div class="text-white font-bold text-lg" id="quick-name">admin</div>
+        <div class="text-slate-500 text-xs mb-5">Sesión guardada en este dispositivo</div>
+        <button id="quick-btn" class="btn-primary w-full font-bold py-3.5 rounded-xl">Entrar como admin</button>
+        <button id="quick-other" class="w-full mt-3 text-slate-400 hover:text-white text-sm font-medium">Usar otra cuenta</button>
+      </div>
+
+      <!-- Login completo -->
+      <div id="full-login" class="hidden bg-[#10151f] border border-[#1e2636] rounded-2xl p-6">
+        <label class="block text-xs font-semibold text-slate-400 mb-1.5">Usuario</label>
+        <input id="login-user" type="text" value="admin" readonly class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white mb-4 cursor-default">
+        <label class="block text-xs font-semibold text-slate-400 mb-1.5">PIN</label>
+        <input id="login-pin" type="password" inputmode="numeric" pattern="[0-9]*" autocomplete="off" maxlength="8" placeholder="••••" class="w-full text-center text-2xl tracking-[0.4em] bg-slate-900 border border-slate-700 rounded-xl px-4 py-3.5 text-white focus:outline-none focus:border-emerald-500 mb-3">
+        <p id="login-error" class="text-rose-400 text-sm mb-3 hidden">PIN incorrecto</p>
+        <label class="flex items-center gap-2 mb-4 cursor-pointer select-none">
+          <input id="login-remember" type="checkbox" class="w-4 h-4 accent-emerald-500" checked>
+          <span class="text-sm text-slate-300">Recordar inicio de sesión</span>
+        </label>
+        <button id="login-btn" class="btn-primary w-full font-bold py-3.5 rounded-xl">Entrar</button>
+      </div>
     </div>
   </div>
 
@@ -58,32 +104,30 @@
     <div class="w-full max-w-6xl">
 
       <!-- Encabezado -->
-      <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
-        <div class="flex items-center gap-4">
-          <div class="w-16 h-16 rounded-2xl flex items-center justify-center shadow-2xl overflow-hidden">
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
+        <div class="flex items-center gap-3">
+          <div class="w-11 h-11 rounded-xl overflow-hidden border border-slate-700 bg-slate-900 flex items-center justify-center">
             <img src="icon.svg" alt="TOP FUT" class="w-full h-full object-cover">
           </div>
           <div>
-            <h1 class="text-3xl md:text-4xl font-black bg-gradient-to-r from-yellow-300 via-orange-400 to-yellow-500 bg-clip-text text-transparent">TOP FUT · ADMIN</h1>
-            <p class="text-emerald-300 text-sm font-semibold">⚽ Panel de administración</p>
+            <h1 class="text-2xl font-extrabold text-white tracking-tight">TOP FUT <span class="text-emerald-400">Admin</span></h1>
+            <p class="text-slate-400 text-xs font-medium">Panel de administración</p>
           </div>
         </div>
-        <a href="index.html" target="_blank" class="btn-gold text-slate-900 font-bold py-3 px-6 rounded-2xl shadow-lg flex items-center gap-2 text-sm">
-          🌐 Ver plataforma
-        </a>
+        <div class="flex items-center gap-2">
+          <a href="index.html" target="_blank" class="text-slate-200 hover:text-white text-sm font-semibold py-2.5 px-4 rounded-xl border border-slate-700 hover:border-slate-600 flex items-center gap-2">🌐 Ver plataforma</a>
+          <button id="logout-btn" class="text-slate-400 hover:text-white text-sm font-semibold py-2.5 px-4 rounded-xl border border-slate-700 hover:border-slate-600">Salir</button>
+        </div>
       </div>
 
       <!-- Tabs principales -->
-      <div class="flex flex-wrap gap-2 bg-slate-800/60 rounded-3xl p-2 border border-slate-700/50 mb-6">
-        <button data-tab="matches" class="main-tab active flex-1 min-w-[120px] py-4 px-5 rounded-2xl font-bold text-base text-white bg-gradient-to-r from-emerald-600 to-teal-600 shadow-lg">
-          ⚽ Partidos
-        </button>
-        <button data-tab="tester" class="main-tab flex-1 min-w-[120px] py-4 px-5 rounded-2xl font-bold text-base text-slate-400 hover:text-white hover:bg-slate-700/50">
-          🔍 Probar señales
-        </button>
+      <div class="seg mb-6">
+        <button data-tab="matches" class="main-tab active flex-1">⚽ Partidos</button>
+        <button data-tab="stats" class="main-tab flex-1">📊 Estadísticas</button>
+        <button data-tab="tester" class="main-tab flex-1">🔍 Probar señales</button>
       </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div id="main-grid" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Columna principal -->
         <div class="lg:col-span-2 space-y-6">
 
@@ -337,42 +381,105 @@
           </div>
         </div>
       </div>
+
+      <!-- ============ PANEL: ESTADÍSTICAS ============ -->
+      <div id="panel-stats" class="hidden space-y-6">
+        <div class="flex items-center justify-between gap-3 flex-wrap">
+          <div>
+            <h3 class="text-xl font-extrabold text-white">📊 Estadísticas</h3>
+            <p class="text-slate-400 text-sm">Visitas, partidos vistos y en qué señal los vieron. Se actualiza en vivo.</p>
+          </div>
+          <div class="text-xs text-slate-500" id="stats-updated"></div>
+        </div>
+
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4" id="stats-kpis">
+          <div class="kpi"><div class="n">–</div><div class="l">Cargando…</div></div>
+        </div>
+
+        <div class="panel-clean p-5">
+          <div class="flex items-center justify-between gap-3 flex-wrap mb-4">
+            <h4 class="text-base font-bold text-slate-200">Crecimiento (últimos 14 días)</h4>
+            <div class="flex items-center gap-4 text-xs">
+              <span class="flex items-center gap-1.5 text-slate-300"><span style="width:12px;height:3px;background:#10b981;display:inline-block;border-radius:2px;"></span> Visitas</span>
+              <span class="flex items-center gap-1.5 text-slate-300"><span style="width:12px;height:3px;background:#60a5fa;display:inline-block;border-radius:2px;"></span> Vistas de partidos</span>
+            </div>
+          </div>
+          <div id="stats-chart" class="w-full overflow-x-auto"></div>
+        </div>
+
+        <div class="panel-clean p-5">
+          <h4 class="text-base font-bold text-slate-200 mb-1">Partidos más vistos</h4>
+          <p class="text-slate-500 text-xs mb-4">Cuántas personas vieron cada partido y por qué señal.</p>
+          <div id="stats-matches" class="space-y-1"></div>
+        </div>
+      </div>
     </div>
   </div>
 
   <script type="module">
     import { getFirestore, collection, addDoc, getDocs, getDoc, setDoc, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
+    import { getAuth, setPersistence, browserLocalPersistence, browserSessionPersistence, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-auth.js";
 
     document.addEventListener('DOMContentLoaded', async () => {
       const db = getFirestore();
 
       // ══════════════════════════════════════════════════════════
-      //  PIN DE ACCESO (guardado en Firebase: config/access)
+      //  ACCESO — Firebase Auth (usuario "admin" + PIN numérico)
+      //  El PIN elige la cuenta; el "pepper" solo alarga el PIN a >=6
+      //  caracteres (mínimo que exige Firebase). El pepper es público:
+      //  la seguridad real la da el PIN + el límite de intentos de Firebase.
       // ══════════════════════════════════════════════════════════
-      if (sessionStorage.getItem('panelAuth') !== 'ok') {
-        let pins = [];
-        try {
-          const snap = await getDoc(doc(db, 'config', 'access'));
-          if (snap.exists() && Array.isArray(snap.data().pins)) pins = snap.data().pins.map(String);
-        } catch (e) { console.error('No se pudo leer el PIN:', e); }
-        const input = document.getElementById('pin-input');
-        const errEl = document.getElementById('pin-error');
-        const tryPin = () => {
-          if (pins.length && pins.includes((input.value || '').trim())) {
-            sessionStorage.setItem('panelAuth', 'ok');
-            location.reload();
-          } else {
-            errEl.textContent = pins.length ? 'PIN incorrecto' : 'No se pudo verificar el acceso. Reintenta.';
-            errEl.classList.remove('hidden');
-            input.value = ''; input.focus();
-          }
+      const auth = getAuth();
+      const G = (id) => document.getElementById(id);
+      const ADMIN = {
+        pepper: '-topfut',
+        emailOf: { '2026': 'admin@topfut.app', '2003': 'admin2@topfut.app' }
+      };
+      const pinInput = G('login-pin');
+      pinInput.addEventListener('input', () => { pinInput.value = pinInput.value.replace(/\D/g, ''); }); // solo dígitos
+
+      await new Promise((resolve) => {
+        let done = false;
+        const finish = () => { if (done) return; done = true; resolve(); };
+        const errEl = G('login-error');
+        const showErr = (msg) => { errEl.textContent = msg; errEl.classList.remove('hidden'); };
+        const showFull = () => { G('quick-login').classList.add('hidden'); G('full-login').classList.remove('hidden'); setTimeout(() => pinInput.focus(), 50); };
+        const showQuick = (label) => { G('quick-name').textContent = label || 'admin'; G('full-login').classList.add('hidden'); G('quick-login').classList.remove('hidden'); };
+
+        const doLogin = async () => {
+          errEl.classList.add('hidden');
+          const pin = (pinInput.value || '').trim();
+          const email = ADMIN.emailOf[pin];
+          if (!email) { showErr('PIN incorrecto'); pinInput.value = ''; pinInput.focus(); return; }
+          G('login-btn').disabled = true;
+          try {
+            await setPersistence(auth, G('login-remember').checked ? browserLocalPersistence : browserSessionPersistence);
+            localStorage.setItem('panel-remember', G('login-remember').checked ? '1' : '0');
+            await signInWithEmailAndPassword(auth, email, pin + ADMIN.pepper);
+            finish();
+          } catch (e) {
+            console.error('login', e && e.code);
+            if (e && e.code === 'auth/network-request-failed') showErr('Sin conexión. Reintenta.');
+            else if (e && ['auth/user-not-found', 'auth/invalid-credential', 'auth/operation-not-allowed'].includes(e.code)) showErr('No se pudo entrar. ¿Ya creaste el usuario en Firebase? Revisa el PIN.');
+            else showErr('PIN incorrecto');
+            pinInput.value = ''; pinInput.focus();
+          } finally { G('login-btn').disabled = false; }
         };
-        document.getElementById('pin-submit').addEventListener('click', tryPin);
-        input.addEventListener('keydown', e => { if (e.key === 'Enter') tryPin(); });
-        input.focus();
-        return; // no inicializar el panel hasta validar
-      }
-      document.getElementById('pin-gate').classList.add('hidden');
+
+        G('login-btn').addEventListener('click', doLogin);
+        pinInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') doLogin(); });
+        G('quick-btn').addEventListener('click', finish);
+        G('quick-other').addEventListener('click', async () => { try { await signOut(auth); } catch (_) {} localStorage.setItem('panel-remember', '0'); showFull(); });
+
+        // Estado inicial: si hay sesión guardada → inicio rápido; si no → login completo.
+        onAuthStateChanged(auth, (user) => {
+          if (done) return;
+          if (user) showQuick(user.email ? user.email.split('@')[0] : 'admin');
+          else showFull();
+        });
+      });
+      G('login-gate').classList.add('hidden');
+      G('logout-btn').addEventListener('click', async () => { try { await signOut(auth); } catch (_) {} localStorage.setItem('panel-remember', '0'); location.reload(); });
 
       const streamsCol = collection(db, "streams");
       const linksCol = collection(db, "generatedLinks");
@@ -397,20 +504,15 @@
 
       // ── Tabs ──────────────────────────────────────────────────
       const mainTabs = document.querySelectorAll('.main-tab');
-      const panels = { matches: $('panel-matches'), tester: $('panel-tester') };
       mainTabs.forEach(btn => btn.addEventListener('click', () => {
         const tab = btn.dataset.tab;
-        mainTabs.forEach(b => {
-          const active = b === btn;
-          b.classList.toggle('active', active);
-          b.classList.toggle('text-white', active);
-          b.classList.toggle('bg-gradient-to-r', active);
-          b.classList.toggle('from-emerald-600', active);
-          b.classList.toggle('to-teal-600', active);
-          b.classList.toggle('shadow-lg', active);
-          b.classList.toggle('text-slate-400', !active);
-        });
-        Object.entries(panels).forEach(([k, el]) => el.classList.toggle('hidden', k !== tab));
+        mainTabs.forEach(b => b.classList.toggle('active', b === btn));
+        // Stats ocupa el ancho completo (oculta la rejilla con sidebar); Partidos/Tester usan la rejilla.
+        $('main-grid').classList.toggle('hidden', tab === 'stats');
+        $('panel-stats').classList.toggle('hidden', tab !== 'stats');
+        $('panel-matches').classList.toggle('hidden', tab !== 'matches');
+        $('panel-tester').classList.toggle('hidden', tab !== 'tester');
+        if (tab === 'stats') renderStats();
       }));
 
       // ══════════════════════════════════════════════════════════
@@ -596,7 +698,17 @@
         const payload = { status: 'finished', finishedAt: new Date(), updatedAt: new Date() };
         const mm = raw.match(/(\d+)\s*[-:xX]\s*(\d+)/);
         if (mm) payload.finalScore = { home: Number(mm[1]), away: Number(mm[2]) };
-        try { await updateDoc(doc(db, 'matches', id), payload); }
+        try {
+          await updateDoc(doc(db, 'matches', id), payload);
+          // Auto-buscar el resumen en YouTube (solo si hay proxy con clave). Silencioso.
+          try {
+            const m = matchesSnapshot.find(x => x.id === id);
+            if (m && workerUrl && !m.highlightsUrl) {
+              const url = await fetchHighlightsUrl(m);
+              if (url) await updateDoc(doc(db, 'matches', id), { highlightsUrl: url, updatedAt: new Date() });
+            }
+          } catch (_) {}
+        }
         catch (e) { console.error(e); alert('Error al finalizar'); }
       };
       window.deleteMatch = async (id) => {
@@ -658,6 +770,56 @@
         catch (e) { console.error(e); alert('Error al guardar las señales'); }
       };
 
+      // ── Resumen (highlights de YouTube) por partido ──
+      // Busca vía el proxy (oculta la clave de YouTube); si no hay proxy/clave,
+      // abre la búsqueda de YouTube para copiar el enlace manualmente.
+      async function fetchHighlightsUrl(m) {
+        if (!workerUrl) return null;
+        const q = [m.home, m.away].filter(Boolean).join(' vs ') + ' resumen highlights ' + (m.competition || '');
+        const r = await fetch(workerUrl.replace(/\/+$/, '') + '/yt/search?q=' + encodeURIComponent(q.trim()));
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(data.message || ('HTTP ' + r.status));
+        const vid = data.items && data.items[0] && data.items[0].id && data.items[0].id.videoId;
+        return vid ? 'https://www.youtube.com/watch?v=' + vid : null;
+      }
+      window.toggleHlEdit = (id) => {
+        const box = $('hledit-' + id);
+        if (!box) return;
+        const willOpen = box.classList.contains('hidden');
+        document.querySelectorAll('[id^="hledit-"]').forEach(b => b.classList.add('hidden'));
+        if (willOpen) { box.classList.remove('hidden'); hlEditId = id; } else { hlEditId = null; }
+      };
+      window.saveHighlights = async (id) => {
+        const url = ($('hl-' + id)?.value || '').trim();
+        hlEditId = null;
+        try { await updateDoc(doc(db, 'matches', id), { highlightsUrl: url, updatedAt: new Date() }); alert(url ? '🎬 Resumen guardado' : 'Resumen quitado'); }
+        catch (e) { console.error(e); alert('Error al guardar el resumen'); }
+      };
+      window.searchHighlights = async (id) => {
+        const m = matchesSnapshot.find(x => x.id === id);
+        if (!m) return;
+        const q = [m.home, m.away].filter(Boolean).join(' vs ') + ' resumen highlights ' + (m.competition || '');
+        if (!workerUrl) {
+          window.open('https://www.youtube.com/results?search_query=' + encodeURIComponent(q.trim()), '_blank');
+          alert('Sin clave de YouTube en el proxy: abrí la búsqueda en YouTube. Copia el enlace del video y pégalo en el campo, luego Guardar.');
+          return;
+        }
+        const btn = $('hlsearch-' + id);
+        if (btn) { btn.disabled = true; btn.textContent = 'Buscando…'; }
+        try {
+          const url = await fetchHighlightsUrl(m);
+          if (!url) throw new Error('sin resultados');
+          const inp = $('hl-' + id); if (inp) inp.value = url;
+          await updateDoc(doc(db, 'matches', id), { highlightsUrl: url, updatedAt: new Date() });
+          alert('✅ Resumen encontrado y guardado.');
+        } catch (e) {
+          console.error(e);
+          alert('No se pudo buscar el resumen (' + (e.message || e) + '). Pega el enlace manualmente o revisa la clave de YouTube en el proxy.');
+        } finally {
+          if (btn) { btn.disabled = false; btn.textContent = '🔎 Buscar en YouTube'; }
+        }
+      };
+
       // ── Render lista de partidos (sidebar) ────────────────────
       // "En vivo" se calcula por horario (igual que el cliente): status 'live'
       // o faltan <= AUTO_LIVE_MIN min para el inicio. Así el panel se muestra
@@ -676,8 +838,9 @@
 
       let matchesSnapshot = [];
       let sigEditId = null;   // id del partido con el editor de señales inline abierto
-      // No re-renderizar (perder edición) mientras se edita una señal o el formulario está abierto
-      const uiBusy = () => sigEditId !== null || !$('match-form-section').classList.contains('hidden');
+      let hlEditId = null;    // id del partido con el editor de resumen (highlights) abierto
+      // No re-renderizar (perder edición) mientras se edita una señal, el resumen, o el formulario está abierto
+      const uiBusy = () => sigEditId !== null || hlEditId !== null || !$('match-form-section').classList.contains('hidden');
 
       function renderMatches() {
         const cont = $('matches-container');
@@ -707,6 +870,17 @@
                 <button onclick="toggleSigEdit('${m.id}')" class="px-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-xs">Cerrar</button>
               </div>
             </div>`;
+          const hlEditor = `
+            <div id="hledit-${m.id}" class="hidden bg-slate-900/70 rounded-xl border border-rose-500/25 p-3 space-y-2">
+              <label class="text-xs text-rose-300 font-bold">🎬 Resumen del partido (YouTube)</label>
+              <input id="hl-${m.id}" type="text" value="${esc(m.highlightsUrl || '')}" placeholder="Enlace de YouTube del resumen" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-rose-500">
+              <div class="flex gap-2">
+                <button id="hlsearch-${m.id}" onclick="searchHighlights('${m.id}')" class="flex-1 bg-rose-600 hover:bg-rose-500 text-white font-bold py-2 rounded-lg text-xs">🔎 Buscar en YouTube</button>
+                <button onclick="saveHighlights('${m.id}')" class="flex-1 btn-primary text-white font-bold py-2 rounded-lg text-xs">💾 Guardar</button>
+                <button onclick="toggleHlEdit('${m.id}')" class="px-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-xs">Cerrar</button>
+              </div>
+              <p class="text-[11px] text-slate-500">Con clave de YouTube en el proxy, "Buscar" lo encuentra y guarda solo. Sin clave, abre la búsqueda para copiar el enlace y pegarlo aquí.</p>
+            </div>`;
           return `
             <div class="bg-slate-800/80 rounded-2xl border border-slate-700 p-3 space-y-2">
               <div class="flex items-start justify-between gap-2">
@@ -718,6 +892,7 @@
                 ${statusBadge(m)}
               </div>
               ${sigEditor}
+              ${hlEditor}
               <div class="flex flex-wrap gap-1.5">
                 ${m.status === 'finished'
                   ? `<button onclick="setMatchStatus('${m.id}','live')" class="flex-1 bg-red-600 hover:bg-red-500 text-white py-1.5 rounded-lg text-xs font-bold">▶️ Reabrir</button>`
@@ -725,6 +900,7 @@
                     ? `<button onclick="finishMatch('${m.id}')" class="flex-1 bg-slate-600 hover:bg-slate-500 text-white py-1.5 rounded-lg text-xs font-bold">🏁 Finalizar</button>`
                     : `<button onclick="setMatchStatus('${m.id}','live')" class="flex-1 bg-red-600 hover:bg-red-500 text-white py-1.5 rounded-lg text-xs font-bold">▶️ En vivo</button>`}
                 <button onclick="toggleSigEdit('${m.id}')" title="Cambiar señales" class="bg-purple-600 hover:bg-purple-500 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold">📶</button>
+                <button onclick="toggleHlEdit('${m.id}')" title="Resumen (YouTube)" class="bg-rose-600 hover:bg-rose-500 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold">🎬</button>
                 <button onclick="navigator.clipboard.writeText('${url}').then(()=>alert('Enlace copiado'))" class="bg-slate-700 hover:bg-slate-600 text-white px-2.5 py-1.5 rounded-lg text-xs">📋</button>
                 <a href="${url}" target="_blank" class="btn-gold text-slate-900 px-2.5 py-1.5 rounded-lg text-xs font-bold text-center">▶️</a>
                 <button onclick="editMatch('${m.id}')" class="bg-blue-600 hover:bg-blue-500 text-white px-2.5 py-1.5 rounded-lg text-xs">✏️</button>
@@ -746,7 +922,8 @@
             kickoff: m.kickoff?.seconds ? { seconds: m.kickoff.seconds } : null,
             signals: (m.signals || []).map(s => ({ name: s.name || '', url: s.url || '' })),
             activeSignal: Number.isInteger(m.activeSignal) ? m.activeSignal : 0,
-            finalScore: m.finalScore || null
+            finalScore: m.finalScore || null,
+            highlightsUrl: m.highlightsUrl || ''
           }));
           await setDoc(doc(db, 'public', 'schedule'), { matches: pub, updatedAt: Date.now() });
         } catch (e) { console.error('publishSchedule', e); }
@@ -1307,6 +1484,93 @@
           alert('Error al importar partidos: ' + (e && e.message ? e.message : e));
         }
       });
+
+      // ══════════════════════════════════════════════════════════
+      //  ESTADÍSTICAS (lee public/stats — que el cliente solo escribe)
+      // ══════════════════════════════════════════════════════════
+      let statsData = null;
+
+      // Gráfica de líneas en SVG puro (sin librerías): visitas + vistas por día.
+      function buildLineChart(days) {
+        const W = 720, H = 220, padL = 34, padR = 12, padT = 14, padB = 26;
+        const n = days.length;
+        const maxV = Math.max(1, ...days.map(d => Math.max(d.visits, d.views)));
+        const x = i => padL + (n <= 1 ? 0 : i * (W - padL - padR) / (n - 1));
+        const y = v => padT + (H - padT - padB) * (1 - v / maxV);
+        const series = (key, color) => {
+          const pts = days.map((d, i) => `${x(i).toFixed(1)},${y(d[key]).toFixed(1)}`).join(' ');
+          const dots = days.map((d, i) => `<circle cx="${x(i).toFixed(1)}" cy="${y(d[key]).toFixed(1)}" r="2.4" fill="${color}"/>`).join('');
+          return `<polyline fill="none" stroke="${color}" stroke-width="2" points="${pts}"/>${dots}`;
+        };
+        let grid = '';
+        for (let g = 0; g <= 4; g++) {
+          const gy = padT + (H - padT - padB) * g / 4;
+          const val = Math.round(maxV * (1 - g / 4));
+          grid += `<line x1="${padL}" y1="${gy.toFixed(1)}" x2="${W - padR}" y2="${gy.toFixed(1)}" stroke="#1e2636" stroke-width="1"/>`
+            + `<text x="4" y="${(gy + 3).toFixed(1)}" fill="#5b6676" font-size="9">${val}</text>`;
+        }
+        const step = Math.max(1, Math.ceil(n / 7));
+        let xl = '';
+        days.forEach((d, i) => {
+          if (i % step === 0 || i === n - 1) {
+            const parts = d.date.split('-');
+            xl += `<text x="${x(i).toFixed(1)}" y="${H - 8}" fill="#5b6676" font-size="9" text-anchor="middle">${parts[2]}/${parts[1]}</text>`;
+          }
+        });
+        return `<svg viewBox="0 0 ${W} ${H}" width="100%" style="min-width:520px;display:block;">${grid}${series('visits', '#10b981')}${series('views', '#60a5fa')}${xl}</svg>`;
+      }
+
+      function renderStats() {
+        const s = statsData || {};
+        const daily = s.daily || {};
+        const iso = (d) => d.toISOString().slice(0, 10);
+        const today = iso(new Date());
+        const yd = new Date(); yd.setDate(yd.getDate() - 1); const ykey = iso(yd);
+        // Últimos 14 días (rellena huecos con 0)
+        const days = [];
+        for (let i = 13; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); const k = iso(d); const e = daily[k] || {}; days.push({ date: k, visits: Number(e.visits || 0), views: Number(e.views || 0) }); }
+        const vToday = Number((daily[today] || {}).visits || 0), vYday = Number((daily[ykey] || {}).visits || 0);
+        const wToday = Number((daily[today] || {}).views || 0);
+        const dPct = vYday > 0 ? Math.round((vToday - vYday) / vYday * 100) : (vToday > 0 ? 100 : 0);
+        const num = (x) => Number(x || 0).toLocaleString('es');
+        const kpi = (n, l, d) => `<div class="kpi"><div class="n">${n}</div><div class="l">${l}</div>${d || ''}</div>`;
+        $('stats-kpis').innerHTML =
+          kpi(num(s.visitsTotal), 'Visitas totales') +
+          kpi(num(s.viewsTotal), 'Vistas de partidos') +
+          kpi(num(vToday), 'Visitas hoy', `<div class="d ${dPct > 0 ? 'up' : 'flat'}">${dPct > 0 ? '▲ +' : dPct < 0 ? '▼ ' : ''}${dPct}% vs ayer</div>`) +
+          kpi(num(wToday), 'Vistas hoy');
+        $('stats-chart').innerHTML = buildLineChart(days);
+
+        const mm = s.matches || {};
+        const rows = Object.entries(mm)
+          .map(([slug, v]) => ({ slug, title: v.title || slug, views: Number(v.views || 0), signals: v.signals || {} }))
+          .sort((a, b) => b.views - a.views).slice(0, 20);
+        if (rows.length === 0) {
+          $('stats-matches').innerHTML = '<p class="text-slate-500 text-sm py-6 text-center">Aún no hay vistas registradas. Aparecerán aquí cuando alguien mire un partido.</p>';
+        } else {
+          const maxViews = Math.max(1, ...rows.map(r => r.views));
+          $('stats-matches').innerHTML = rows.map(r => {
+            const match = matchesSnapshot.find(x => x.slug === r.slug);
+            const sig = Object.entries(r.signals).sort((a, b) => Number(b[1]) - Number(a[1])).map(([i, c]) => {
+              const nm = (match && match.signals && match.signals[i] && match.signals[i].name) ? match.signals[i].name : ('Señal ' + (Number(i) + 1));
+              return `${esc(nm)}: <b class="text-slate-200">${c}</b>`;
+            }).join(' · ') || '<span class="text-slate-600">sin desglose de señal</span>';
+            const pct = Math.round(r.views / maxViews * 100);
+            return `<div class="stat-row">
+              <div class="min-w-0"><div class="text-sm font-semibold text-slate-100 truncate">${esc(r.title)}</div><div class="text-xs text-slate-400 truncate mt-0.5">📶 ${sig}</div></div>
+              <div class="w-24 bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>
+              <div class="text-sm font-bold text-slate-100 w-12 text-right">${r.views}</div>
+            </div>`;
+          }).join('');
+        }
+        const upd = s.updatedAt ? new Date(typeof s.updatedAt === 'number' ? s.updatedAt : (s.updatedAt.seconds ? s.updatedAt.seconds * 1000 : Date.now())) : null;
+        $('stats-updated').textContent = upd ? 'Actualizado ' + fmtDateTime(upd) : '';
+      }
+
+      onSnapshot(doc(db, 'public', 'stats'), (snap) => {
+        statsData = snap.exists() ? snap.data() : {};
+        if (!$('panel-stats').classList.contains('hidden')) renderStats();
+      }, (e) => console.error('stats onSnapshot', e));
 
       // Inicial
       resetMatchForm();
