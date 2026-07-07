@@ -698,17 +698,7 @@
         const payload = { status: 'finished', finishedAt: new Date(), updatedAt: new Date() };
         const mm = raw.match(/(\d+)\s*[-:xX]\s*(\d+)/);
         if (mm) payload.finalScore = { home: Number(mm[1]), away: Number(mm[2]) };
-        try {
-          await updateDoc(doc(db, 'matches', id), payload);
-          // Auto-buscar el resumen en YouTube (solo si hay proxy con clave). Silencioso.
-          try {
-            const m = matchesSnapshot.find(x => x.id === id);
-            if (m && workerUrl && !m.highlightsUrl) {
-              const url = await fetchHighlightsUrl(m);
-              if (url) await updateDoc(doc(db, 'matches', id), { highlightsUrl: url, updatedAt: new Date() });
-            }
-          } catch (_) {}
-        }
+        try { await updateDoc(doc(db, 'matches', id), payload); }
         catch (e) { console.error(e); alert('Error al finalizar'); }
       };
       window.deleteMatch = async (id) => {
@@ -806,7 +796,6 @@
         const q = [m.home, m.away].filter(Boolean).join(' vs ') + ' resumen highlights ' + (m.competition || '');
         if (!workerUrl) {
           window.open('https://www.youtube.com/results?search_query=' + encodeURIComponent(q.trim()), '_blank');
-          alert('Sin clave de YouTube en el proxy: abrí la búsqueda en YouTube. Copia el enlace del video y pégalo en el campo, luego Guardar.');
           return;
         }
         const btn = $('hlsearch-' + id);
@@ -814,14 +803,14 @@
         try {
           const url = await fetchHighlightsUrl(m);
           if (!url) throw new Error('sin resultados');
-          const inp = $('hl-' + id); if (inp) inp.value = url;
-          await updateDoc(doc(db, 'matches', id), { highlightsUrl: url, updatedAt: new Date() });
-          alert('✅ Resumen encontrado y guardado.');
+          const inp = $('hl-' + id); if (inp) inp.value = url;   // solo sugiere; NO guarda
+          alert('Sugerencia puesta en el campo. Verifica que se vea embebida (algunos canales bloquean el embed); si no, pega otro enlace y pulsa 💾 Guardar.');
         } catch (e) {
           console.error(e);
-          alert('No se pudo buscar el resumen (' + (e.message || e) + '). Pega el enlace manualmente o revisa la clave de YouTube en el proxy.');
+          window.open('https://www.youtube.com/results?search_query=' + encodeURIComponent(q.trim()), '_blank');
+          alert('No se pudo sugerir automáticamente. Abrí YouTube: copia el enlace de un video que permita embed y pégalo aquí, luego 💾 Guardar.');
         } finally {
-          if (btn) { btn.disabled = false; btn.textContent = '🔎 Buscar en YouTube'; }
+          if (btn) { btn.disabled = false; btn.textContent = '🔎 Sugerir de YouTube'; }
         }
       };
 
@@ -877,14 +866,14 @@
             </div>`;
           const hlEditor = `
             <div id="hledit-${m.id}" class="hidden bg-slate-900/70 rounded-xl border border-rose-500/25 p-3 space-y-2">
-              <label class="text-xs text-rose-300 font-bold">🎬 Resumen del partido (YouTube)</label>
-              <input id="hl-${m.id}" type="text" value="${esc(m.highlightsUrl || '')}" placeholder="Enlace de YouTube del resumen" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-rose-500">
+              <label class="text-xs text-rose-300 font-bold">🎬 Resumen del partido (pega el enlace de YouTube)</label>
+              <input id="hl-${m.id}" type="text" value="${esc(m.highlightsUrl || '')}" placeholder="https://www.youtube.com/watch?v=..." class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-rose-500">
               <div class="flex gap-2">
-                <button id="hlsearch-${m.id}" onclick="searchHighlights('${m.id}')" class="flex-1 bg-rose-600 hover:bg-rose-500 text-white font-bold py-2 rounded-lg text-xs">🔎 Buscar en YouTube</button>
+                <button id="hlsearch-${m.id}" onclick="searchHighlights('${m.id}')" class="flex-1 bg-rose-600 hover:bg-rose-500 text-white font-bold py-2 rounded-lg text-xs">🔎 Sugerir de YouTube</button>
                 <button onclick="saveHighlights('${m.id}')" class="flex-1 btn-primary text-white font-bold py-2 rounded-lg text-xs">💾 Guardar</button>
                 <button onclick="toggleHlEdit('${m.id}')" class="px-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-xs">Cerrar</button>
               </div>
-              <p class="text-[11px] text-slate-500">Con clave de YouTube en el proxy, "Buscar" lo encuentra y guarda solo. Sin clave, abre la búsqueda para copiar el enlace y pegarlo aquí.</p>
+              <p class="text-[11px] text-slate-500">Pega el enlace del resumen y pulsa 💾 Guardar. Elige un video que permita reproducirse embebido — <b>algunos canales bloquean el embed</b> y saldría "no disponible". "Sugerir" propone uno (no lo guarda) por si te sirve de punto de partida.</p>
             </div>`;
           return `
             <div class="bg-slate-800/80 rounded-2xl border border-slate-700 p-3 space-y-2">

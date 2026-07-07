@@ -239,40 +239,6 @@
         const q = [m.home, m.away].filter(Boolean).join(' vs ') + ' resumen highlights ' + (m.competition || '');
         return 'https://www.youtube.com/results?search_query=' + encodeURIComponent(q.trim());
       }
-      const isFifaComp = (c) => /fifa|mundial|world\s*cup/i.test(c || '');
-      // URL del proxy (Worker) — se lee 1 sola vez de config/importer (lectura pública).
-      let _workerUrl;
-      async function getWorkerUrl() {
-        if (_workerUrl !== undefined) return _workerUrl;
-        try {
-          const s = await getDoc(doc(db, 'config', 'importer'));
-          _workerUrl = (s.exists() && s.data().workerUrl) ? String(s.data().workerUrl).trim().replace(/\/+$/, '') : '';
-        } catch (e) { _workerUrl = ''; }
-        return _workerUrl;
-      }
-      // Busca el resumen: si es Mundial prioriza el canal FIFA; si no, el primer resultado.
-      // Cachea por sesión para no gastar cuota al re-ver el mismo partido.
-      async function findHighlights(m) {
-        if (m.highlightsUrl) return m.highlightsUrl;
-        try { const c = sessionStorage.getItem('topfut-hl-' + m.slug); if (c) return c || null; } catch (_) {}
-        const wu = await getWorkerUrl();
-        if (!wu) return null;
-        const fifa = isFifaComp(m.competition);
-        const teams = [m.home, m.away].filter(Boolean).join(' vs ');
-        const q = fifa ? (teams + ' highlights FIFA World Cup') : (teams + ' resumen highlights ' + (m.competition || ''));
-        try {
-          const r = await fetch(wu + '/yt/search?q=' + encodeURIComponent(q.trim()));
-          const data = await r.json().catch(() => ({}));
-          if (!r.ok) return null;
-          const items = data.items || [];
-          let pick = items[0];
-          if (fifa) { const f = items.find(it => /fifa/i.test((it.snippet && it.snippet.channelTitle) || '')); if (f) pick = f; }
-          const vid = pick && pick.id && pick.id.videoId;
-          const url = vid ? 'https://www.youtube.com/watch?v=' + vid : null;
-          try { sessionStorage.setItem('topfut-hl-' + m.slug, url || ''); } catch (_) {}
-          return url;
-        } catch (e) { return null; }
-      }
 
       // Próximo partido (para el acceso rápido ⏭ mientras se ve)
       function nextMatchSlug() {
@@ -479,6 +445,14 @@
         const scoreHtml = hasScore
           ? `<div class="fin-board">${finTeam(m.home, m.homeLogo)}<div class="fin-score">${esc(String(fs.home))}<i>-</i>${esc(String(fs.away))}</div>${finTeam(m.away, m.awayLogo)}</div>`
           : `<div style="margin:8px 0;">${teamsBlock(m)}</div>`;
+        // Resumen: se embebe el enlace de YouTube que el admin pegó en el panel
+        // (así elige un video que SÍ permita reproducirse embebido). Si no hay ninguno,
+        // se ofrece la búsqueda en YouTube.
+        const highlightsHtml = m.highlightsUrl
+          ? `<div class="fin-video-lbl">🎬 Resumen del partido</div>
+             <div class="fin-video"><iframe src="${esc(ytEmbed(m.highlightsUrl))}" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe></div>
+             <a href="${esc(m.highlightsUrl)}" target="_blank" rel="noopener" style="display:inline-block;margin-top:8px;color:#9fb0e6;font-size:12px;">Abrir en YouTube ↗</a>`
+          : `<a class="mo-btn" style="margin-top:16px;background:rgba(255,255,255,0.12);color:#fff;border:1px solid rgba(255,255,255,0.2);" href="${esc(ytSearchUrl(m))}" target="_blank" rel="noopener">🎬 Ver resumen en YouTube</a>`;
         showMatchOverlay(`
           <div class="fin-wrap">
             <div style="font-size:52px;margin-bottom:6px;">🏁</div>
@@ -486,25 +460,10 @@
             <p class="fin-thanks">¡Gracias por verlo a través de nuestra plataforma! 🙌</p>
             ${scoreHtml}
             <div class="fin-comp">${esc(m.competition || '')}${m.round ? ' · ' + esc(m.round) : ''}</div>
-            <div id="fin-highlights"><div class="fin-video-lbl" style="opacity:.6;">🎬 Buscando resumen…</div></div>
+            ${highlightsHtml}
             <div id="next-slot"></div>
             <a href="index.html" class="mo-btn" style="margin-top:22px;">🏠 Volver al inicio</a>
           </div>`);
-        // Resumen embebido: se ve aquí mismo, sin ir a YouTube. Prioriza el canal FIFA
-        // si es Mundial; si no, el primer resultado. Si no hay proxy/resultado → enlace de búsqueda.
-        (async () => {
-          const slot = document.getElementById('fin-highlights');
-          if (!slot) return;
-          const url = await findHighlights(m);
-          if (url) {
-            slot.innerHTML = `
-              <div class="fin-video-lbl">🎬 Resumen del partido</div>
-              <div class="fin-video"><iframe src="${esc(ytEmbed(url))}" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe></div>
-              <a href="${esc(url)}" target="_blank" rel="noopener" style="display:inline-block;margin-top:8px;color:#9fb0e6;font-size:12px;">Abrir en YouTube ↗</a>`;
-          } else {
-            slot.innerHTML = `<a class="mo-btn" style="margin-top:16px;background:rgba(255,255,255,0.12);color:#fff;border:1px solid rgba(255,255,255,0.2);" href="${esc(ytSearchUrl(m))}" target="_blank" rel="noopener">🎬 Ver resumen en YouTube</a>`;
-          }
-        })();
         // Próximo partido: UNA sola consulta (sin sondeo en segundo plano)
         try {
           const snap = await getDocs(matchesCol);
