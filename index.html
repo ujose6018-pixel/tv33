@@ -91,15 +91,30 @@
     .section { max-width: 1200px; margin: 26px auto 0; padding: 0 18px; }
     .section-title { font-size: 22px; font-weight: 900; margin: 0 0 14px; }
     .scroll-wrap { position: relative; }
-    .scroller { display: flex; gap: 16px; overflow-x: auto; scroll-behavior: smooth; padding: 4px 2px 14px; scrollbar-width: thin; }
-    .scroller::-webkit-scrollbar { height: 8px; }
-    .scroller::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.25); border-radius: 10px; }
-    .scroll-arrow { position: absolute; top: 42%; transform: translateY(-50%); z-index: 6; width: 38px; height: 38px; border-radius: 10px; border: none; cursor: pointer; background: rgba(10,16,60,0.85); color: #fff; font-size: 20px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(0,0,0,0.4); }
-    .scroll-arrow:hover { background: #65a30d; }
-    .scroll-arrow.left { left: -6px; } .scroll-arrow.right { right: -6px; }
+    /* Rejilla responsiva (se acomoda sola). Reemplaza al carrusel horizontal:
+       más natural en móvil y TV, y sin JS de flechas. */
+    .scroller { display: block; padding: 4px 0 14px; }
+    .scroll-arrow { display: none; }   /* ya no se usan con la rejilla */
+
+    /* Agrupación por día */
+    .day-group { margin-bottom: 8px; }
+    .day-title { font-size: 14px; font-weight: 800; color: #9fb0e6; margin: 14px 2px 12px; text-transform: uppercase; letter-spacing: .6px; }
+    .day-title .n { color: #a3e635; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(258px, 1fr)); gap: 16px; }
+
+    /* Skeletons de carga (pulso de opacidad barato, apto para TV) */
+    @keyframes skelPulse { 0%,100% { opacity: .55; } 50% { opacity: .85; } }
+    .skel-card { border-radius: 16px; overflow: hidden; background: #141a12; }
+    .skel-card > div { animation: skelPulse 1.4s ease-in-out infinite; }
+    .skel-top { height: 150px; background: rgba(255,255,255,0.06); }
+    .skel-meta { padding: 14px; }
+    .skel-line { height: 12px; border-radius: 6px; background: rgba(255,255,255,0.08); margin-bottom: 8px; }
+    .skel-line.short { width: 55%; }
+    .skel-btn { height: 38px; border-radius: 12px; background: rgba(255,255,255,0.08); margin-top: 12px; }
+    @media (prefers-reduced-motion: reduce) { .skel-card > div { animation: none; } }
 
     /* ── Tarjeta de evento ── */
-    .event-card { flex: 0 0 300px; max-width: 300px; transition: transform .2s; }
+    .event-card { position: relative; width: 100%; max-width: 340px; transition: transform .2s; }
     .event-card:hover { transform: translateY(-4px); }
     .event-card.locked { opacity: 0.72; }
     .event-card.locked:hover { transform: none; }
@@ -136,6 +151,28 @@
     .sig-btn.alt2 { background: #1a2413; color: #a3e635; border: 1px solid rgba(163,230,53,0.6); }
     .event-actions.three .sig-btn { font-size: 11.5px; padding: 10px 4px; letter-spacing: -0.2px; }
     .locked-btn { flex: 1; text-align: center; border-radius: 12px; padding: 10px 8px; font-weight: 800; font-size: 13px; color: #94a3b8; background: rgba(148,163,184,0.12); margin-top: 12px; }
+
+    /* Botón compartir (esquina de la tarjeta) */
+    .card-share { position: absolute; top: 8px; right: 8px; z-index: 3; width: 32px; height: 32px; border: none; cursor: pointer; border-radius: 50%; background: rgba(0,0,0,0.5); color: #fff; display: flex; align-items: center; justify-content: center; padding: 0; }
+    .card-share:hover { background: #65a30d; color: #0c1502; }
+    .card-share svg { width: 16px; height: 16px; }
+
+    /* Marcador de resultado (finalizados) */
+    .event-time .score { color: #e2e8f0; font-weight: 800; }
+    .event-time .fin { color: #94a3b8; font-weight: 700; }
+
+    /* Toast */
+    #toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 70; background: rgba(15,23,42,0.96); color: #fff; padding: 11px 20px; border-radius: 999px; font-size: 14px; font-weight: 600; box-shadow: 0 8px 24px rgba(0,0,0,0.5); opacity: 0; transition: opacity .25s; pointer-events: none; max-width: 90%; text-align: center; }
+    #toast.show { opacity: 1; }
+    @media (prefers-reduced-motion: reduce) { #toast { transition: none; } .event-card { transition: none; } }
+
+    /* Foco visible para navegar con el control de la TV */
+    .nav-link:focus-visible, .icon-btn:focus-visible, .sig-btn:focus-visible,
+    .card-share:focus-visible, .search-box input:focus-visible, #install-btn:focus-visible,
+    footer a:focus-visible, .modal-close:focus-visible {
+      outline: 3px solid #a3e635; outline-offset: 2px;
+    }
+    .sig-btn:focus-visible { scroll-margin-top: 84px; scroll-margin-bottom: 24px; }
 
     .empty { text-align: center; color: #9fb0e6; padding: 60px 0; width: 100%; }
     footer { max-width: 1200px; margin: 40px auto 0; padding: 24px 18px; color: #6b78ba; font-size: 12px; text-align: center; }
@@ -207,6 +244,7 @@
         <button class="nav-link active" data-filter="all">INICIO</button>
         <button class="nav-link" data-filter="live">EN VIVO</button>
         <button class="nav-link" data-filter="upcoming">PRÓXIMOS</button>
+        <button class="nav-link" data-filter="finished">RESULTADOS</button>
       </div>
       <div class="nav-icons">
         <div class="search-box" id="search-box">
@@ -239,12 +277,13 @@
     <h3 class="section-title" id="section-title">Próximos eventos</h3>
     <div class="scroll-wrap">
       <button class="scroll-arrow left" id="arrow-left">‹</button>
-      <div class="scroller" id="scroller">
-        <div class="empty">Cargando partidos…</div>
-      </div>
+      <div class="scroller" id="scroller"></div>
       <button class="scroll-arrow right" id="arrow-right">›</button>
     </div>
   </div>
+
+  <!-- Aviso breve -->
+  <div id="toast"></div>
 
   <footer>
     ⚽ TOP FUT · Agenda de partidos<br>
@@ -306,6 +345,40 @@
         return 'locked';
       }
 
+      // ── Helpers añadidos: URL corta, toast, agrupación por día, compartir ──
+      const getBaseDir = () => { const p = location.pathname; return p.substring(0, p.lastIndexOf('/') + 1); };
+      const shortUrlFor = (slug) => location.origin + getBaseDir() + slug;
+      let toastTimer = null;
+      const toast = (msg) => {
+        const t = $('toast'); t.textContent = msg; t.classList.add('show');
+        if (toastTimer) clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
+      };
+      const dayKey = (m) => {
+        const ko = koMillis(m); if (!ko) return 'zzz-sin-fecha';
+        const d = new Date(ko);
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      };
+      const dayLabel = (m) => {
+        const ko = koMillis(m); if (!ko) return '🗓️ Sin fecha';
+        const d = new Date(ko), today = new Date(), tom = new Date();
+        tom.setDate(today.getDate() + 1);
+        const same = (a, b) => a.getDate() === b.getDate() && a.getMonth() === b.getMonth() && a.getFullYear() === b.getFullYear();
+        if (same(d, today)) return 'HOY';
+        if (same(d, tom)) return 'MAÑANA';
+        return new Intl.DateTimeFormat('es-ES', { weekday: 'long', day: '2-digit', month: 'long' }).format(d).toUpperCase();
+      };
+      // Compartir: usa el diálogo nativo si existe; si no, copia el enlace (toast) o WhatsApp.
+      window.shareMatch = (slug) => {
+        const m = allMatches.find(x => x.slug === slug);
+        const name = m ? ([m.home, m.away].filter(Boolean).join(' vs ') || m.title || 'Partido') : 'Partido';
+        const url = shortUrlFor(slug);
+        const text = '⚽ ' + name + '\n' + url;
+        if (navigator.share) { navigator.share({ title: name, text, url }).catch(() => {}); }
+        else if (navigator.clipboard) { navigator.clipboard.writeText(url).then(() => toast('🔗 Enlace copiado')).catch(() => window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank')); }
+        else { window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank'); }
+      };
+
       let allMatches = [];
       let currentFilter = 'all';
       let searchQuery = '';
@@ -331,11 +404,17 @@
 
         let badge = '';
         if (phase === 'live') badge = `<div class="round-badge live">● EN VIVO</div>`;
+        else if (phase === 'finished') badge = `<div class="round-badge" style="background:linear-gradient(180deg,#cbd5e1,#94a3b8);color:#0f172a;">FINAL</div>`;
         else if (m.round) badge = `<div class="round-badge">${esc(m.round)}</div>`;
 
         const key = esc(m.slug || '');
         let timeLine;
-        if (phase === 'live') {
+        if (phase === 'finished') {
+          const fs = m.finalScore;
+          const sc = (fs && fs.home != null && fs.away != null && fs.home !== '' && fs.away !== '')
+            ? `${esc(String(fs.home))} - ${esc(String(fs.away))}` : '';
+          timeLine = (sc ? `<span class="score">${sc}</span> · ` : '') + `<span class="fin">🏁 Finalizado</span>`;
+        } else if (phase === 'live') {
           timeLine = `<span class="live"><span class="dot"></span>EN VIVO AHORA</span>`;
         } else if (phase === 'locked') {
           timeLine = `${esc(dt(m))} · 🔒 <span class="cd" id="cd-${key}" data-ko="${ko}">${formatCountdown(ko - now)}</span>`;
@@ -347,7 +426,9 @@
         const name = [m.home, m.away].filter(Boolean).join(' vs. ') || (m.title || 'Partido');
         const sigs = m.signals || [];
         let actions;
-        if (!clickable) {
+        if (phase === 'finished') {
+          actions = `<div class="event-actions"><button class="sig-btn alt" onclick="goMatch('${key}')">📊 Ver resumen</button></div>`;
+        } else if (!clickable) {
           actions = `<div class="locked-btn">🔒 Disponible pronto</div>`;
         } else if (sigs.length >= 2) {
           // Un botón por señal (hasta 3); el cliente elige y el reproductor abre esa (?s=i)
@@ -361,6 +442,9 @@
         }
         return `
           <div class="event-card ${clickable ? '' : 'locked'}">
+            <button class="card-share" title="Compartir" aria-label="Compartir" onclick="shareMatch('${key}')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>
+            </button>
             <div class="event-top">
               <div class="comp-title">${esc(m.competition || 'TOP FUT')}</div>
               <div class="crest-panel">
@@ -387,25 +471,53 @@
 
       function renderGrid() {
         let list = allMatches.filter(passesSearch);
+        const isFinished = currentFilter === 'finished';
         if (currentFilter === 'live') list = list.filter(m => computePhase(m) === 'live');
         else if (currentFilter === 'upcoming') list = list.filter(m => { const p = computePhase(m); return p === 'active' || p === 'locked'; });
+        else if (isFinished) list = list.filter(m => computePhase(m) === 'finished');
         else list = list.filter(m => computePhase(m) !== 'finished');
 
-        list.sort((a, b) => {
-          const la = computePhase(a) === 'live' ? 0 : 1, lb = computePhase(b) === 'live' ? 0 : 1;
-          if (la !== lb) return la - lb;
-          return (koMillis(a) || 0) - (koMillis(b) || 0);
-        });
+        if (isFinished) {
+          list.sort((a, b) => (koMillis(b) || 0) - (koMillis(a) || 0));   // más recientes primero
+        } else {
+          list.sort((a, b) => {
+            const la = computePhase(a) === 'live' ? 0 : 1, lb = computePhase(b) === 'live' ? 0 : 1;
+            if (la !== lb) return la - lb;
+            return (koMillis(a) || 0) - (koMillis(b) || 0);
+          });
+        }
 
         visibleList = list;
         phaseCache = {};
         list.forEach(m => phaseCache[m.slug] = computePhase(m));
 
-        sectionTitle.textContent = currentFilter === 'live' ? '🔴 En vivo' : currentFilter === 'upcoming' ? 'Próximos eventos' : 'Eventos';
+        sectionTitle.textContent = currentFilter === 'live' ? '🔴 En vivo'
+          : currentFilter === 'upcoming' ? 'Próximos eventos'
+          : isFinished ? '🏁 Resultados' : 'Eventos';
 
-        scroller.innerHTML = list.length === 0
-          ? `<div class="empty">📭 No hay partidos ${currentFilter === 'live' ? 'en vivo' : currentFilter === 'upcoming' ? 'próximos' : 'disponibles'} por ahora</div>`
-          : list.map(matchCard).join('');
+        if (list.length === 0) {
+          scroller.innerHTML = `<div class="empty">📭 No hay partidos ${currentFilter === 'live' ? 'en vivo' : currentFilter === 'upcoming' ? 'próximos' : isFinished ? 'finalizados' : 'disponibles'} por ahora</div>`;
+          return;
+        }
+
+        // Agrupar por día (conserva el orden ya calculado)
+        const order = [], byKey = {};
+        for (const m of list) {
+          const k = dayKey(m);
+          if (!byKey[k]) { byKey[k] = { label: dayLabel(m), items: [] }; order.push(k); }
+          byKey[k].items.push(m);
+        }
+        scroller.innerHTML = order.map(k => `
+          <div class="day-group">
+            <div class="day-title"><span class="n">▸</span> ${esc(byKey[k].label)}</div>
+            <div class="grid">${byKey[k].items.map(matchCard).join('')}</div>
+          </div>`).join('');
+      }
+
+      // Skeletons mientras carga (pulso ligero)
+      function renderSkeletons(n) {
+        const card = `<div class="skel-card"><div class="skel-top"></div><div class="skel-meta"><div class="skel-line"></div><div class="skel-line short"></div><div class="skel-btn"></div></div></div>`;
+        scroller.innerHTML = `<div class="day-group"><div class="grid">${card.repeat(n || 6)}</div></div>`;
       }
 
       // Navegación (filtros)
@@ -441,6 +553,7 @@
           renderGrid();
         } catch (e) { console.error('fallback matches', e); }
       }
+      renderSkeletons(8);   // placeholder mientras llega el primer snapshot
       onSnapshot(doc(db, 'public', 'schedule'), (snap) => {
         if (snap.exists() && Array.isArray(snap.data().matches)) {
           allMatches = snap.data().matches;

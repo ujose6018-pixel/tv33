@@ -84,6 +84,33 @@
     .next-actions a { flex:1; min-width:130px; text-align:center; padding:11px 14px; border-radius:12px; font-weight:800; font-size:14px; }
     .btn-primary { background: linear-gradient(135deg,#a3e635,#65a30d); color:#0c1502; }
     .btn-remind { background: rgba(255,255,255,0.12); color:#fff; border:1px solid rgba(255,255,255,0.2); }
+
+    /* ── Barra de señales flotante (cambiar de señal sin salir) ──
+       Ligerísima: solo pills con opacity; sin blur ni animaciones continuas. */
+    #sig-bar { position: fixed; top: 16px; right: 16px; z-index: 50; display: flex; gap: 8px;
+      align-items: center; flex-wrap: wrap; justify-content: flex-end; max-width: calc(100% - 120px); }
+    .sig-pill { border: none; cursor: pointer; background: rgba(0,0,0,0.72); color: #fff; border-radius: 999px;
+      padding: 9px 14px; font-size: 13px; font-weight: 700; opacity: 0.6; box-shadow: 0 3px 14px rgba(0,0,0,0.5);
+      max-width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-decoration: none;
+      display: inline-flex; align-items: center; gap: 5px; line-height: 1; }
+    .sig-pill:hover { opacity: 0.97; }
+    .sig-pill.active { background: linear-gradient(135deg,#a3e635,#65a30d); color: #0c1502; opacity: 1; }
+    .sig-pill.report { background: rgba(127,29,29,0.82); }
+    .sig-pill.next { background: rgba(30,46,140,0.82); }
+
+    /* Aviso breve (toast) */
+    #rp-toast { position: fixed; left: 50%; bottom: 78px; transform: translateX(-50%); z-index: 60;
+      background: rgba(15,23,42,0.95); color: #fff; padding: 10px 18px; border-radius: 999px; font-size: 14px;
+      font-weight: 600; box-shadow: 0 6px 20px rgba(0,0,0,0.5); opacity: 0; transition: opacity .25s;
+      pointer-events: none; max-width: 90%; text-align: center; }
+    #rp-toast.show { opacity: 1; }
+
+    /* Foco visible para navegar con el control de la TV (teclas/flechas) */
+    .viewer-btn:focus-visible, .sig-pill:focus-visible, .mo-btn:focus-visible,
+    .exp-btn:focus-visible, .next-actions a:focus-visible {
+      outline: 3px solid #a3e635; outline-offset: 2px; opacity: 1;
+    }
+    @media (prefers-reduced-motion: reduce) { #rp-toast { transition: none; } }
   </style>
 </head>
 <body>
@@ -101,6 +128,12 @@
 
   <!-- Overlay pre-partido / finalizado -->
   <div id="match-overlay" class="hidden"><div id="mo-content"></div></div>
+
+  <!-- Barra de señales flotante (se llena solo si el partido tiene >1 señal) -->
+  <div id="sig-bar" class="hidden"></div>
+
+  <!-- Aviso breve -->
+  <div id="rp-toast"></div>
 
   <!-- Enlace expirado / no disponible -->
   <div id="expired-view" class="hidden">
@@ -127,6 +160,8 @@
       const matchOverlay = $('match-overlay');
       const moContent = $('mo-content');
       const btnFullscreen = $('btn-fullscreen');
+      const sigBar = $('sig-bar');
+      const toastEl = $('rp-toast');
 
       const safeDecode = (v) => { try { return decodeURIComponent(v); } catch (_) { return v; } };
       const getBaseDir = () => { const p = window.location.pathname; return p.substring(0, p.lastIndexOf('/') + 1); };
@@ -141,6 +176,83 @@
 
       // Bloquear popups (ads de iframes)
       window.open = function () { return null; };
+
+      // ── Aviso breve (toast) ──
+      let toastTimer = null;
+      function toast(msg) {
+        toastEl.textContent = msg;
+        toastEl.classList.add('show');
+        if (toastTimer) clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2600);
+      }
+
+      // ── Estado de señales (para cambiar sin salir + auto-fallback) ──
+      let currentSigIdx = null;          // señal elegida en esta sesión (null = usar la del ?s= / activeSignal)
+      const failedSigs = new Set();      // índices de señales que dieron error de reproducción
+
+      // Próximo partido (para el acceso rápido ⏭ mientras se ve)
+      function nextMatchSlug() {
+        const list = window._allMatches || [];
+        const cur = window._m || {};
+        const now = Date.now();
+        const next = list
+          .filter(x => x.slug && x.slug !== cur.slug && x.status !== 'finished'
+            && x.kickoff?.seconds && x.kickoff.seconds * 1000 > now)
+          .sort((a, b) => a.kickoff.seconds - b.kickoff.seconds)[0];
+        return next ? next.slug : null;
+      }
+
+      // Dibuja la barra flotante: una pill por señal + "no funciona" + siguiente.
+      function renderSignalBar(signals, activeIdx) {
+        const sigs = signals || [];
+        const nextSlug = nextMatchSlug();
+        if (sigs.length < 2 && !nextSlug) { sigBar.classList.add('hidden'); sigBar.innerHTML = ''; return; }
+        let html = '';
+        if (sigs.length >= 2) {
+          html += sigs.map((s, i) =>
+            `<button class="sig-pill${i === activeIdx ? ' active' : ''}" data-sig="${i}">📶 ${esc(s.name || ('Señal ' + (i + 1)))}</button>`
+          ).join('');
+          html += `<button class="sig-pill report" data-report="1">⚠️ No funciona</button>`;
+        }
+        if (nextSlug) html += `<a class="sig-pill next" href="reproductor.html?slug=${encodeURIComponent(nextSlug)}" title="Siguiente partido">⏭</a>`;
+        sigBar.innerHTML = html;
+        sigBar.classList.remove('hidden');
+        sigBar.querySelectorAll('[data-sig]').forEach(b =>
+          b.addEventListener('click', () => switchSignal(Number(b.dataset.sig), true)));
+        const rep = sigBar.querySelector('[data-report]');
+        if (rep) rep.addEventListener('click', () => { failedSigs.add(currentSigIdx); tryNextSignal(); });
+      }
+
+      // Cambiar a una señal concreta (manual = elegida por el usuario)
+      function switchSignal(i, manual) {
+        const sigs = window._sigs || [];
+        if (i < 0 || i >= sigs.length || i === currentSigIdx) return;
+        currentSigIdx = i;
+        if (manual) failedSigs.delete(i);     // el usuario la elige a propósito: darle otra oportunidad
+        toast('Cambiando a ' + (sigs[i]?.name || ('Señal ' + (i + 1))) + '…');
+        applyMatchState(window._m);
+      }
+
+      // Probar la siguiente señal disponible (auto-fallback o botón "no funciona")
+      function tryNextSignal() {
+        const sigs = window._sigs || [];
+        if (sigs.length < 2) { toast('No hay otra señal disponible'); return; }
+        for (let k = 1; k <= sigs.length; k++) {
+          const cand = ((currentSigIdx ?? 0) + k) % sigs.length;
+          if (!failedSigs.has(cand)) { switchSignal(cand, false); return; }
+        }
+        toast('Ninguna señal disponible por ahora. Intenta más tarde.');
+      }
+
+      // Error real de reproducción (solo se detecta en video/HLS propios, no en iframes de terceros)
+      function onMediaError() {
+        const sigs = window._sigs || [];
+        if (sigs.length > 1 && currentSigIdx != null && !failedSigs.has(currentSigIdx)) {
+          failedSigs.add(currentSigIdx);
+          toast('Señal con problemas, probando otra…');
+          tryNextSignal();
+        }
+      }
 
       // ── Reproductor de una sola señal ──
       let _hlsReady = false, _hlsQ = [];
@@ -196,10 +308,14 @@
         } else if (type === 'direct') {
           const v = document.createElement('video');
           v.autoplay = true; v.controls = true; v.setAttribute('playsinline', '');
+          v.addEventListener('error', onMediaError);   // auto-fallback si el stream cae
           wrap.appendChild(v);
           if (/\.m3u8?(\?|$)/i.test(url)) {
             _ensureHLS(() => {
-              if (window.Hls && Hls.isSupported()) { const hls = new Hls(); hls.loadSource(url); hls.attachMedia(v); }
+              if (window.Hls && Hls.isSupported()) {
+                const hls = new Hls(); hls.loadSource(url); hls.attachMedia(v);
+                hls.on(Hls.Events.ERROR, (_e, data) => { if (data && data.fatal) onMediaError(); });
+              }
               else if (v.canPlayType('application/vnd.apple.mpegurl')) { v.src = url; }
             });
           } else { v.src = url; }
@@ -211,13 +327,14 @@
       }
 
       function stopPlayer() { videoContainer.innerHTML = ''; }
+      function hideSigBar() { sigBar.classList.add('hidden'); sigBar.innerHTML = ''; }
       function showViewer() { matchOverlay.classList.add('hidden'); expiredView.classList.add('hidden'); viewerView.classList.remove('hidden'); }
       function showMatchOverlay(html) {
-        stopPlayer(); currentSignalUrl = null;
+        stopPlayer(); currentSignalUrl = null; hideSigBar();
         viewerView.classList.add('hidden'); expiredView.classList.add('hidden');
         moContent.innerHTML = html; matchOverlay.classList.remove('hidden');
       }
-      function showExpired() { stopPlayer(); viewerView.classList.add('hidden'); matchOverlay.classList.add('hidden'); expiredView.classList.remove('hidden'); }
+      function showExpired() { stopPlayer(); hideSigBar(); viewerView.classList.add('hidden'); matchOverlay.classList.add('hidden'); expiredView.classList.remove('hidden'); }
 
       // ── Visor de partido (la señal la decide el admin) ──
       let currentSignalUrl = null;
@@ -332,9 +449,16 @@
         // ¿Toca reproducir? (admin en vivo, o faltan <= AUTO_PLAY_MIN min)
         if (shouldPlay(m)) {
           const signals = m.signals || [];
-          // El cliente eligió la señal en el index (?s=0 o ?s=1). Si no, la por defecto.
-          const sig = signals[sIdx != null ? sIdx : (m.activeSignal || 0)] || signals[0];
+          window._sigs = signals;
+          // Prioridad: la señal que el usuario cambió aquí (currentSigIdx) >
+          // la que eligió en el index (?s=) > la activa del admin.
+          let idx = (currentSigIdx != null) ? currentSigIdx
+            : (sIdx != null ? sIdx : (m.activeSignal || 0));
+          if (idx < 0 || idx >= signals.length) idx = 0;
+          currentSigIdx = signals.length ? idx : null;
+          const sig = signals[idx] || signals[0];
           if (!sig || !sig.url) {
+            hideSigBar();
             showMatchOverlay(`
               <div style="max-width:520px;">
                 <div style="font-size:56px;margin-bottom:12px;">📡</div>
@@ -345,6 +469,7 @@
             return;
           }
           showViewer();
+          renderSignalBar(signals, idx);
           if (currentSignalUrl !== sig.url) { currentSignalUrl = sig.url; mountSingle(sig.url); }
           return;
         }
@@ -385,6 +510,7 @@
       // señal elegida cambió, así el video no se reinicia por cambios ajenos.
       function startMatchViewer(slug) {
         const handle = (matches) => {
+          window._allMatches = matches || [];
           const m = (matches || []).find(x => x.slug === slug);
           if (!m) { showMatchOverlay(`<div style="max-width:520px;"><div style="font-size:56px;">❌</div><h2 style="font-size:24px;font-weight:900;color:#e2e8f0;">Partido no encontrado</h2><a href="index.html" class="mo-btn">🏠 Ver otros partidos</a></div>`); return; }
           applyMatchState(m);
