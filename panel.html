@@ -775,11 +775,16 @@
       // abre la búsqueda de YouTube para copiar el enlace manualmente.
       async function fetchHighlightsUrl(m) {
         if (!workerUrl) return null;
-        const q = [m.home, m.away].filter(Boolean).join(' vs ') + ' resumen highlights ' + (m.competition || '');
+        const fifa = /fifa|mundial|world\s*cup/i.test(m.competition || '');
+        const teams = [m.home, m.away].filter(Boolean).join(' vs ');
+        const q = fifa ? (teams + ' highlights FIFA World Cup') : (teams + ' resumen highlights ' + (m.competition || ''));
         const r = await fetch(workerUrl.replace(/\/+$/, '') + '/yt/search?q=' + encodeURIComponent(q.trim()));
         const data = await r.json().catch(() => ({}));
         if (!r.ok) throw new Error(data.message || ('HTTP ' + r.status));
-        const vid = data.items && data.items[0] && data.items[0].id && data.items[0].id.videoId;
+        const items = data.items || [];
+        let pick = items[0];
+        if (fifa) { const f = items.find(it => /fifa/i.test((it.snippet && it.snippet.channelTitle) || '')); if (f) pick = f; }
+        const vid = pick && pick.id && pick.id.videoId;
         return vid ? 'https://www.youtube.com/watch?v=' + vid : null;
       }
       window.toggleHlEdit = (id) => {
