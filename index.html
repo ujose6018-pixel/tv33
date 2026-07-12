@@ -136,6 +136,12 @@
     .crest .noimg { width: 62px; height: 62px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 26px; background: #dbe3ff; }
     .crest .code { color: #10225f; font-weight: 900; font-size: 16px; letter-spacing: .5px; }
     .vs { color: #10225f; font-weight: 900; font-size: 18px; }
+    /* Chips de filtro por deporte (solo aparecen si hay más de un deporte agendado) */
+    .sport-chips { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 14px; }
+    .sport-chips:empty { margin: 0; }
+    .sport-chip { border: 1px solid rgba(163,230,53,0.25); background: rgba(255,255,255,0.05); color: #cdd6f4; font-weight: 700; font-size: 12.5px; padding: 7px 14px; border-radius: 999px; cursor: pointer; transition: background .15s, color .15s, border-color .15s; }
+    .sport-chip:hover { border-color: rgba(163,230,53,0.6); }
+    .sport-chip.active { background: #a3e635; border-color: #a3e635; color: #0c1502; }
     .event-meta { background: rgba(9,14,52,0.72); border-radius: 0 0 16px 16px; padding: 12px 14px; }
     .event-name { font-weight: 800; font-size: 15px; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .event-time { color: #9fb0e6; font-size: 12.5px; margin-top: 3px; font-variant-numeric: tabular-nums; }
@@ -248,7 +254,7 @@
       </div>
       <div class="nav-icons">
         <div class="search-box" id="search-box">
-          <input id="search-input" type="text" placeholder="Buscar equipo…">
+          <input id="search-input" type="text" placeholder="Buscar equipo o evento…">
         </div>
         <button class="icon-btn" id="search-btn" title="Buscar">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.3-4.3"/></svg>
@@ -267,7 +273,7 @@
       <img src="icon.svg" alt="">
       <div>
         <h2>TOP <span style="color:#a3e635;">FUT</span> ⚽</h2>
-        <p>Streaming de partidos en vivo</p>
+        <p>Streaming en vivo: fútbol, UFC, lucha libre y más</p>
       </div>
     </div>
   </div>
@@ -275,6 +281,7 @@
   <!-- ── Sección de eventos ── -->
   <div class="section">
     <h3 class="section-title" id="section-title">Próximos eventos</h3>
+    <div class="sport-chips" id="sport-chips"></div>
     <div class="scroll-wrap">
       <button class="scroll-arrow left" id="arrow-left">‹</button>
       <div class="scroller" id="scroller"></div>
@@ -330,6 +337,21 @@
 
       const esc = (s) => (s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
       const abbr = (name) => ((name || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z0-9]/g, '').slice(0, 3).toUpperCase() || '—');
+
+      // ── Deportes / tipos de evento ──
+      const SPORTS = {
+        futbol:  { emoji: '⚽',  label: 'Fútbol' },
+        ufc:     { emoji: '🥋', label: 'UFC / MMA' },
+        boxeo:   { emoji: '🥊', label: 'Boxeo' },
+        lucha:   { emoji: '🤼', label: 'Lucha libre' },
+        basquet: { emoji: '🏀', label: 'Básquet' },
+        beisbol: { emoji: '⚾',  label: 'Béisbol' },
+        tenis:   { emoji: '🎾', label: 'Tenis' },
+        motor:   { emoji: '🏎️', label: 'Automovilismo' },
+        otro:    { emoji: '🏆', label: 'Eventos' }
+      };
+      const sportOf = (m) => SPORTS[m.sport] ? m.sport : 'futbol';
+      const sportEmoji = (m) => SPORTS[sportOf(m)].emoji;
       const dt = (m) => {
         if (!m.kickoff?.seconds) return '';
         const d = new Date(m.kickoff.seconds * 1000);
@@ -387,9 +409,9 @@
       // Compartir: usa el diálogo nativo si existe; si no, copia el enlace (toast) o WhatsApp.
       window.shareMatch = (slug) => {
         const m = allMatches.find(x => x.slug === slug);
-        const name = m ? ([m.home, m.away].filter(Boolean).join(' vs ') || m.title || 'Partido') : 'Partido';
+        const name = m ? ([m.home, m.away].filter(Boolean).join(' vs ') || m.title || 'Evento') : 'Evento';
         const url = shortUrlFor(slug);
-        const text = '⚽ ' + name + '\n' + url;
+        const text = (m ? sportEmoji(m) : '⚽') + ' ' + name + '\n' + url;
         if (navigator.share) { navigator.share({ title: name, text, url }).catch(() => {}); }
         else if (navigator.clipboard) { navigator.clipboard.writeText(url).then(() => toast('🔗 Enlace copiado')).catch(() => window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank')); }
         else { window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank'); }
@@ -406,9 +428,10 @@
         window.location.href = 'reproductor.html?slug=' + encodeURIComponent(slug) + s;
       };
 
-      function crest(name, logo) {
+      function crest(name, logo, emoji) {
+        const emo = emoji || '⚽';
         return `<div class="crest">
-          ${logo ? `<img src="${esc(logo)}" alt="" onerror="this.outerHTML='<div class=&quot;noimg&quot;>⚽</div>'">` : `<div class="noimg">⚽</div>`}
+          ${logo ? `<img src="${esc(logo)}" alt="" onerror="this.outerHTML='<div class=&quot;noimg&quot;>${emo}</div>'">` : `<div class="noimg">${emo}</div>`}
           <span class="code">${esc(abbr(name))}</span>
         </div>`;
       }
@@ -428,7 +451,8 @@
         if (phase === 'finished') {
           const fs = m.finalScore;
           const sc = (fs && fs.home != null && fs.away != null && fs.home !== '' && fs.away !== '')
-            ? `${esc(String(fs.home))} - ${esc(String(fs.away))}` : '';
+            ? `${esc(String(fs.home))} - ${esc(String(fs.away))}`
+            : (m.finalResultText ? esc(m.finalResultText) : '');
           timeLine = (sc ? `<span class="score">${sc}</span> · ` : '') + `<span class="fin">🏁 Finalizado</span>`;
         } else if (phase === 'live') {
           timeLine = `<span class="live"><span class="dot"></span>EN VIVO AHORA</span>`;
@@ -439,7 +463,9 @@
         }
 
         const clickable = phase !== 'locked';
-        const name = [m.home, m.away].filter(Boolean).join(' vs. ') || (m.title || 'Partido');
+        const emo = sportEmoji(m);
+        const isSingle = !(m.home && m.away);   // evento completo (WWE RAW, gala UFC, GP…) → sin "VS"
+        const name = [m.home, m.away].filter(Boolean).join(' vs. ') || (m.title || 'Evento');
         const sigs = m.signals || [];
         let actions;
         if (phase === 'finished') {
@@ -462,13 +488,15 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>
             </button>
             <div class="event-top">
-              <div class="comp-title">${esc(m.competition || 'TOP FUT')}</div>
+              <div class="comp-title">${esc(m.competition || (SPORTS[sportOf(m)].label !== 'Fútbol' ? SPORTS[sportOf(m)].label : 'TOP FUT'))}</div>
               <div class="crest-panel">
                 ${badge}
                 <div class="crests">
-                  ${crest(m.home, m.homeLogo)}
+                  ${isSingle
+                    ? crest(m.home || m.away || m.title, m.homeLogo || m.awayLogo, emo)
+                    : `${crest(m.home, m.homeLogo, emo)}
                   <span class="vs">VS</span>
-                  ${crest(m.away, m.awayLogo)}
+                  ${crest(m.away, m.awayLogo, emo)}`}
                 </div>
               </div>
             </div>
@@ -482,11 +510,27 @@
 
       function passesSearch(m) {
         if (!searchQuery) return true;
-        return `${m.home || ''} ${m.away || ''} ${m.competition || ''} ${m.title || ''}`.toLowerCase().includes(searchQuery);
+        return `${m.home || ''} ${m.away || ''} ${m.competition || ''} ${m.title || ''} ${SPORTS[sportOf(m)].label}`.toLowerCase().includes(searchQuery);
+      }
+
+      // ── Filtro por deporte (chips): solo se muestran si hay más de un deporte agendado ──
+      let sportFilter = 'all';
+      window.setSportFilter = (s) => { sportFilter = s; renderGrid(); };
+      function renderSportChips() {
+        const cont = $('sport-chips');
+        const present = [...new Set(allMatches.map(sportOf))];
+        if (present.length <= 1) { if (sportFilter !== 'all') sportFilter = 'all'; cont.innerHTML = ''; return; }
+        if (sportFilter !== 'all' && !present.includes(sportFilter)) sportFilter = 'all';
+        const chip = (key, label) => `<button class="sport-chip ${sportFilter === key ? 'active' : ''}" onclick="setSportFilter('${key}')">${label}</button>`;
+        cont.innerHTML = chip('all', '🌐 Todos')
+          + Object.keys(SPORTS).filter(k => present.includes(k))
+              .map(k => chip(k, `${SPORTS[k].emoji} ${SPORTS[k].label}`)).join('');
       }
 
       function renderGrid() {
+        renderSportChips();
         let list = allMatches.filter(passesSearch);
+        if (sportFilter !== 'all') list = list.filter(m => sportOf(m) === sportFilter);
         const isFinished = currentFilter === 'finished';
         if (currentFilter === 'live') list = list.filter(m => computePhase(m) === 'live');
         else if (currentFilter === 'upcoming') list = list.filter(m => { const p = computePhase(m); return p === 'active' || p === 'locked'; });
@@ -512,7 +556,7 @@
           : isFinished ? '🏁 Resultados' : 'Eventos';
 
         if (list.length === 0) {
-          scroller.innerHTML = `<div class="empty">📭 No hay partidos ${currentFilter === 'live' ? 'en vivo' : currentFilter === 'upcoming' ? 'próximos' : isFinished ? 'finalizados' : 'disponibles'} por ahora</div>`;
+          scroller.innerHTML = `<div class="empty">📭 No hay eventos ${currentFilter === 'live' ? 'en vivo' : currentFilter === 'upcoming' ? 'próximos' : isFinished ? 'finalizados' : 'disponibles'} por ahora</div>`;
           return;
         }
 

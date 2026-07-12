@@ -122,7 +122,7 @@
 
       <!-- Tabs principales -->
       <div class="seg mb-6">
-        <button data-tab="matches" class="main-tab active flex-1">⚽ Partidos</button>
+        <button data-tab="matches" class="main-tab active flex-1">🎬 Eventos</button>
         <button data-tab="stats" class="main-tab flex-1">📊 Estadísticas</button>
         <button data-tab="tester" class="main-tab flex-1">🔍 Probar señales</button>
       </div>
@@ -137,12 +137,12 @@
               <!-- Toolbar -->
               <div class="flex items-center justify-between gap-3 flex-wrap">
                 <div>
-                  <h3 class="text-xl font-black text-emerald-200">⚽ Partidos</h3>
-                  <p class="text-emerald-100/70 text-xs">Crea uno nuevo o edita las señales de cada partido</p>
+                  <h3 class="text-xl font-black text-emerald-200">🎬 Eventos</h3>
+                  <p class="text-emerald-100/70 text-xs">Partidos, peleas y otros eventos: crea uno nuevo o edita sus señales</p>
                 </div>
                 <div class="flex gap-2">
-                  <button id="btn-import-matches" class="bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-bold py-3 px-5 rounded-2xl shadow-lg whitespace-nowrap">📅 Importar partidos</button>
-                  <button id="btn-create-match" class="btn-primary text-white font-bold py-3 px-5 rounded-2xl shadow-lg whitespace-nowrap">➕ Crear partido</button>
+                  <button id="btn-import-matches" class="bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-bold py-3 px-5 rounded-2xl shadow-lg whitespace-nowrap">📅 Importar partidos ⚽</button>
+                  <button id="btn-create-match" class="btn-primary text-white font-bold py-3 px-5 rounded-2xl shadow-lg whitespace-nowrap">➕ Crear evento</button>
                 </div>
               </div>
 
@@ -250,34 +250,51 @@
               <!-- Formulario (oculto por defecto — se abre con "Crear" o "Editar") -->
               <div id="match-form-section" class="hidden space-y-5">
               <div class="bg-gradient-to-r from-emerald-900/50 to-teal-900/50 border border-emerald-500/40 rounded-3xl p-5 flex gap-4">
-                <span class="text-3xl">⚽</span>
+                <span id="form-emoji" class="text-3xl">⚽</span>
                 <div>
-                  <h3 id="form-title" class="text-lg font-bold text-emerald-200">Crear partido</h3>
-                  <p class="text-emerald-100/80 text-sm">Carga los datos y las señales (botones) del partido.</p>
+                  <h3 id="form-title" class="text-lg font-bold text-emerald-200">Crear evento</h3>
+                  <p class="text-emerald-100/80 text-sm">Elige el deporte, carga los datos y las señales (botones) del evento.</p>
                 </div>
+              </div>
+
+              <!-- Tipo de evento / deporte -->
+              <div>
+                <label class="block text-sm font-bold text-slate-300 mb-2">🎽 Tipo de evento / deporte</label>
+                <select id="m-sport" class="w-full bg-slate-800/60 border border-slate-700 rounded-2xl px-5 py-4 text-white focus:outline-none focus:border-emerald-500 cursor-pointer">
+                  <option value="futbol">⚽ Fútbol</option>
+                  <option value="ufc">🥋 UFC / MMA</option>
+                  <option value="boxeo">🥊 Boxeo</option>
+                  <option value="lucha">🤼 Lucha libre (WWE, AAA, CMLL…)</option>
+                  <option value="basquet">🏀 Básquet</option>
+                  <option value="beisbol">⚾ Béisbol</option>
+                  <option value="tenis">🎾 Tenis</option>
+                  <option value="motor">🏎️ Automovilismo</option>
+                  <option value="otro">🏆 Otro evento</option>
+                </select>
+                <p id="m-sport-hint" class="text-xs text-slate-500 mt-1.5 hidden">💡 Para eventos sin rivales fijos (ej: WWE RAW, una gala completa de UFC), escribe el nombre del evento en el primer campo y deja el segundo vacío.</p>
               </div>
 
               <!-- Competición + Ronda -->
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label class="block text-sm font-bold text-slate-300 mb-2">🏆 Competición / liga</label>
+                  <label id="lbl-competition" class="block text-sm font-bold text-slate-300 mb-2">🏆 Competición / liga</label>
                   <input id="m-competition" type="text" placeholder="Ej: Copa Mundial de la FIFA" class="w-full bg-slate-800/60 border border-slate-700 rounded-2xl px-5 py-4 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500">
                 </div>
                 <div>
-                  <label class="block text-sm font-bold text-slate-300 mb-2">🏅 Ronda / fase <span class="text-slate-500 font-normal">(badge amarillo)</span></label>
+                  <label id="lbl-round" class="block text-sm font-bold text-slate-300 mb-2">🏅 Ronda / fase <span class="text-slate-500 font-normal">(badge amarillo)</span></label>
                   <input id="m-round" type="text" placeholder="Ej: 16avos de final" class="w-full bg-slate-800/60 border border-slate-700 rounded-2xl px-5 py-4 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500">
                 </div>
               </div>
 
-              <!-- Equipos -->
+              <!-- Participantes (equipos / peleadores / evento) -->
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="bg-slate-800/40 rounded-2xl p-4 border border-slate-700/50 space-y-3">
-                  <label class="block text-sm font-bold text-yellow-300">🏠 Equipo local</label>
+                  <label id="lbl-home" class="block text-sm font-bold text-yellow-300">🏠 Equipo local</label>
                   <input id="m-home" type="text" placeholder="Ej: Argentina" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-yellow-500">
                   <input id="m-home-logo" type="text" placeholder="URL del escudo (opcional)" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-3 text-white text-sm placeholder-slate-500 focus:outline-none focus:border-yellow-500">
                 </div>
                 <div class="bg-slate-800/40 rounded-2xl p-4 border border-slate-700/50 space-y-3">
-                  <label class="block text-sm font-bold text-cyan-300">🛫 Equipo visitante</label>
+                  <label id="lbl-away" class="block text-sm font-bold text-cyan-300">🛫 Equipo visitante</label>
                   <input id="m-away" type="text" placeholder="Ej: México" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500">
                   <input id="m-away-logo" type="text" placeholder="URL del escudo (opcional)" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-3 text-white text-sm placeholder-slate-500 focus:outline-none focus:border-cyan-500">
                 </div>
@@ -333,7 +350,7 @@
 
               <!-- Resultado -->
               <div id="m-result" class="p-6 bg-gradient-to-br from-yellow-900/30 to-orange-900/30 rounded-3xl border border-yellow-500/40 hidden">
-                <h3 class="text-lg font-bold text-yellow-300 mb-4">✨ ¡Partido guardado! Este es su enlace:</h3>
+                <h3 class="text-lg font-bold text-yellow-300 mb-4">✨ ¡Evento guardado! Este es su enlace:</h3>
                 <input id="m-url-output" readonly class="w-full bg-slate-900 border border-yellow-600/50 rounded-2xl px-4 py-3 text-yellow-100 text-sm focus:outline-none mb-3">
                 <div class="flex flex-col sm:flex-row gap-3">
                   <button id="m-copy" class="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white">📋 Copiar</button>
@@ -502,6 +519,38 @@
       };
       let savedStreams = [];
 
+      // ── Catálogo de deportes / tipos de evento ─────────────────
+      // p1/p2 = etiquetas de los participantes · single = permite un solo participante (evento completo)
+      const SPORTS = {
+        futbol:  { emoji: '⚽', label: 'Fútbol',        p1: '🏠 Equipo local',   p2: '🛫 Equipo visitante', ph1: 'Ej: Argentina',          ph2: 'Ej: México',            comp: '🏆 Competición / liga',   compPh: 'Ej: Copa Mundial de la FIFA', roundPh: 'Ej: 16avos de final',        single: false },
+        ufc:     { emoji: '🥋', label: 'UFC / MMA',     p1: '🔴 Peleador 1',     p2: '🔵 Peleador 2',        ph1: 'Ej: Ilia Topuria',       ph2: 'Ej: Charles Oliveira',  comp: '🏆 Evento / organización', compPh: 'Ej: UFC 317',                 roundPh: 'Ej: Pelea estelar · Peso ligero', single: true },
+        boxeo:   { emoji: '🥊', label: 'Boxeo',         p1: '🔴 Boxeador 1',     p2: '🔵 Boxeador 2',        ph1: 'Ej: Canelo Álvarez',     ph2: 'Ej: Terence Crawford',  comp: '🏆 Evento / cartelera',    compPh: 'Ej: Riyadh Season',           roundPh: 'Ej: Título supermediano',    single: true },
+        lucha:   { emoji: '🤼', label: 'Lucha libre',   p1: '⭐ Luchador / evento', p2: '⭐ Luchador 2 (opcional)', ph1: 'Ej: WWE RAW  ·  o: Roman Reigns', ph2: 'Ej: Cody Rhodes (o vacío)', comp: '🏆 Empresa / marca', compPh: 'Ej: WWE · AAA · CMLL',   roundPh: 'Ej: Campeonato Universal',   single: true },
+        basquet: { emoji: '🏀', label: 'Básquet',       p1: '🏠 Equipo local',   p2: '🛫 Equipo visitante',  ph1: 'Ej: Lakers',             ph2: 'Ej: Celtics',           comp: '🏆 Liga / torneo',         compPh: 'Ej: NBA',                     roundPh: 'Ej: Playoffs · Juego 3',     single: false },
+        beisbol: { emoji: '⚾', label: 'Béisbol',       p1: '🏠 Equipo local',   p2: '🛫 Equipo visitante',  ph1: 'Ej: Yankees',            ph2: 'Ej: Dodgers',           comp: '🏆 Liga / torneo',         compPh: 'Ej: MLB',                     roundPh: 'Ej: Serie Mundial · Juego 1', single: false },
+        tenis:   { emoji: '🎾', label: 'Tenis',         p1: '🎾 Jugador 1',      p2: '🎾 Jugador 2',         ph1: 'Ej: Alcaraz',            ph2: 'Ej: Sinner',            comp: '🏆 Torneo',                compPh: 'Ej: Wimbledon',               roundPh: 'Ej: Final',                  single: false },
+        motor:   { emoji: '🏎️', label: 'Automovilismo', p1: '🏁 Nombre del evento', p2: '(no aplica)',       ph1: 'Ej: GP de Mónaco',       ph2: 'Déjalo vacío',          comp: '🏆 Campeonato',            compPh: 'Ej: Fórmula 1',               roundPh: 'Ej: Carrera · Vuelta 1',     single: true },
+        otro:    { emoji: '🏆', label: 'Otro evento',   p1: '⭐ Nombre del evento / participante 1', p2: '⭐ Participante 2 (opcional)', ph1: 'Ej: Juegos Olímpicos — Apertura', ph2: 'Opcional', comp: '🏆 Competición / evento', compPh: 'Ej: París 2026', roundPh: 'Ej: Fase / detalle', single: true }
+      };
+      const sportInfo = (key) => SPORTS[key] || SPORTS.futbol;
+      const sportEmoji = (key) => sportInfo(key).emoji;
+
+      function updateSportLabels() {
+        const s = sportInfo($('m-sport').value);
+        $('form-emoji').textContent = s.emoji;
+        $('lbl-home').textContent = s.p1;
+        $('lbl-away').textContent = s.p2;
+        $('m-home').placeholder = s.ph1;
+        $('m-away').placeholder = s.ph2;
+        $('lbl-competition').textContent = s.comp;
+        $('m-competition').placeholder = s.compPh;
+        $('m-round').placeholder = s.roundPh;
+        $('m-sport-hint').classList.toggle('hidden', !s.single);
+        const isTeamLogo = ['futbol','basquet','beisbol'].includes($('m-sport').value);
+        $('m-home-logo').placeholder = isTeamLogo ? 'URL del escudo (opcional)' : 'URL de la foto / logo (opcional)';
+        $('m-away-logo').placeholder = $('m-home-logo').placeholder;
+      }
+
       // ── Tabs ──────────────────────────────────────────────────
       const mainTabs = document.querySelectorAll('.main-tab');
       mainTabs.forEach(btn => btn.addEventListener('click', () => {
@@ -591,6 +640,7 @@
         return slug;
       };
       ['m-home', 'm-away', 'm-slug'].forEach(id => $(id).addEventListener('input', updateMatchSlug));
+      $('m-sport').addEventListener('change', updateSportLabels);
 
       let editingMatchId = null;
 
@@ -598,14 +648,16 @@
         editingMatchId = null;
         ['m-competition','m-round','m-home','m-home-logo','m-away','m-away-logo','m-kickoff','m-slug'].forEach(id => $(id).value = '');
         $('m-status').value = 'upcoming';
+        $('m-sport').value = 'futbol';
+        updateSportLabels();
         signalsList.innerHTML = '';
         createSignalRow('Señal 1', '', true);
         createSignalRow('Señal 2', '', false);
         createSignalRow('Señal 3', '', false);
         $('m-slug-preview').textContent = '';
         $('m-result').classList.add('hidden');
-        $('form-title').textContent = 'Crear partido';
-        $('m-save').textContent = '💾 Guardar partido';
+        $('form-title').textContent = 'Crear evento';
+        $('m-save').textContent = '💾 Guardar evento';
       }
 
       // ── Vistas del panel: lista ⇄ formulario (sin ventanas emergentes) ──
@@ -627,18 +679,19 @@
       $('m-save').addEventListener('click', async () => {
         const home = $('m-home').value.trim();
         const away = $('m-away').value.trim();
-        if (!home && !away) { alert('Escribe al menos un equipo'); return; }
+        if (!home && !away) { alert('Escribe al menos un equipo, peleador o el nombre del evento'); return; }
         const signals = readSignals();
         if (signals.length === 0) { alert('Agrega al menos una señal con URL'); return; }
 
         let slug = updateMatchSlug();
-        if (!slug) slug = 'partido-' + Math.random().toString(36).slice(2, 7);
+        if (!slug) slug = 'evento-' + Math.random().toString(36).slice(2, 7);
 
         const kickoffVal = $('m-kickoff').value;
         const kickoff = kickoffVal ? new Date(kickoffVal) : new Date();
 
         const payload = {
           home, away,
+          sport: $('m-sport').value || 'futbol',
           homeLogo: $('m-home-logo').value.trim(),
           awayLogo: $('m-away-logo').value.trim(),
           competition: $('m-competition').value.trim(),
@@ -683,7 +736,7 @@
         });
       });
       $('m-whatsapp').addEventListener('click', () => {
-        window.open('https://wa.me/?text=' + encodeURIComponent('⚽ Mira el partido en vivo:\n' + $('m-url-output').value), '_blank');
+        window.open('https://wa.me/?text=' + encodeURIComponent('🔴 Mira el evento en vivo:\n' + $('m-url-output').value), '_blank');
       });
 
       // ── Acciones en vivo sobre partidos ───────────────────────
@@ -693,16 +746,17 @@
       };
       // Finalizar: cierra la transmisión y guarda el marcador final (para la despedida)
       window.finishMatch = async (id) => {
-        const raw = prompt('Marcador final (ej: 2-1). Déjalo vacío si no lo sabes:', '');
+        const raw = prompt('Resultado final: marcador (ej: 2-1) o ganador (ej: "Ganó Topuria por KO"). Déjalo vacío si no lo sabes:', '');
         if (raw === null) return; // cancelado
         const payload = { status: 'finished', finishedAt: new Date(), updatedAt: new Date() };
         const mm = raw.match(/(\d+)\s*[-:xX]\s*(\d+)/);
         if (mm) payload.finalScore = { home: Number(mm[1]), away: Number(mm[2]) };
+        else if (raw.trim()) payload.finalResultText = raw.trim();
         try { await updateDoc(doc(db, 'matches', id), payload); }
         catch (e) { console.error(e); alert('Error al finalizar'); }
       };
       window.deleteMatch = async (id) => {
-        if (!confirm('¿Eliminar este partido?')) return;
+        if (!confirm('¿Eliminar este evento?')) return;
         try { await deleteDoc(doc(db, 'matches', id)); } catch (e) { console.error(e); }
       };
       window.editMatch = async (id) => {
@@ -712,6 +766,8 @@
           if (!d) return;
           const m = d.data();
           editingMatchId = id;
+          $('m-sport').value = SPORTS[m.sport] ? m.sport : 'futbol';
+          updateSportLabels();
           $('m-competition').value = m.competition || '';
           $('m-round').value = m.round || '';
           $('m-home').value = m.home || '';
@@ -725,8 +781,8 @@
           (m.signals || []).forEach((s, i) => createSignalRow(s.name || '', s.url || '', i === (m.activeSignal || 0)));
           if (signalsList.children.length === 0) createSignalRow('Señal 1', '', true);
           updateMatchSlug();
-          $('form-title').textContent = 'Editar partido';
-          $('m-save').textContent = '🔄 Actualizar partido';
+          $('form-title').textContent = 'Editar evento';
+          $('m-save').textContent = '🔄 Actualizar evento';
           mainTabs.forEach(b => { if (b.dataset.tab === 'matches') b.click(); });
           showForm();
         } catch (e) { console.error(e); }
@@ -838,14 +894,15 @@
 
       function renderMatches() {
         const cont = $('matches-container');
-        if (matchesSnapshot.length === 0) { cont.innerHTML = '<div class="text-center text-slate-400 py-10 text-sm">No hay partidos aún. Toca "Crear partido".</div>'; return; }
+        if (matchesSnapshot.length === 0) { cont.innerHTML = '<div class="text-center text-slate-400 py-10 text-sm">No hay eventos aún. Toca "Crear evento".</div>'; return; }
         const savedOpts = savedStreams.map((s, i) => `<option value="${i}">⚽ ${esc(s.title)}</option>`).join('');
         cont.innerHTML = matchesSnapshot.map(m => {
           const url = shortUrlFor(m.slug);
           const when = m.kickoff?.seconds ? fmtDateTime(new Date(m.kickoff.seconds * 1000)) : '';
           const live = matchLive(m);
           const sigNames = (m.signals || []).map(s => s.name || 'Señal').join(' · ') || 'Sin señales';
-          const score = (m.status === 'finished' && m.finalScore) ? ` · ${m.finalScore.home}-${m.finalScore.away}` : '';
+          const score = (m.status === 'finished' && m.finalScore) ? ` · ${m.finalScore.home}-${m.finalScore.away}`
+            : (m.status === 'finished' && m.finalResultText) ? ` · ${esc(m.finalResultText)}` : '';
           const sigEditor = `
             <div id="sigedit-${m.id}" class="hidden bg-slate-900/70 rounded-xl border border-purple-500/30 p-3 space-y-3">
               ${[0, 1, 2].map(i => `
@@ -879,7 +936,7 @@
             <div class="bg-slate-800/80 rounded-2xl border border-slate-700 p-3 space-y-2">
               <div class="flex items-start justify-between gap-2">
                 <div class="min-w-0">
-                  <h4 class="text-sm font-bold text-white truncate">${esc(m.title || 'Partido')}</h4>
+                  <h4 class="text-sm font-bold text-white truncate">${sportEmoji(m.sport)} ${esc(m.title || 'Evento')}</h4>
                   <p class="text-xs text-slate-400 truncate">${esc(m.competition || '')} ${when ? '· ' + when : ''}${score}</p>
                   <p class="text-xs text-purple-300/80 truncate">📶 ${esc(sigNames)}</p>
                 </div>
@@ -909,6 +966,7 @@
         try {
           const pub = matchesSnapshot.map(m => ({
             slug: m.slug || '', home: m.home || '', away: m.away || '',
+            sport: m.sport || 'futbol',
             homeLogo: m.homeLogo || '', awayLogo: m.awayLogo || '',
             competition: m.competition || '', round: m.round || '',
             title: m.title || [m.home, m.away].filter(Boolean).join(' vs '),
@@ -917,6 +975,7 @@
             signals: (m.signals || []).map(s => ({ name: s.name || '', url: s.url || '' })),
             activeSignal: Number.isInteger(m.activeSignal) ? m.activeSignal : 0,
             finalScore: m.finalScore || null,
+            finalResultText: m.finalResultText || '',
             highlightsUrl: m.highlightsUrl || ''
           }));
           await setDoc(doc(db, 'public', 'schedule'), { matches: pub, updatedAt: Date.now() });
@@ -1455,6 +1514,7 @@
 
             await addDoc(matchesCol, {
               home, away,
+              sport: 'futbol',
               homeLogo: m.strHomeTeamBadge || '',
               awayLogo: m.strAwayTeamBadge || '',
               competition: m.strLeague || '',

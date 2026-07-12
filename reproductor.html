@@ -172,6 +172,8 @@
       const safeDecode = (v) => { try { return decodeURIComponent(v); } catch (_) { return v; } };
       const getBaseDir = () => { const p = window.location.pathname; return p.substring(0, p.lastIndexOf('/') + 1); };
       const esc = (s) => (s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+      const SPORT_EMOJI = { futbol:'⚽', ufc:'🥋', boxeo:'🥊', lucha:'🤼', basquet:'🏀', beisbol:'⚾', tenis:'🎾', motor:'🏎️', otro:'🏆' };
+      const sportEmoji = (m) => SPORT_EMOJI[(m && m.sport)] || '⚽';
       const isToday = (d) => { const n = new Date(); return d.getDate()===n.getDate() && d.getMonth()===n.getMonth() && d.getFullYear()===n.getFullYear(); };
       const timeLabel = (m) => {
         if (!m.kickoff?.seconds) return '';
@@ -236,7 +238,8 @@
         return 'https://www.youtube-nocookie.com/embed/' + id + '?rel=0&modestbranding=1&playsinline=1';
       }
       function ytSearchUrl(m) {
-        const q = [m.home, m.away].filter(Boolean).join(' vs ') + ' resumen highlights ' + (m.competition || '');
+        const base = (m.home && m.away) ? `${m.home} vs ${m.away}` : (m.title || m.home || m.away || '');
+        const q = base + ' resumen highlights ' + (m.competition || '');
         return 'https://www.youtube.com/results?search_query=' + encodeURIComponent(q.trim());
       }
 
@@ -264,7 +267,7 @@
           ).join('');
           html += `<button class="sig-pill report" data-report="1">⚠️ No funciona</button>`;
         }
-        if (nextSlug) html += `<a class="sig-pill next" href="reproductor.html?slug=${encodeURIComponent(nextSlug)}" title="Siguiente partido">⏭</a>`;
+        if (nextSlug) html += `<a class="sig-pill next" href="reproductor.html?slug=${encodeURIComponent(nextSlug)}" title="Siguiente evento">⏭</a>`;
         sigBar.innerHTML = html;
         sigBar.classList.remove('hidden');
         sigBar.querySelectorAll('[data-sig]').forEach(b =>
@@ -430,33 +433,36 @@
         const end = new Date(start.getTime() + 2 * 3600000);
         const fmt = d => d.toISOString().replace(/[-:]|\.\d{3}/g, '');
         return 'https://calendar.google.com/calendar/render?action=TEMPLATE'
-          + '&text=' + encodeURIComponent(m.title || 'Partido')
+          + '&text=' + encodeURIComponent(m.title || 'Evento')
           + '&dates=' + fmt(start) + '/' + fmt(end)
           + '&details=' + encodeURIComponent('Míralo en vivo en la plataforma');
       }
-      function finTeam(name, logo) {
+      function finTeam(name, logo, emo) {
         return `<div class="fin-team">
-          ${logo ? `<img src="${esc(logo)}" onerror="this.outerHTML='<div class=&quot;noimg&quot;>⚽</div>'">` : `<div class="noimg">⚽</div>`}
+          ${logo ? `<img src="${esc(logo)}" onerror="this.outerHTML='<div class=&quot;noimg&quot;>${emo || '⚽'}</div>'">` : `<div class="noimg">${emo || '⚽'}</div>`}
           <span>${esc(name || '')}</span></div>`;
       }
       async function showFinishedScreen(m) {
+        const emo = sportEmoji(m);
         const fs = m.finalScore || {};
         const hasScore = fs.home != null && fs.away != null && fs.home !== '' && fs.away !== '';
-        const scoreHtml = hasScore
-          ? `<div class="fin-board">${finTeam(m.home, m.homeLogo)}<div class="fin-score">${esc(String(fs.home))}<i>-</i>${esc(String(fs.away))}</div>${finTeam(m.away, m.awayLogo)}</div>`
-          : `<div style="margin:8px 0;">${teamsBlock(m)}</div>`;
+        const resultTxt = m.finalResultText
+          ? `<div style="margin:10px 0 0;font-size:18px;font-weight:800;color:#a3e635;">🏆 ${esc(m.finalResultText)}</div>` : '';
+        const scoreHtml = (hasScore
+          ? `<div class="fin-board">${finTeam(m.home, m.homeLogo, emo)}<div class="fin-score">${esc(String(fs.home))}<i>-</i>${esc(String(fs.away))}</div>${finTeam(m.away, m.awayLogo, emo)}</div>`
+          : `<div style="margin:8px 0;">${teamsBlock(m)}</div>`) + resultTxt;
         // Resumen: se embebe el enlace de YouTube que el admin pegó en el panel
         // (así elige un video que SÍ permita reproducirse embebido). Si no hay ninguno,
         // se ofrece la búsqueda en YouTube.
         const highlightsHtml = m.highlightsUrl
-          ? `<div class="fin-video-lbl">🎬 Resumen del partido</div>
+          ? `<div class="fin-video-lbl">🎬 Resumen del evento</div>
              <div class="fin-video"><iframe src="${esc(ytEmbed(m.highlightsUrl))}" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe></div>
              <a href="${esc(m.highlightsUrl)}" target="_blank" rel="noopener" style="display:inline-block;margin-top:8px;color:#9fb0e6;font-size:12px;">Abrir en YouTube ↗</a>`
           : `<a class="mo-btn" style="margin-top:16px;background:rgba(255,255,255,0.12);color:#fff;border:1px solid rgba(255,255,255,0.2);" href="${esc(ytSearchUrl(m))}" target="_blank" rel="noopener">🎬 Ver resumen en YouTube</a>`;
         showMatchOverlay(`
           <div class="fin-wrap">
             <div style="font-size:52px;margin-bottom:6px;">🏁</div>
-            <h2 style="font-size:26px;font-weight:900;margin:0;color:#e2e8f0;">El partido ha finalizado</h2>
+            <h2 style="font-size:26px;font-weight:900;margin:0;color:#e2e8f0;">La transmisión ha finalizado</h2>
             <p class="fin-thanks">¡Gracias por verlo a través de nuestra plataforma! 🙌</p>
             ${scoreHtml}
             <div class="fin-comp">${esc(m.competition || '')}${m.round ? ' · ' + esc(m.round) : ''}</div>
@@ -476,11 +482,11 @@
             const gc = gcalUrl(next);
             slot.innerHTML = `
               <div class="next-card">
-                <div class="lbl">▶️ Próximo partido</div>
+                <div class="lbl">▶️ Próximo evento</div>
                 <div class="nm">${esc(next.title || [next.home, next.away].filter(Boolean).join(' vs '))}</div>
                 <div class="tm">${esc(next.competition || '')} · 🕐 ${esc(dtShort(next))}</div>
                 <div class="next-actions">
-                  <a class="btn-primary" href="reproductor.html?slug=${encodeURIComponent(next.slug)}">Ver partido</a>
+                  <a class="btn-primary" href="reproductor.html?slug=${encodeURIComponent(next.slug)}">Ver evento</a>
                   ${gc ? `<a class="btn-remind" href="${gc}" target="_blank" rel="noopener">🔔 Recordarme</a>` : ''}
                 </div>
               </div>`;
@@ -489,18 +495,23 @@
       }
 
       function teamsBlock(m) {
+        const emo = sportEmoji(m);
         const badge = (name, logo) => `
-          <div style="display:flex;flex-direction:column;align-items:center;gap:8px;width:110px;">
-            ${logo ? `<img src="${esc(logo)}" style="width:64px;height:64px;object-fit:contain;" onerror="this.style.display='none'">` : `<div style="width:64px;height:64px;border-radius:50%;background:#334155;display:flex;align-items:center;justify-content:center;font-size:26px;">⚽</div>`}
+          <div style="display:flex;flex-direction:column;align-items:center;gap:8px;min-width:110px;max-width:200px;">
+            ${logo ? `<img src="${esc(logo)}" style="width:64px;height:64px;object-fit:contain;" onerror="this.style.display='none'">` : `<div style="width:64px;height:64px;border-radius:50%;background:#334155;display:flex;align-items:center;justify-content:center;font-size:26px;">${emo}</div>`}
             <span style="font-weight:700;font-size:14px;text-align:center;">${esc(name || '')}</span>
           </div>`;
+        if (!(m.home && m.away)) {
+          // Evento completo (gala UFC, función de lucha, GP…): un solo bloque, sin "VS"
+          return `<div style="display:flex;align-items:center;justify-content:center;">${badge(m.title || m.home || m.away, m.homeLogo || m.awayLogo)}</div>`;
+        }
         return `<div style="display:flex;align-items:center;justify-content:center;gap:16px;">${badge(m.home, m.homeLogo)}<span style="font-size:22px;font-weight:900;color:#64748b;">VS</span>${badge(m.away, m.awayLogo)}</div>`;
       }
 
       function applyMatchState(m) {
         clearCountdown();
         window._m = m;
-        document.title = (m.title || 'Partido') + ' · En Vivo';
+        document.title = (m.title || 'Evento') + ' · En Vivo';
 
         // ¿Partido finalizado? → despedida
         if (m.status === 'finished') { showFinishedScreen(m); return; }
@@ -523,7 +534,7 @@
                 <div style="font-size:56px;margin-bottom:12px;">📡</div>
                 <h2 style="font-size:24px;font-weight:900;color:#e2e8f0;">Señal no disponible</h2>
                 <p style="color:#94a3b8;margin-top:8px;">El administrador aún no ha asignado una señal.</p>
-                <a href="index.html" class="mo-btn">🏠 Ver otros partidos</a>
+                <a href="index.html" class="mo-btn">🏠 Ver otros eventos</a>
               </div>`);
             return;
           }
@@ -544,7 +555,7 @@
             <p style="color:#e2e8f0;font-size:15px;margin:6px 0 0;">🕐 Inicio: ${esc(timeStr)}</p>
             <div class="cd-clock" id="cd-big">--:--:--</div>
             <p class="mo-note">▶️ La transmisión se activa sola ${AUTO_PLAY_MIN} min antes del inicio.</p>
-            <a href="index.html" class="mo-btn">🏠 Ver otros partidos</a>
+            <a href="index.html" class="mo-btn">🏠 Ver otros eventos</a>
           </div>`);
         updateCountdownText();
         countdownTimer = setInterval(() => {
@@ -572,7 +583,7 @@
         const handle = (matches) => {
           window._allMatches = matches || [];
           const m = (matches || []).find(x => x.slug === slug);
-          if (!m) { showMatchOverlay(`<div style="max-width:520px;"><div style="font-size:56px;">❌</div><h2 style="font-size:24px;font-weight:900;color:#e2e8f0;">Partido no encontrado</h2><a href="index.html" class="mo-btn">🏠 Ver otros partidos</a></div>`); return; }
+          if (!m) { showMatchOverlay(`<div style="max-width:520px;"><div style="font-size:56px;">❌</div><h2 style="font-size:24px;font-weight:900;color:#e2e8f0;">Evento no encontrado</h2><a href="index.html" class="mo-btn">🏠 Ver otros eventos</a></div>`); return; }
           applyMatchState(m);
         };
         onSnapshot(doc(db, 'public', 'schedule'), (snap) => {
