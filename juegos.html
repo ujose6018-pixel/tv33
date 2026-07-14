@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Zona de Juegos · TOP FUT</title>
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#020617">
+  <style>
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { margin: 0; padding: 0; background: #020617; color: #e2e8f0; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; min-height: 100vh; }
+    body { background: radial-gradient(1100px 500px at 50% -10%, #0d1b4b 0%, #060a1f 55%, #020617 100%) fixed, #020617; }
+
+    /* ── Barra superior (misma familia visual que el inicio) ── */
+    .nav { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 16px; background: rgba(2,6,23,0.85); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(163,230,53,0.15); }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 900; font-style: italic; font-size: 18px; }
+    .brand img { width: 32px; height: 32px; border-radius: 8px; }
+    .brand .b2 { color: #a3e635; }
+    .back { color: #9fb0e6; text-decoration: none; font-weight: 700; font-size: 13.5px; padding: 8px 14px; border: 1px solid rgba(159,176,230,0.3); border-radius: 999px; transition: color .15s, border-color .15s; }
+    .back:hover, .back:focus-visible { color: #fff; border-color: #a3e635; outline: none; }
+
+    .wrap { max-width: 860px; margin: 0 auto; padding: 20px 14px 60px; }
+    .hero h1 { margin: 8px 0 4px; font-size: 26px; font-weight: 900; font-style: italic; }
+    .hero h1 span { color: #a3e635; }
+    .hero p { margin: 0 0 18px; color: #9fb0e6; font-size: 14px; }
+
+    /* ── Selector de juegos ── */
+    .picker { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 18px; }
+    @media (max-width: 560px) { .picker { grid-template-columns: 1fr; } }
+    .game-btn { text-align: left; cursor: pointer; border: 1px solid rgba(163,230,53,0.2); background: rgba(9,14,52,0.72); border-radius: 16px; padding: 14px; color: #e2e8f0; transition: border-color .15s, transform .15s; }
+    .game-btn:hover, .game-btn:focus-visible { border-color: #a3e635; transform: translateY(-2px); outline: none; }
+    .game-btn.active { border-color: #a3e635; background: rgba(163,230,53,0.12); }
+    .game-btn .ico { font-size: 26px; }
+    .game-btn .nm { font-weight: 800; font-size: 15px; margin-top: 6px; }
+    .game-btn .ds { color: #9fb0e6; font-size: 12px; margin-top: 2px; }
+    .game-btn .bst { color: #a3e635; font-size: 11.5px; font-weight: 700; margin-top: 6px; min-height: 14px; }
+
+    /* ── Escenario ── */
+    .stage { background: rgba(9,14,52,0.72); border: 1px solid rgba(163,230,53,0.2); border-radius: 20px; padding: 18px 16px 22px; min-height: 420px; }
+    .stage h2 { margin: 0 0 2px; font-size: 19px; font-weight: 900; font-style: italic; }
+    .stage .sub { color: #9fb0e6; font-size: 13px; margin: 0 0 14px; }
+    .hud { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+    .hud .pill { background: rgba(2,6,23,0.6); border: 1px solid rgba(159,176,230,0.25); border-radius: 999px; padding: 6px 14px; font-size: 13px; font-weight: 700; }
+    .hud .pill b { color: #a3e635; }
+    .btn { display: inline-block; border: none; cursor: pointer; background: #a3e635; color: #0c1502; font-weight: 900; font-size: 15px; padding: 13px 26px; border-radius: 999px; transition: transform .12s, box-shadow .15s; }
+    .btn:hover, .btn:focus-visible { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(163,230,53,0.35); outline: none; }
+    .btn.ghost { background: transparent; color: #9fb0e6; border: 1px solid rgba(159,176,230,0.35); font-weight: 700; }
+    .msg { min-height: 26px; font-size: 16px; font-weight: 800; margin: 10px 0 4px; }
+    .msg.gol { color: #a3e635; } .msg.mal { color: #ff5964; } .msg.info { color: #9fb0e6; }
+    .hidden { display: none !important; }
+
+    /* ── Penales ── */
+    #pen-field { position: relative; width: 100%; max-width: 520px; margin: 0 auto; aspect-ratio: 13/8; background: linear-gradient(#134e1f, #0d3a17); border-radius: 14px; overflow: hidden; border: 1px solid rgba(255,255,255,0.12); touch-action: manipulation; cursor: pointer; user-select: none; }
+    #pen-field .grass { position: absolute; inset: 0; background: repeating-linear-gradient(90deg, rgba(255,255,255,0.045) 0 40px, transparent 40px 80px); }
+    .goal { position: absolute; top: 9%; left: 12%; width: 76%; height: 46%; border: 4px solid #f1f5f9; border-bottom: none; border-radius: 4px 4px 0 0; background: repeating-linear-gradient(45deg, rgba(255,255,255,0.10) 0 2px, transparent 2px 12px), repeating-linear-gradient(-45deg, rgba(255,255,255,0.10) 0 2px, transparent 2px 12px); }
+    #keeper { position: absolute; top: 22%; left: 50%; transform: translateX(-50%); font-size: clamp(30px, 8vw, 44px); transition: left .28s ease; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.5)); }
+    #marker { position: absolute; top: 58%; left: 12%; width: 14px; height: 14px; margin-left: -7px; border-radius: 50%; background: #a3e635; box-shadow: 0 0 10px #a3e635; }
+    #pen-ball { position: absolute; bottom: 7%; left: 50%; transform: translate(-50%, 0); font-size: clamp(26px, 7vw, 38px); transition: top .32s ease, left .32s ease, bottom .32s ease, transform .32s ease; }
+    #pen-hint { position: absolute; bottom: 2%; width: 100%; text-align: center; color: rgba(255,255,255,0.85); font-size: 12px; font-weight: 700; text-shadow: 0 1px 3px rgba(0,0,0,0.6); }
+    .shots { display: flex; gap: 6px; justify-content: center; margin-top: 12px; }
+    .shots span { width: 16px; height: 16px; border-radius: 50%; background: rgba(255,255,255,0.15); display: inline-block; font-size: 11px; line-height: 16px; text-align: center; }
+    .shots span.g { background: #a3e635; } .shots span.f { background: #ff5964; }
+
+    /* ── Memoria ── */
+    #mem-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; max-width: 420px; margin: 0 auto; }
+    .mem-card { aspect-ratio: 1; border: none; cursor: pointer; border-radius: 12px; background: rgba(2,6,23,0.7); border: 1px solid rgba(159,176,230,0.25); font-size: clamp(24px, 7vw, 36px); display: flex; align-items: center; justify-content: center; color: transparent; transition: background .15s, transform .15s; }
+    .mem-card:focus-visible { outline: 2px solid #a3e635; }
+    .mem-card.up { background: rgba(163,230,53,0.14); border-color: #a3e635; color: inherit; }
+    .mem-card.ok { background: rgba(163,230,53,0.25); border-color: #a3e635; color: inherit; cursor: default; transform: scale(0.96); }
+
+    /* ── Reflejos ── */
+    #rx-zone { max-width: 520px; margin: 0 auto; height: 260px; border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; cursor: pointer; user-select: none; touch-action: manipulation; font-weight: 900; font-size: 22px; border: 1px solid rgba(255,255,255,0.12); transition: background .1s; }
+    #rx-zone.wait { background: #7f1d1d; } #rx-zone.go { background: #14532d; } #rx-zone.idle { background: rgba(2,6,23,0.7); }
+    #rx-zone small { font-weight: 600; font-size: 13px; color: rgba(255,255,255,0.75); }
+
+    @media (prefers-reduced-motion: reduce) { .btn, .game-btn, .empty-cta { transition: none; } }
+  </style>
+</head>
+<body>
+  <nav class="nav">
+    <div class="brand"><img src="icon.svg" alt=""><span><span>TOP</span> <span class="b2">FUT</span> · Juegos</span></div>
+    <a class="back" href="./">🏠 Volver al inicio</a>
+  </nav>
+
+  <div class="wrap">
+    <div class="hero">
+      <h1>🎮 Zona de <span>Juegos</span></h1>
+      <p>¿No hay eventos en vivo? Entrena aquí mientras esperas. Funciona en el celular y en la PC.</p>
+    </div>
+
+    <div class="picker">
+      <button class="game-btn active" data-game="pen">
+        <div class="ico">⚽</div><div class="nm">Tanda de Penales</div>
+        <div class="ds">Detén el marcador y vence al portero. 5 tiros.</div>
+        <div class="bst" id="best-pen"></div>
+      </button>
+      <button class="game-btn" data-game="mem">
+        <div class="ico">🧠</div><div class="nm">Memoria Deportiva</div>
+        <div class="ds">Encuentra los pares en el menor tiempo.</div>
+        <div class="bst" id="best-mem"></div>
+      </button>
+      <button class="game-btn" data-game="rx">
+        <div class="ico">⚡</div><div class="nm">Reflejos de Portero</div>
+        <div class="ds">Toca apenas se ponga verde. 5 rondas.</div>
+        <div class="bst" id="best-rx"></div>
+      </button>
+    </div>
+
+    <!-- ═══ PENALES ═══ -->
+    <div class="stage" id="stage-pen">
+      <h2>⚽ Tanda de Penales</h2>
+      <p class="sub">El punto verde se mueve: toca la cancha (o pulsa <b>Espacio</b>) para patear hacia donde esté. ¡Cuidado, el portero se lanza!</p>
+      <div class="hud">
+        <div class="pill">Goles: <b id="pen-score">0</b></div>
+        <div class="pill">Tiro: <b id="pen-shot">1</b>/5</div>
+        <div class="pill">Récord: <b id="pen-best">—</b></div>
+      </div>
+      <div id="pen-field">
+        <div class="grass"></div>
+        <div class="goal"></div>
+        <div id="keeper">🧤</div>
+        <div id="marker"></div>
+        <div id="pen-ball">⚽</div>
+        <div id="pen-hint">Toca para patear</div>
+      </div>
+      <div class="shots" id="pen-dots"></div>
+      <p class="msg info" id="pen-msg"></p>
+      <button class="btn hidden" id="pen-again">🔁 Jugar otra vez</button>
+    </div>
+
+    <!-- ═══ MEMORIA ═══ -->
+    <div class="stage hidden" id="stage-mem">
+      <h2>🧠 Memoria Deportiva</h2>
+      <p class="sub">Voltea las cartas y encuentra los 8 pares. Menos movimientos y menos tiempo = mejor marca.</p>
+      <div class="hud">
+        <div class="pill">Movimientos: <b id="mem-moves">0</b></div>
+        <div class="pill">Tiempo: <b id="mem-time">0s</b></div>
+        <div class="pill">Récord: <b id="mem-best">—</b></div>
+      </div>
+      <div id="mem-grid"></div>
+      <p class="msg info" id="mem-msg"></p>
+      <button class="btn" id="mem-again">🔁 Reiniciar</button>
+    </div>
+
+    <!-- ═══ REFLEJOS ═══ -->
+    <div class="stage hidden" id="stage-rx">
+      <h2>⚡ Reflejos de Portero</h2>
+      <p class="sub">Espera en rojo… y toca (o pulsa <b>Espacio</b>) apenas se ponga verde. Si te adelantas, cuenta como fallo.</p>
+      <div class="hud">
+        <div class="pill">Ronda: <b id="rx-round">0</b>/5</div>
+        <div class="pill">Promedio: <b id="rx-avg">—</b></div>
+        <div class="pill">Récord: <b id="rx-best">—</b></div>
+      </div>
+      <div id="rx-zone" class="idle"><span>Toca para empezar</span><small>Reacciona lo más rápido posible</small></div>
+      <p class="msg info" id="rx-msg"></p>
+    </div>
+  </div>
+
+  <script>
+    'use strict';
+    const $ = id => document.getElementById(id);
+    const store = {
+      get: (k) => { try { return localStorage.getItem('topfut-game-' + k); } catch (_) { return null; } },
+      set: (k, v) => { try { localStorage.setItem('topfut-game-' + k, v); } catch (_) {} }
+    };
+
+    // ── Selector de juego ──
+    const games = ['pen', 'mem', 'rx'];
+    let current = 'pen';
+    document.querySelectorAll('.game-btn').forEach(btn => btn.addEventListener('click', () => {
+      current = btn.dataset.game;
+      document.querySelectorAll('.game-btn').forEach(b => b.classList.toggle('active', b === btn));
+      games.forEach(g => $('stage-' + g).classList.toggle('hidden', g !== current));
+      if (current === 'pen') penReset();
+      if (current === 'mem') memStart();
+      if (current === 'rx') rxIdle();
+    }));
+
+    function refreshBests() {
+      const bp = store.get('pen'); $('best-pen').textContent = bp ? `🏆 Récord: ${bp}/5 goles` : '';
+      const bm = store.get('mem'); $('best-mem').textContent = bm ? `🏆 Récord: ${bm}` : '';
+      const br = store.get('rx');  $('best-rx').textContent  = br ? `🏆 Récord: ${br} ms` : '';
+      $('pen-best').textContent = bp ? bp + '/5' : '—';
+      $('mem-best').textContent = bm || '—';
+      $('rx-best').textContent  = br ? br + ' ms' : '—';
+    }
+
+    /* ═════════ 1) TANDA DE PENALES ═════════ */
+    const field = $('pen-field'), marker = $('marker'), keeper = $('keeper'), ball = $('pen-ball');
+    let penScore = 0, penShot = 0, penDir = 1, penPos = 0.5, penSpeed = 0.011, penRunning = false, penRaf = null, penBusy = false;
+
+    // El marcador recorre el ancho del arco (12% → 88% del campo)
+    const MIN_X = 14, MAX_X = 86;
+    function penDraw() { marker.style.left = (MIN_X + (MAX_X - MIN_X) * penPos) + '%'; }
+    function penLoop() {
+      if (!penRunning) return;
+      penPos += penSpeed * penDir;
+      if (penPos >= 1) { penPos = 1; penDir = -1; }
+      if (penPos <= 0) { penPos = 0; penDir = 1; }
+      penDraw();
+      penRaf = requestAnimationFrame(penLoop);
+    }
+    function penDots() {
+      $('pen-dots').innerHTML = '';
+      for (let i = 0; i < 5; i++) {
+        const sp = document.createElement('span');
+        $('pen-dots').appendChild(sp);
+      }
+    }
+    function penReset() {
+      cancelAnimationFrame(penRaf);
+      penScore = 0; penShot = 0; penPos = 0.5; penDir = 1; penSpeed = 0.011; penBusy = false;
+      $('pen-score').textContent = '0'; $('pen-shot').textContent = '1';
+      $('pen-msg').textContent = ''; $('pen-msg').className = 'msg info';
+      $('pen-again').classList.add('hidden');
+      keeper.style.left = '50%'; keeper.textContent = '🧤';
+      ball.style.transition = 'none'; ball.style.left = '50%'; ball.style.bottom = '7%'; ball.style.top = 'auto';
+      penDots(); penDraw();
+      penRunning = true; penRaf = requestAnimationFrame(penLoop);
+    }
+    function penKick() {
+      if (penBusy || !penRunning) return;
+      penBusy = true; penRunning = false; cancelAnimationFrame(penRaf);
+      const shotPos = penPos;                        // 0..1 dentro del arco
+      const keeperZone = Math.floor(Math.random() * 3); // 0 izq · 1 centro · 2 der
+      const shotZone = shotPos < 0.34 ? 0 : shotPos < 0.66 ? 1 : 2;
+      // Portero se lanza
+      keeper.style.left = (keeperZone === 0 ? 28 : keeperZone === 1 ? 50 : 72) + '%';
+      // Balón viaja al punto elegido
+      const ballX = MIN_X + (MAX_X - MIN_X) * shotPos;
+      requestAnimationFrame(() => {
+        ball.style.transition = 'top .32s ease, left .32s ease, bottom .32s ease';
+        ball.style.left = ballX + '%';
+        ball.style.bottom = 'auto'; ball.style.top = '26%';
+      });
+      const saved = shotZone === keeperZone;
+      setTimeout(() => {
+        const dot = $('pen-dots').children[penShot];
+        const msg = $('pen-msg');
+        if (saved) {
+          keeper.textContent = '🧤⚽';
+          msg.textContent = '🧤 ¡Atajada del portero!'; msg.className = 'msg mal';
+          dot.classList.add('f'); dot.textContent = '✕';
+        } else {
+          penScore++;
+          msg.textContent = '⚽ ¡GOOOL!'; msg.className = 'msg gol';
+          dot.classList.add('g'); dot.textContent = '✓';
+          penSpeed += 0.004;   // cada gol acelera el marcador
+        }
+        $('pen-score').textContent = penScore;
+        penShot++;
+        if (penShot >= 5) return penEnd();
+        $('pen-shot').textContent = penShot + 1;
+        // Preparar siguiente tiro
+        setTimeout(() => {
+          keeper.style.left = '50%'; keeper.textContent = '🧤';
+          ball.style.transition = 'none'; ball.style.top = 'auto'; ball.style.bottom = '7%'; ball.style.left = '50%';
+          penBusy = false; penRunning = true; penRaf = requestAnimationFrame(penLoop);
+        }, 900);
+      }, 360);
+    }
+    function penEnd() {
+      penRunning = false;
+      const msg = $('pen-msg');
+      msg.textContent = penScore >= 4 ? `🏆 ¡Crack! Anotaste ${penScore}/5` : penScore >= 2 ? `👏 Anotaste ${penScore}/5` : `😅 Anotaste ${penScore}/5 · ¡Revancha!`;
+      msg.className = 'msg ' + (penScore >= 3 ? 'gol' : 'mal');
+      const best = Number(store.get('pen') || 0);
+      if (penScore > best) { store.set('pen', String(penScore)); msg.textContent += ' · ¡Nuevo récord!'; }
+      refreshBests();
+      $('pen-again').classList.remove('hidden');
+    }
+    field.addEventListener('pointerdown', penKick);
+    $('pen-again').addEventListener('click', penReset);
+
+    /* ═════════ 2) MEMORIA DEPORTIVA ═════════ */
+    const MEM_EMOJIS = ['⚽','🥊','🥋','🤼','🏀','🎾','🏎️','🏆'];
+    let memFirst = null, memLock = false, memMoves = 0, memFound = 0, memTimer = null, memSecs = 0;
+    function memStart() {
+      clearInterval(memTimer);
+      memFirst = null; memLock = false; memMoves = 0; memFound = 0; memSecs = 0;
+      $('mem-moves').textContent = '0'; $('mem-time').textContent = '0s';
+      $('mem-msg').textContent = ''; $('mem-msg').className = 'msg info';
+      const deck = [...MEM_EMOJIS, ...MEM_EMOJIS].sort(() => Math.random() - 0.5);
+      const grid = $('mem-grid');
+      grid.innerHTML = '';
+      deck.forEach(e => {
+        const c = document.createElement('button');
+        c.className = 'mem-card'; c.textContent = e; c.setAttribute('aria-label', 'Carta');
+        c.addEventListener('click', () => memFlip(c));
+        grid.appendChild(c);
+      });
+      memTimer = setInterval(() => { memSecs++; $('mem-time').textContent = memSecs + 's'; }, 1000);
+    }
+    function memFlip(c) {
+      if (memLock || c.classList.contains('up') || c.classList.contains('ok')) return;
+      c.classList.add('up');
+      if (!memFirst) { memFirst = c; return; }
+      memMoves++; $('mem-moves').textContent = memMoves;
+      const a = memFirst; memFirst = null;
+      if (a.textContent === c.textContent) {
+        a.classList.replace('up', 'ok'); c.classList.replace('up', 'ok');
+        memFound++;
+        if (memFound === MEM_EMOJIS.length) memEnd();
+      } else {
+        memLock = true;
+        setTimeout(() => { a.classList.remove('up'); c.classList.remove('up'); memLock = false; }, 750);
+      }
+    }
+    function memEnd() {
+      clearInterval(memTimer);
+      const result = `${memMoves} mov · ${memSecs}s`;
+      const msg = $('mem-msg');
+      msg.textContent = `🎉 ¡Completado en ${result}!`; msg.className = 'msg gol';
+      const best = store.get('mem');
+      const bestMoves = best ? Number(best.split(' ')[0]) : Infinity;
+      if (memMoves < bestMoves) { store.set('mem', result); msg.textContent += ' · ¡Nuevo récord!'; }
+      refreshBests();
+    }
+    $('mem-again').addEventListener('click', memStart);
+
+    /* ═════════ 3) REFLEJOS DE PORTERO ═════════ */
+    const rxZone = $('rx-zone');
+    let rxState = 'idle', rxT0 = 0, rxTimeout = null, rxTimes = [], rxRound = 0;
+    function rxIdle() {
+      clearTimeout(rxTimeout);
+      rxState = 'idle'; rxTimes = []; rxRound = 0;
+      rxZone.className = 'idle';
+      rxZone.innerHTML = '<span>Toca para empezar</span><small>Reacciona lo más rápido posible</small>';
+      $('rx-round').textContent = '0'; $('rx-avg').textContent = '—';
+      $('rx-msg').textContent = ''; $('rx-msg').className = 'msg info';
+    }
+    function rxWait() {
+      rxState = 'wait';
+      rxZone.className = 'wait';
+      rxZone.innerHTML = '<span>Espera el verde…</span><small>🧤 No te lances antes</small>';
+      rxTimeout = setTimeout(() => {
+        rxState = 'go'; rxT0 = performance.now();
+        rxZone.className = 'go';
+        rxZone.innerHTML = '<span>¡AHORA! 🥅</span><small>¡Toca!</small>';
+      }, 1000 + Math.random() * 2500);
+    }
+    function rxTap() {
+      if (rxState === 'idle') { rxWait(); return; }
+      if (rxState === 'wait') {
+        clearTimeout(rxTimeout);
+        rxTimes.push(1000);   // salida en falso = 1000 ms de castigo
+        $('rx-msg').textContent = '🟥 ¡Te lanzaste antes! (+1000 ms)'; $('rx-msg').className = 'msg mal';
+        rxNext(); return;
+      }
+      if (rxState === 'go') {
+        const ms = Math.round(performance.now() - rxT0);
+        rxTimes.push(ms);
+        const msg = $('rx-msg');
+        msg.textContent = ms < 250 ? `⚡ ${ms} ms · ¡Reflejos de crack!` : ms < 400 ? `👍 ${ms} ms · ¡Bien!` : `🐢 ${ms} ms · Puedes más`;
+        msg.className = 'msg ' + (ms < 400 ? 'gol' : 'info');
+        rxNext();
+      }
+    }
+    function rxNext() {
+      rxRound++;
+      $('rx-round').textContent = rxRound;
+      if (rxRound >= 5) {
+        const avg = Math.round(rxTimes.reduce((a, b) => a + b, 0) / rxTimes.length);
+        $('rx-avg').textContent = avg + ' ms';
+        rxState = 'idle';
+        rxZone.className = 'idle';
+        rxZone.innerHTML = `<span>Promedio: ${avg} ms</span><small>Toca para jugar de nuevo</small>`;
+        const best = Number(store.get('rx') || Infinity);
+        if (avg < best) { store.set('rx', String(avg)); $('rx-msg').textContent += ' · 🏆 ¡Nuevo récord!'; }
+        refreshBests();
+        rxTimes = []; rxRound = 0;
+        $('rx-round').textContent = '0';
+      } else {
+        rxWait();
+      }
+    }
+    rxZone.addEventListener('pointerdown', rxTap);
+
+    // Teclado (PC): Espacio/Enter actúan en el juego visible
+    document.addEventListener('keydown', (e) => {
+      if (e.code !== 'Space' && e.code !== 'Enter') return;
+      if (e.target && (e.target.tagName === 'BUTTON' || e.target.tagName === 'A')) return;
+      e.preventDefault();
+      if (current === 'pen') penKick();
+      if (current === 'rx') rxTap();
+    });
+
+    // ── Inicio ──
+    refreshBests();
+    penReset();
+
+    // PWA: mismo service worker de la plataforma
+    if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js').catch(() => {}); }
+  </script>
+</body>
+</html>

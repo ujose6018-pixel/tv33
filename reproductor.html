@@ -123,7 +123,7 @@
 
   <!-- Visor (una sola señal) -->
   <div id="viewer-view" class="hidden">
-    <a href="index.html" id="btn-home" class="viewer-btn" title="Inicio">
+    <a href="./" id="btn-home" class="viewer-btn" title="Inicio">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
     </a>
     <button id="btn-fullscreen" class="viewer-btn" title="Pantalla completa">
@@ -147,7 +147,7 @@
       <div style="font-size:56px;margin-bottom:12px;">⏳</div>
       <h2>¡Enlace no disponible!</h2>
       <p>Este enlace ha caducado o no existe</p>
-      <a href="index.html" class="exp-btn">🏠 Volver al Inicio</a>
+      <a href="./" class="exp-btn">🏠 Volver al Inicio</a>
     </div>
   </div>
 
@@ -387,7 +387,29 @@
         viewerView.classList.add('hidden'); expiredView.classList.add('hidden');
         moContent.innerHTML = html; matchOverlay.classList.remove('hidden');
       }
-      function showExpired() { stopPlayer(); hideSigBar(); viewerView.classList.add('hidden'); matchOverlay.classList.add('hidden'); expiredView.classList.remove('hidden'); }
+      // Enlace expirado / evento borrado → breve aviso y redirección al INICIO.
+      // location.replace no deja historial (el botón "Atrás" del control de TV
+      // no vuelve al enlace muerto) y la URL queda limpia (sin /index.html).
+      let redirecting = false;
+      function goHome() {
+        if (redirecting) return;
+        redirecting = true;
+        try { history.replaceState(null, '', getBaseDir()); } catch (_) {}
+        window.location.replace(getBaseDir());
+      }
+      function showExpired() {
+        if (redirecting) return;
+        stopPlayer(); hideSigBar(); clearCountdown();
+        viewerView.classList.add('hidden'); expiredView.classList.add('hidden');
+        showMatchOverlay(`
+          <div style="max-width:520px;">
+            <div style="font-size:56px;margin-bottom:10px;">⏳</div>
+            <h2 style="font-size:24px;font-weight:900;color:#e2e8f0;">Este enlace ya expiró</h2>
+            <p style="color:#94a3b8;margin-top:8px;">Te llevamos al inicio para ver los eventos disponibles…</p>
+            <a href="./" class="mo-btn">🏠 Ir al inicio ahora</a>
+          </div>`);
+        setTimeout(goHome, 2500);
+      }
 
       // ── Visor de partido (la señal la decide el admin) ──
       let currentSignalUrl = null;
@@ -468,7 +490,7 @@
             <div class="fin-comp">${esc(m.competition || '')}${m.round ? ' · ' + esc(m.round) : ''}</div>
             ${highlightsHtml}
             <div id="next-slot"></div>
-            <a href="index.html" class="mo-btn" style="margin-top:22px;">🏠 Volver al inicio</a>
+            <a href="./" class="mo-btn" style="margin-top:22px;">🏠 Volver al inicio</a>
           </div>`);
         // Próximo partido: UNA sola consulta (sin sondeo en segundo plano)
         try {
@@ -534,7 +556,7 @@
                 <div style="font-size:56px;margin-bottom:12px;">📡</div>
                 <h2 style="font-size:24px;font-weight:900;color:#e2e8f0;">Señal no disponible</h2>
                 <p style="color:#94a3b8;margin-top:8px;">El administrador aún no ha asignado una señal.</p>
-                <a href="index.html" class="mo-btn">🏠 Ver otros eventos</a>
+                <a href="./" class="mo-btn">🏠 Ver otros eventos</a>
               </div>`);
             return;
           }
@@ -555,7 +577,7 @@
             <p style="color:#e2e8f0;font-size:15px;margin:6px 0 0;">🕐 Inicio: ${esc(timeStr)}</p>
             <div class="cd-clock" id="cd-big">--:--:--</div>
             <p class="mo-note">▶️ La transmisión se activa sola ${AUTO_PLAY_MIN} min antes del inicio.</p>
-            <a href="index.html" class="mo-btn">🏠 Ver otros eventos</a>
+            <a href="./" class="mo-btn">🏠 Ver otros eventos</a>
           </div>`);
         updateCountdownText();
         countdownTimer = setInterval(() => {
@@ -583,7 +605,7 @@
         const handle = (matches) => {
           window._allMatches = matches || [];
           const m = (matches || []).find(x => x.slug === slug);
-          if (!m) { showMatchOverlay(`<div style="max-width:520px;"><div style="font-size:56px;">❌</div><h2 style="font-size:24px;font-weight:900;color:#e2e8f0;">Evento no encontrado</h2><a href="index.html" class="mo-btn">🏠 Ver otros eventos</a></div>`); return; }
+          if (!m) { showExpired(); return; }   // borrado/expirado → aviso breve y al inicio
           applyMatchState(m);
         };
         onSnapshot(doc(db, 'public', 'schedule'), (snap) => {
@@ -639,7 +661,7 @@
         playSingle(firstParamStream);
       } else {
         // Sin nada que reproducir → a la lista
-        window.location.replace('index.html');
+        window.location.replace(getBaseDir());
       }
 
       // ── Pantalla completa ──

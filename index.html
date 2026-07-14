@@ -137,6 +137,8 @@
     .crest .code { color: #10225f; font-weight: 900; font-size: 16px; letter-spacing: .5px; }
     .vs { color: #10225f; font-weight: 900; font-size: 18px; }
     /* Chips de filtro por deporte (solo aparecen si hay más de un deporte agendado) */
+    .empty-cta { display: inline-block; margin-top: 14px; background: #a3e635; color: #0c1502; font-weight: 800; font-size: 14px; padding: 11px 22px; border-radius: 999px; text-decoration: none; transition: transform .15s, box-shadow .15s; }
+    .empty-cta:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(163,230,53,0.35); }
     .sport-chips { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 14px; }
     .sport-chips:empty { margin: 0; }
     .sport-chip { border: 1px solid rgba(163,230,53,0.25); background: rgba(255,255,255,0.05); color: #cdd6f4; font-weight: 700; font-size: 12.5px; padding: 7px 14px; border-radius: 999px; cursor: pointer; transition: background .15s, color .15s, border-color .15s; }
@@ -251,6 +253,7 @@
         <button class="nav-link" data-filter="live">EN VIVO</button>
         <button class="nav-link" data-filter="upcoming">PRÓXIMOS</button>
         <button class="nav-link" data-filter="finished">RESULTADOS</button>
+        <a class="nav-link" href="juegos.html" style="text-decoration:none;display:inline-block;">🎮 JUEGOS</a>
       </div>
       <div class="nav-icons">
         <div class="search-box" id="search-box">
@@ -332,6 +335,12 @@
       })();
 
       const $ = id => document.getElementById(id);
+      // URL limpia: si se llegó como /index.html, dejar solo la carpeta en la barra
+      try {
+        if (/\/index\.html$/.test(location.pathname)) {
+          history.replaceState(null, '', location.pathname.replace(/index\.html$/, '') + location.search);
+        }
+      } catch (_) {}
       const scroller = $('scroller');
       const sectionTitle = $('section-title');
 
@@ -556,7 +565,7 @@
           : isFinished ? '🏁 Resultados' : 'Eventos';
 
         if (list.length === 0) {
-          scroller.innerHTML = `<div class="empty">📭 No hay eventos ${currentFilter === 'live' ? 'en vivo' : currentFilter === 'upcoming' ? 'próximos' : isFinished ? 'finalizados' : 'disponibles'} por ahora</div>`;
+          scroller.innerHTML = `<div class="empty">📭 No hay eventos ${currentFilter === 'live' ? 'en vivo' : currentFilter === 'upcoming' ? 'próximos' : isFinished ? 'finalizados' : 'disponibles'} por ahora<br><a href="juegos.html" class="empty-cta">🎮 Jugar minijuegos mientras esperas</a></div>`;
           return;
         }
 

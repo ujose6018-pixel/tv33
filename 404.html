@@ -6,17 +6,20 @@
   <title>Cargando…</title>
   <script>
     // GitHub Pages sirve este 404.html cuando la ruta no existe como archivo.
-    // Ej: el usuario escribe  https://ujose6018-pixel.github.io/tv2/mar-vs-arg
-    // Extraemos el slug ("mar-vs-arg") y lo abrimos en el REPRODUCTOR aislado.
+    // Funciona con dominio propio (topfut.online/arg-vs-mex) y con rutas de
+    // github.io (usuario.github.io/repo/arg-vs-mex): el slug es SIEMPRE el
+    // último segmento y la base es todo lo anterior.
     (function () {
-      var parts = location.pathname.split('/').filter(Boolean); // ['tv2', 'mar-vs-arg']
-      var repo = parts[0] || '';                                // 'tv2'
-      var slug = parts.slice(1).join('-');                      // 'mar-vs-arg'
-      var base = repo ? '/' + repo + '/' : '/';
-      if (slug) {
-        location.replace(base + 'reproductor.html?slug=' + encodeURIComponent(slug));
-      } else {
+      var parts = location.pathname.split('/').filter(Boolean);
+      var slug = parts.length ? parts[parts.length - 1] : '';
+      var base = '/' + parts.slice(0, -1).join('/');
+      if (base !== '/') base += '/';
+      // Si no hay slug o parece un archivo (tiene punto), al inicio.
+      // location.replace no deja historial: evita bucles con "Atrás" en TVs.
+      if (!slug || slug.indexOf('.') !== -1) {
         location.replace(base);
+      } else {
+        location.replace(base + 'reproductor.html?slug=' + encodeURIComponent(slug));
       }
     })();
   </script>
