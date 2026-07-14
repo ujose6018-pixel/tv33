@@ -187,11 +187,18 @@
 
     /* ── Responsive (móvil / Smart TV angosta) ── */
     @media (max-width: 640px) {
-      .navbar-inner { gap: 4px; padding: 0 8px; }
-      .brand { font-size: 15px; gap: 6px; }
-      .brand img { width: 26px; height: 26px; }
-      .nav-links { margin-left: 2px; gap: 0; }
-      .nav-link { padding: 20px 7px; font-size: 11.5px; letter-spacing: 0; }
+      /* Nav en 2 filas: arriba marca + iconos, abajo pestañas deslizables */
+      .navbar-inner { flex-wrap: wrap; height: auto; gap: 4px 8px; padding: 8px 10px 0; }
+      .brand { font-size: 16px; gap: 7px; }
+      .brand img { width: 28px; height: 28px; }
+      .nav-icons { margin-left: auto; }
+      .nav-links {
+        order: 3; flex-basis: 100%; margin: 2px 0 0; gap: 2px;
+        overflow-x: auto; flex-wrap: nowrap; white-space: nowrap;
+        -webkit-overflow-scrolling: touch; scrollbar-width: none;
+      }
+      .nav-links::-webkit-scrollbar { display: none; }
+      .nav-link { flex: none; padding: 10px 13px; font-size: 12.5px; letter-spacing: .2px; }
       .icon-btn { width: 34px; height: 34px; }
       .search-box input { width: 116px; }
       .hero-inner { padding: 18px; gap: 14px; }

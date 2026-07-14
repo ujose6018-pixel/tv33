@@ -1,7 +1,7 @@
 // Service worker de TOP FUT (PWA cliente).
 // Estrategia segura: solo intercepta MISMO ORIGEN. Firebase, streams y CDNs pasan directo.
 // Navegaciones: red primero (siempre fresco) con respaldo de caché si no hay conexión.
-const CACHE = 'topfut-v3';
+const CACHE = 'topfut-v4';
 const SHELL = ['./', './index.html', './reproductor.html', './juegos.html', './icon.svg', './manifest.json'];
 
 self.addEventListener('install', (e) => {

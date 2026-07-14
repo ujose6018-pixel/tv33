@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Zona de Juegos · TOP FUT</title>
   <link rel="icon" href="icon.svg" type="image/svg+xml">
   <link rel="manifest" href="manifest.json">
@@ -11,13 +11,15 @@
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     html, body { margin: 0; padding: 0; background: #020617; color: #e2e8f0; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; min-height: 100vh; }
     body { background: radial-gradient(1100px 500px at 50% -10%, #0d1b4b 0%, #060a1f 55%, #020617 100%) fixed, #020617; }
+    body.lock { overflow: hidden; }
+    button { font-family: inherit; }
 
-    /* ── Barra superior (misma familia visual que el inicio) ── */
+    /* ── Barra superior ── */
     .nav { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 16px; background: rgba(2,6,23,0.85); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(163,230,53,0.15); }
     .brand { display: flex; align-items: center; gap: 10px; font-weight: 900; font-style: italic; font-size: 18px; }
     .brand img { width: 32px; height: 32px; border-radius: 8px; }
     .brand .b2 { color: #a3e635; }
-    .back { color: #9fb0e6; text-decoration: none; font-weight: 700; font-size: 13.5px; padding: 8px 14px; border: 1px solid rgba(159,176,230,0.3); border-radius: 999px; transition: color .15s, border-color .15s; }
+    .back { color: #9fb0e6; text-decoration: none; font-weight: 700; font-size: 13.5px; padding: 8px 14px; border: 1px solid rgba(159,176,230,0.3); border-radius: 999px; }
     .back:hover, .back:focus-visible { color: #fff; border-color: #a3e635; outline: none; }
 
     .wrap { max-width: 860px; margin: 0 auto; padding: 20px 14px 60px; }
@@ -26,113 +28,209 @@
     .hero p { margin: 0 0 18px; color: #9fb0e6; font-size: 14px; }
 
     /* ── Selector de juegos ── */
-    .picker { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 18px; }
-    @media (max-width: 560px) { .picker { grid-template-columns: 1fr; } }
-    .game-btn { text-align: left; cursor: pointer; border: 1px solid rgba(163,230,53,0.2); background: rgba(9,14,52,0.72); border-radius: 16px; padding: 14px; color: #e2e8f0; transition: border-color .15s, transform .15s; }
-    .game-btn:hover, .game-btn:focus-visible { border-color: #a3e635; transform: translateY(-2px); outline: none; }
-    .game-btn.active { border-color: #a3e635; background: rgba(163,230,53,0.12); }
-    .game-btn .ico { font-size: 26px; }
-    .game-btn .nm { font-weight: 800; font-size: 15px; margin-top: 6px; }
-    .game-btn .ds { color: #9fb0e6; font-size: 12px; margin-top: 2px; }
-    .game-btn .bst { color: #a3e635; font-size: 11.5px; font-weight: 700; margin-top: 6px; min-height: 14px; }
+    .picker { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    @media (max-width: 640px) { .picker { grid-template-columns: 1fr; } }
+    .game-card { position: relative; text-align: left; cursor: pointer; border: 1px solid rgba(163,230,53,0.25); background: rgba(9,14,52,0.72); border-radius: 18px; padding: 18px 16px; color: #e2e8f0; transition: border-color .15s, transform .15s; overflow: hidden; }
+    .game-card:hover, .game-card:focus-visible { border-color: #a3e635; transform: translateY(-3px); outline: none; }
+    .game-card .ico { font-size: 40px; }
+    .game-card .nm { font-weight: 900; font-size: 17px; margin-top: 8px; font-style: italic; }
+    .game-card .ds { color: #9fb0e6; font-size: 12.5px; margin-top: 4px; line-height: 1.45; }
+    .game-card .bst { color: #a3e635; font-size: 12px; font-weight: 800; margin-top: 10px; min-height: 15px; }
+    .game-card .play { display: inline-block; margin-top: 10px; background: #a3e635; color: #0c1502; font-weight: 900; font-size: 13px; padding: 8px 18px; border-radius: 999px; }
 
-    /* ── Escenario ── */
-    .stage { background: rgba(9,14,52,0.72); border: 1px solid rgba(163,230,53,0.2); border-radius: 20px; padding: 18px 16px 22px; min-height: 420px; }
-    .stage h2 { margin: 0 0 2px; font-size: 19px; font-weight: 900; font-style: italic; }
-    .stage .sub { color: #9fb0e6; font-size: 13px; margin: 0 0 14px; }
-    .hud { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
-    .hud .pill { background: rgba(2,6,23,0.6); border: 1px solid rgba(159,176,230,0.25); border-radius: 999px; padding: 6px 14px; font-size: 13px; font-weight: 700; }
-    .hud .pill b { color: #a3e635; }
-    .btn { display: inline-block; border: none; cursor: pointer; background: #a3e635; color: #0c1502; font-weight: 900; font-size: 15px; padding: 13px 26px; border-radius: 999px; transition: transform .12s, box-shadow .15s; }
-    .btn:hover, .btn:focus-visible { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(163,230,53,0.35); outline: none; }
-    .btn.ghost { background: transparent; color: #9fb0e6; border: 1px solid rgba(159,176,230,0.35); font-weight: 700; }
-    .msg { min-height: 26px; font-size: 16px; font-weight: 800; margin: 10px 0 4px; }
+    /* ── Escenario a PANTALLA COMPLETA ── */
+    .stage { display: none; position: fixed; inset: 0; z-index: 60; background: radial-gradient(900px 480px at 50% -10%, #0d1b4b 0%, #060a1f 55%, #020617 100%), #020617; overflow-y: auto; padding-bottom: env(safe-area-inset-bottom); }
+    .stage.open { display: flex; flex-direction: column; }
+    .stage-head { display: flex; align-items: center; gap: 8px; padding: 10px 12px; padding-top: max(10px, env(safe-area-inset-top)); }
+    .stage-head h2 { flex: 1; margin: 0; font-size: 17px; font-weight: 900; font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .icon-b { width: 40px; height: 40px; border-radius: 12px; border: 1px solid rgba(159,176,230,0.3); background: rgba(2,6,23,0.5); color: #e2e8f0; font-size: 17px; cursor: pointer; }
+    .icon-b:hover, .icon-b:focus-visible { border-color: #a3e635; outline: none; }
+    .stage-body { flex: 1; display: flex; flex-direction: column; padding: 4px 12px 20px; max-width: 720px; margin: 0 auto; width: 100%; }
+    .hud { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-bottom: 10px; }
+    .pill { background: rgba(2,6,23,0.6); border: 1px solid rgba(159,176,230,0.25); border-radius: 999px; padding: 6px 14px; font-size: 13px; font-weight: 700; }
+    .pill b { color: #a3e635; }
+    .btn { border: none; cursor: pointer; background: #a3e635; color: #0c1502; font-weight: 900; font-size: 16px; padding: 14px 28px; border-radius: 999px; }
+    .btn:hover, .btn:focus-visible { box-shadow: 0 8px 20px rgba(163,230,53,0.35); outline: none; }
+    .msg { min-height: 26px; text-align: center; font-size: 17px; font-weight: 900; margin: 10px 0 4px; }
     .msg.gol { color: #a3e635; } .msg.mal { color: #ff5964; } .msg.info { color: #9fb0e6; }
     .hidden { display: none !important; }
+    .center { text-align: center; }
 
-    /* ── Penales ── */
-    #pen-field { position: relative; width: 100%; max-width: 520px; margin: 0 auto; aspect-ratio: 13/8; background: linear-gradient(#134e1f, #0d3a17); border-radius: 14px; overflow: hidden; border: 1px solid rgba(255,255,255,0.12); touch-action: manipulation; cursor: pointer; user-select: none; }
-    #pen-field .grass { position: absolute; inset: 0; background: repeating-linear-gradient(90deg, rgba(255,255,255,0.045) 0 40px, transparent 40px 80px); }
-    .goal { position: absolute; top: 9%; left: 12%; width: 76%; height: 46%; border: 4px solid #f1f5f9; border-bottom: none; border-radius: 4px 4px 0 0; background: repeating-linear-gradient(45deg, rgba(255,255,255,0.10) 0 2px, transparent 2px 12px), repeating-linear-gradient(-45deg, rgba(255,255,255,0.10) 0 2px, transparent 2px 12px); }
-    #keeper { position: absolute; top: 22%; left: 50%; transform: translateX(-50%); font-size: clamp(30px, 8vw, 44px); transition: left .28s ease; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.5)); }
-    #marker { position: absolute; top: 58%; left: 12%; width: 14px; height: 14px; margin-left: -7px; border-radius: 50%; background: #a3e635; box-shadow: 0 0 10px #a3e635; }
-    #pen-ball { position: absolute; bottom: 7%; left: 50%; transform: translate(-50%, 0); font-size: clamp(26px, 7vw, 38px); transition: top .32s ease, left .32s ease, bottom .32s ease, transform .32s ease; }
-    #pen-hint { position: absolute; bottom: 2%; width: 100%; text-align: center; color: rgba(255,255,255,0.85); font-size: 12px; font-weight: 700; text-shadow: 0 1px 3px rgba(0,0,0,0.6); }
-    .shots { display: flex; gap: 6px; justify-content: center; margin-top: 12px; }
-    .shots span { width: 16px; height: 16px; border-radius: 50%; background: rgba(255,255,255,0.15); display: inline-block; font-size: 11px; line-height: 16px; text-align: center; }
-    .shots span.g { background: #a3e635; } .shots span.f { background: #ff5964; }
+    /* ═══ 1) DUELO DE PENALES ═══ */
+    #duel-board { display: flex; justify-content: center; align-items: center; gap: 14px; margin-bottom: 8px; font-weight: 900; }
+    #duel-board .side { display: flex; flex-direction: column; align-items: center; min-width: 76px; }
+    #duel-board .side .who { font-size: 12px; color: #9fb0e6; letter-spacing: .5px; }
+    #duel-board .side .pts { font-size: 34px; line-height: 1; }
+    #duel-board .side.you .pts { color: #a3e635; }
+    #duel-board .rnd { font-size: 12px; color: #9fb0e6; text-align: center; }
+    .ticks { display: flex; gap: 5px; justify-content: center; margin-top: 5px; }
+    .ticks i { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.15); font-style: normal; }
+    .ticks i.g { background: #a3e635; } .ticks i.f { background: #ff5964; }
 
-    /* ── Memoria ── */
-    #mem-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; max-width: 420px; margin: 0 auto; }
-    .mem-card { aspect-ratio: 1; border: none; cursor: pointer; border-radius: 12px; background: rgba(2,6,23,0.7); border: 1px solid rgba(159,176,230,0.25); font-size: clamp(24px, 7vw, 36px); display: flex; align-items: center; justify-content: center; color: transparent; transition: background .15s, transform .15s; }
+    #banner { text-align: center; font-weight: 900; font-size: clamp(15px, 4.2vw, 19px); margin: 4px 0 8px; min-height: 24px; }
+    #banner .tag { display: inline-block; background: rgba(163,230,53,0.15); border: 1px solid rgba(163,230,53,0.5); color: #d9f99d; border-radius: 999px; padding: 5px 16px; }
+    #banner .tag.rojo { background: rgba(255,89,100,0.12); border-color: rgba(255,89,100,0.5); color: #fecaca; }
+
+    #field { position: relative; width: 100%; max-width: 560px; margin: 0 auto; aspect-ratio: 10/9; background: linear-gradient(#155e26, #0d3a17 70%, #0a2e12); border-radius: 16px; overflow: hidden; border: 1px solid rgba(255,255,255,0.12); user-select: none; touch-action: manipulation; }
+    #field .grass { position: absolute; inset: 0; background: repeating-linear-gradient(90deg, rgba(255,255,255,0.05) 0 44px, transparent 44px 88px); }
+    #field .area { position: absolute; left: 20%; width: 60%; top: 52%; height: 30%; border: 2px solid rgba(255,255,255,0.35); border-top: none; border-radius: 0 0 10px 10px; }
+    .goal-frame { position: absolute; top: 6%; left: 10%; width: 80%; height: 44%; border: 5px solid #f1f5f9; border-bottom: 3px solid rgba(255,255,255,0.5); border-radius: 5px 5px 0 0; background: repeating-linear-gradient(45deg, rgba(255,255,255,0.09) 0 2px, transparent 2px 13px), repeating-linear-gradient(-45deg, rgba(255,255,255,0.09) 0 2px, transparent 2px 13px); }
+
+    /* Zonas para elegir (2 filas × 3 columnas sobre el arco) */
+    #zones { position: absolute; top: 6%; left: 10%; width: 80%; height: 44%; display: grid; grid-template-columns: 1fr 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 4px; padding: 6px; }
+    .zone { border: 2px dashed rgba(163,230,53,0.65); background: rgba(163,230,53,0.10); border-radius: 10px; cursor: pointer; color: #d9f99d; font-size: clamp(15px, 4vw, 20px); display: flex; align-items: center; justify-content: center; transition: background .12s; }
+    .zone:hover, .zone:focus-visible { background: rgba(163,230,53,0.3); outline: none; }
+    @media (prefers-reduced-motion: no-preference) {
+      #zones.pulse .zone { animation: zpulse 1.1s ease-in-out infinite; }
+      @keyframes zpulse { 0%,100% { background: rgba(163,230,53,0.08); } 50% { background: rgba(163,230,53,0.22); } }
+    }
+
+    /* Personajes */
+    .char { position: absolute; display: flex; flex-direction: column; align-items: center; line-height: 1; filter: drop-shadow(0 3px 4px rgba(0,0,0,0.55)); transition: left .45s ease, top .45s ease, transform .45s ease; z-index: 4; }
+    .char .face { font-size: clamp(17px, 4.6vw, 24px); }
+    .char .body { font-size: clamp(26px, 7.5vw, 40px); margin-top: -4px; }
+    .char .tag { font-size: 10px; font-weight: 900; letter-spacing: .5px; background: rgba(2,6,23,0.72); border-radius: 999px; padding: 2px 8px; margin-top: 3px; }
+    .char.you .tag { color: #a3e635; border: 1px solid rgba(163,230,53,0.6); }
+    .char.cpu .tag { color: #fca5a5; border: 1px solid rgba(255,89,100,0.55); }
+    #gk { top: 22%; left: 50%; transform: translateX(-50%); }
+    #striker { top: 68%; left: 50%; transform: translateX(-50%); }
+    @media (prefers-reduced-motion: no-preference) {
+      .char.idle .body { animation: bob 1.4s ease-in-out infinite; display: inline-block; }
+      @keyframes bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+    }
+    #ball { position: absolute; z-index: 5; font-size: clamp(22px, 6vw, 32px); top: 66%; left: 50%; transform: translate(-50%, 0); transition: top .38s cubic-bezier(.3,.9,.6,1), left .38s cubic-bezier(.3,.9,.6,1), transform .38s; filter: drop-shadow(0 3px 3px rgba(0,0,0,0.5)); }
+    #duel-end { text-align: center; margin-top: 12px; }
+    #duel-end h3 { font-size: 24px; font-weight: 900; margin: 6px 0 10px; }
+
+    /* ═══ 2) CARRERA RELÁMPAGO ═══ */
+    #track { position: relative; width: 100%; max-width: 640px; margin: 0 auto; border-radius: 16px; overflow: hidden; border: 1px solid rgba(255,255,255,0.12); background: linear-gradient(#b45309, #92400e); user-select: none; }
+    .lane { position: relative; height: 92px; border-bottom: 3px dashed rgba(255,255,255,0.35); }
+    .lane:last-child { border-bottom: none; }
+    .lane .runner { position: absolute; left: 2%; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; align-items: center; line-height: 1; z-index: 3; }
+    .runner .face { font-size: 17px; } .runner .body { font-size: 36px; margin-top: -3px; transform: scaleX(-1); display: inline-block; }
+    .runner .tag { font-size: 10px; font-weight: 900; background: rgba(2,6,23,0.72); border-radius: 999px; padding: 2px 8px; margin-top: 2px; }
+    .lane.you .tag { color: #a3e635; } .lane.cpu .tag { color: #fca5a5; }
+    #finish { position: absolute; top: 0; bottom: 0; right: 6%; width: 12px; background: repeating-linear-gradient(45deg, #fff 0 8px, #0c1502 8px 16px); z-index: 2; }
+    @media (prefers-reduced-motion: no-preference) {
+      .runner.go .body { animation: run .28s linear infinite; }
+      @keyframes run { 0%,100% { transform: scaleX(-1) rotate(-6deg); } 50% { transform: scaleX(-1) rotate(8deg) translateY(-3px); } }
+    }
+    #tap-btn { display: block; width: 100%; max-width: 640px; margin: 14px auto 0; border: none; cursor: pointer; background: #a3e635; color: #0c1502; font-weight: 900; font-size: clamp(18px, 5vw, 24px); padding: 22px; border-radius: 18px; touch-action: manipulation; }
+    #tap-btn:active { transform: scale(0.985); }
+    #tap-btn:disabled { background: rgba(163,230,53,0.35); cursor: default; }
+    #race-count { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; font-size: 64px; font-weight: 900; color: #fff; text-shadow: 0 4px 14px rgba(0,0,0,0.6); z-index: 6; }
+    #race-count.on { display: flex; }
+
+    /* ═══ 3) MEMORIA ═══ */
+    #mem-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; max-width: 460px; margin: 0 auto; width: 100%; }
+    .mem-card { aspect-ratio: 1; cursor: pointer; border-radius: 12px; background: rgba(2,6,23,0.7); border: 1px solid rgba(159,176,230,0.25); font-size: clamp(24px, 8vw, 40px); display: flex; align-items: center; justify-content: center; color: transparent; transition: background .15s, transform .15s; }
     .mem-card:focus-visible { outline: 2px solid #a3e635; }
-    .mem-card.up { background: rgba(163,230,53,0.14); border-color: #a3e635; color: inherit; }
-    .mem-card.ok { background: rgba(163,230,53,0.25); border-color: #a3e635; color: inherit; cursor: default; transform: scale(0.96); }
+    .mem-card.up { background: rgba(163,230,53,0.14); border-color: #a3e635; color: inherit; transform: rotateY(180deg); }
+    .mem-card.ok { background: rgba(163,230,53,0.25); border-color: #a3e635; color: inherit; cursor: default; transform: scale(0.95); }
 
-    /* ── Reflejos ── */
-    #rx-zone { max-width: 520px; margin: 0 auto; height: 260px; border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; cursor: pointer; user-select: none; touch-action: manipulation; font-weight: 900; font-size: 22px; border: 1px solid rgba(255,255,255,0.12); transition: background .1s; }
-    #rx-zone.wait { background: #7f1d1d; } #rx-zone.go { background: #14532d; } #rx-zone.idle { background: rgba(2,6,23,0.7); }
-    #rx-zone small { font-weight: 600; font-size: 13px; color: rgba(255,255,255,0.75); }
-
-    @media (prefers-reduced-motion: reduce) { .btn, .game-btn, .empty-cta { transition: none; } }
+    @media (prefers-reduced-motion: reduce) { .char, #ball, .game-card, .btn { transition: none; } }
   </style>
 </head>
 <body>
   <nav class="nav">
     <div class="brand"><img src="icon.svg" alt=""><span><span>TOP</span> <span class="b2">FUT</span> · Juegos</span></div>
-    <a class="back" href="./">🏠 Volver al inicio</a>
+    <a class="back" href="./">🏠 Inicio</a>
   </nav>
 
   <div class="wrap">
     <div class="hero">
       <h1>🎮 Zona de <span>Juegos</span></h1>
-      <p>¿No hay eventos en vivo? Entrena aquí mientras esperas. Funciona en el celular y en la PC.</p>
+      <p>¿No hay eventos en vivo? Juega a pantalla completa mientras esperas. Funciona en el celular y en la PC.</p>
     </div>
 
     <div class="picker">
-      <button class="game-btn active" data-game="pen">
-        <div class="ico">⚽</div><div class="nm">Tanda de Penales</div>
-        <div class="ds">Detén el marcador y vence al portero. 5 tiros.</div>
-        <div class="bst" id="best-pen"></div>
+      <button class="game-card" data-game="duel">
+        <div class="ico">⚽🧤</div><div class="nm">Duelo de Penales</div>
+        <div class="ds">Tú pateas Y tú atajas: toca la zona del arco donde quieres tirar… y luego a dónde lanzarte. 5 rondas contra la máquina.</div>
+        <div class="bst" id="best-duel"></div>
+        <span class="play">▶️ Jugar</span>
       </button>
-      <button class="game-btn" data-game="mem">
+      <button class="game-card" data-game="race">
+        <div class="ico">🏃💨</div><div class="nm">Carrera Relámpago</div>
+        <div class="ds">Toca lo más rápido que puedas para que tu jugador le gane la carrera al rival. ¡Primera en llegar a la meta gana!</div>
+        <div class="bst" id="best-race"></div>
+        <span class="play">▶️ Jugar</span>
+      </button>
+      <button class="game-card" data-game="mem">
         <div class="ico">🧠</div><div class="nm">Memoria Deportiva</div>
-        <div class="ds">Encuentra los pares en el menor tiempo.</div>
+        <div class="ds">Encuentra los 8 pares de deportes en el menor número de movimientos y tiempo posible.</div>
         <div class="bst" id="best-mem"></div>
-      </button>
-      <button class="game-btn" data-game="rx">
-        <div class="ico">⚡</div><div class="nm">Reflejos de Portero</div>
-        <div class="ds">Toca apenas se ponga verde. 5 rondas.</div>
-        <div class="bst" id="best-rx"></div>
+        <span class="play">▶️ Jugar</span>
       </button>
     </div>
+  </div>
 
-    <!-- ═══ PENALES ═══ -->
-    <div class="stage" id="stage-pen">
-      <h2>⚽ Tanda de Penales</h2>
-      <p class="sub">El punto verde se mueve: toca la cancha (o pulsa <b>Espacio</b>) para patear hacia donde esté. ¡Cuidado, el portero se lanza!</p>
-      <div class="hud">
-        <div class="pill">Goles: <b id="pen-score">0</b></div>
-        <div class="pill">Tiro: <b id="pen-shot">1</b>/5</div>
-        <div class="pill">Récord: <b id="pen-best">—</b></div>
+  <!-- ═══ DUELO DE PENALES (pantalla completa) ═══ -->
+  <div class="stage" id="stage-duel">
+    <div class="stage-head">
+      <h2>⚽🧤 Duelo de Penales</h2>
+      <button class="icon-b" data-fs title="Pantalla completa">⛶</button>
+      <button class="icon-b" data-close title="Salir">✕</button>
+    </div>
+    <div class="stage-body">
+      <div id="duel-board">
+        <div class="side you"><span class="who">TÚ</span><span class="pts" id="pts-you">0</span><div class="ticks" id="ticks-you"></div></div>
+        <div class="rnd">RONDA<br><b id="duel-round" style="font-size:20px;color:#fff;">1</b>/5</div>
+        <div class="side cpu"><span class="who">MÁQUINA</span><span class="pts" id="pts-cpu">0</span><div class="ticks" id="ticks-cpu"></div></div>
       </div>
-      <div id="pen-field">
+      <div id="banner"><span class="tag">🎯 TU TURNO: toca la zona donde quieres PATEAR</span></div>
+      <div id="field">
         <div class="grass"></div>
-        <div class="goal"></div>
-        <div id="keeper">🧤</div>
-        <div id="marker"></div>
-        <div id="pen-ball">⚽</div>
-        <div id="pen-hint">Toca para patear</div>
+        <div class="area"></div>
+        <div class="goal-frame"></div>
+        <div id="zones" class="pulse"></div>
+        <div class="char cpu idle" id="gk"><span class="face">😼</span><span class="body">🧤</span><span class="tag">PORTERO</span></div>
+        <div id="ball">⚽</div>
+        <div class="char you idle" id="striker"><span class="face">😤</span><span class="body">🏃</span><span class="tag">TÚ</span></div>
       </div>
-      <div class="shots" id="pen-dots"></div>
-      <p class="msg info" id="pen-msg"></p>
-      <button class="btn hidden" id="pen-again">🔁 Jugar otra vez</button>
+      <p class="msg info" id="duel-msg"></p>
+      <div id="duel-end" class="hidden">
+        <h3 id="duel-end-title"></h3>
+        <button class="btn" id="duel-again">🔁 Jugar otra vez</button>
+      </div>
     </div>
+  </div>
 
-    <!-- ═══ MEMORIA ═══ -->
-    <div class="stage hidden" id="stage-mem">
+  <!-- ═══ CARRERA RELÁMPAGO (pantalla completa) ═══ -->
+  <div class="stage" id="stage-race">
+    <div class="stage-head">
+      <h2>🏃💨 Carrera Relámpago</h2>
+      <button class="icon-b" data-fs title="Pantalla completa">⛶</button>
+      <button class="icon-b" data-close title="Salir">✕</button>
+    </div>
+    <div class="stage-body">
+      <div class="hud">
+        <div class="pill">Tiempo: <b id="race-time">0.0s</b></div>
+        <div class="pill">Récord: <b id="race-best">—</b></div>
+      </div>
+      <div id="track">
+        <div class="lane you">
+          <div class="runner" id="run-you"><span class="face">😤</span><span class="body">🏃</span><span class="tag">TÚ</span></div>
+        </div>
+        <div class="lane cpu">
+          <div class="runner" id="run-cpu"><span class="face">🤖</span><span class="body">🏃</span><span class="tag">RIVAL</span></div>
+        </div>
+        <div id="finish"></div>
+        <div id="race-count"></div>
+      </div>
+      <button id="tap-btn">▶️ Empezar carrera</button>
+      <p class="msg info" id="race-msg">En PC también puedes usar la tecla <b>Espacio</b>.</p>
+    </div>
+  </div>
+
+  <!-- ═══ MEMORIA (pantalla completa) ═══ -->
+  <div class="stage" id="stage-mem">
+    <div class="stage-head">
       <h2>🧠 Memoria Deportiva</h2>
-      <p class="sub">Voltea las cartas y encuentra los 8 pares. Menos movimientos y menos tiempo = mejor marca.</p>
+      <button class="icon-b" data-fs title="Pantalla completa">⛶</button>
+      <button class="icon-b" data-close title="Salir">✕</button>
+    </div>
+    <div class="stage-body">
       <div class="hud">
         <div class="pill">Movimientos: <b id="mem-moves">0</b></div>
         <div class="pill">Tiempo: <b id="mem-time">0s</b></div>
@@ -140,20 +238,7 @@
       </div>
       <div id="mem-grid"></div>
       <p class="msg info" id="mem-msg"></p>
-      <button class="btn" id="mem-again">🔁 Reiniciar</button>
-    </div>
-
-    <!-- ═══ REFLEJOS ═══ -->
-    <div class="stage hidden" id="stage-rx">
-      <h2>⚡ Reflejos de Portero</h2>
-      <p class="sub">Espera en rojo… y toca (o pulsa <b>Espacio</b>) apenas se ponga verde. Si te adelantas, cuenta como fallo.</p>
-      <div class="hud">
-        <div class="pill">Ronda: <b id="rx-round">0</b>/5</div>
-        <div class="pill">Promedio: <b id="rx-avg">—</b></div>
-        <div class="pill">Récord: <b id="rx-best">—</b></div>
-      </div>
-      <div id="rx-zone" class="idle"><span>Toca para empezar</span><small>Reacciona lo más rápido posible</small></div>
-      <p class="msg info" id="rx-msg"></p>
+      <div class="center"><button class="btn" id="mem-again">🔁 Reiniciar</button></div>
     </div>
   </div>
 
@@ -164,233 +249,355 @@
       get: (k) => { try { return localStorage.getItem('topfut-game-' + k); } catch (_) { return null; } },
       set: (k, v) => { try { localStorage.setItem('topfut-game-' + k, v); } catch (_) {} }
     };
+    const rnd = (n) => Math.floor(Math.random() * n);
+    const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
-    // ── Selector de juego ──
-    const games = ['pen', 'mem', 'rx'];
-    let current = 'pen';
-    document.querySelectorAll('.game-btn').forEach(btn => btn.addEventListener('click', () => {
-      current = btn.dataset.game;
-      document.querySelectorAll('.game-btn').forEach(b => b.classList.toggle('active', b === btn));
-      games.forEach(g => $('stage-' + g).classList.toggle('hidden', g !== current));
-      if (current === 'pen') penReset();
-      if (current === 'mem') memStart();
-      if (current === 'rx') rxIdle();
+    /* ── Apertura / cierre de juegos a pantalla completa ── */
+    let currentGame = null;
+    function openGame(g) {
+      currentGame = g;
+      document.body.classList.add('lock');
+      $('stage-' + g).classList.add('open');
+      // Pantalla completa real cuando el navegador la permite (Android, PC).
+      // En iPhone no existe para páginas: el overlay ya cubre toda la pantalla.
+      const el = document.documentElement;
+      if (el.requestFullscreen) el.requestFullscreen({ navigationUI: 'hide' }).catch(() => {});
+      if (g === 'duel') duelStart();
+      if (g === 'race') raceReset();
+      if (g === 'mem') memStart();
+    }
+    function closeGame() {
+      if (!currentGame) return;
+      $('stage-' + currentGame).classList.remove('open');
+      document.body.classList.remove('lock');
+      duelStop(); raceStop(); memStop();
+      currentGame = null;
+      if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(() => {});
+      refreshBests();
+    }
+    document.querySelectorAll('.game-card').forEach(b => b.addEventListener('click', () => openGame(b.dataset.game)));
+    document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', closeGame));
+    document.querySelectorAll('[data-fs]').forEach(b => b.addEventListener('click', () => {
+      const el = document.documentElement;
+      if (document.fullscreenElement) { document.exitFullscreen && document.exitFullscreen().catch(() => {}); }
+      else if (el.requestFullscreen) el.requestFullscreen({ navigationUI: 'hide' }).catch(() => {});
     }));
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeGame(); });
 
     function refreshBests() {
-      const bp = store.get('pen'); $('best-pen').textContent = bp ? `🏆 Récord: ${bp}/5 goles` : '';
-      const bm = store.get('mem'); $('best-mem').textContent = bm ? `🏆 Récord: ${bm}` : '';
-      const br = store.get('rx');  $('best-rx').textContent  = br ? `🏆 Récord: ${br} ms` : '';
-      $('pen-best').textContent = bp ? bp + '/5' : '—';
+      const bd = store.get('duel'); $('best-duel').textContent = bd ? `🏆 Victorias: ${bd}` : '';
+      const br = store.get('race'); $('best-race').textContent = br ? `🏆 Mejor tiempo: ${br}s` : '';
+      const bm = store.get('mem');  $('best-mem').textContent  = bm ? `🏆 Récord: ${bm}` : '';
+      $('race-best').textContent = br ? br + 's' : '—';
       $('mem-best').textContent = bm || '—';
-      $('rx-best').textContent  = br ? br + ' ms' : '—';
     }
 
-    /* ═════════ 1) TANDA DE PENALES ═════════ */
-    const field = $('pen-field'), marker = $('marker'), keeper = $('keeper'), ball = $('pen-ball');
-    let penScore = 0, penShot = 0, penDir = 1, penPos = 0.5, penSpeed = 0.011, penRunning = false, penRaf = null, penBusy = false;
+    /* ═════════ 1) DUELO DE PENALES ═════════
+       Cada ronda tiene 2 momentos: TÚ PATEAS (tocas la zona del arco)
+       y TÚ ATAJAS (tocas la zona a la que te lanzas). 5 rondas; empate → muerte súbita. */
+    const ZONES = [
+      { col: 0, row: 0, x: 24, y: 15, ico: '↖️' }, { col: 1, row: 0, x: 50, y: 15, ico: '⬆️' }, { col: 2, row: 0, x: 76, y: 15, ico: '↗️' },
+      { col: 0, row: 1, x: 24, y: 38, ico: '↙️' }, { col: 1, row: 1, x: 50, y: 38, ico: '⬇️' }, { col: 2, row: 1, x: 76, y: 38, ico: '↘️' }
+    ];
+    const gk = $('gk'), striker = $('striker'), ball = $('ball'), zonesEl = $('zones'), banner = $('banner');
+    let duel = null;
 
-    // El marcador recorre el ancho del arco (12% → 88% del campo)
-    const MIN_X = 14, MAX_X = 86;
-    function penDraw() { marker.style.left = (MIN_X + (MAX_X - MIN_X) * penPos) + '%'; }
-    function penLoop() {
-      if (!penRunning) return;
-      penPos += penSpeed * penDir;
-      if (penPos >= 1) { penPos = 1; penDir = -1; }
-      if (penPos <= 0) { penPos = 0; penDir = 1; }
-      penDraw();
-      penRaf = requestAnimationFrame(penLoop);
-    }
-    function penDots() {
-      $('pen-dots').innerHTML = '';
-      for (let i = 0; i < 5; i++) {
-        const sp = document.createElement('span');
-        $('pen-dots').appendChild(sp);
-      }
-    }
-    function penReset() {
-      cancelAnimationFrame(penRaf);
-      penScore = 0; penShot = 0; penPos = 0.5; penDir = 1; penSpeed = 0.011; penBusy = false;
-      $('pen-score').textContent = '0'; $('pen-shot').textContent = '1';
-      $('pen-msg').textContent = ''; $('pen-msg').className = 'msg info';
-      $('pen-again').classList.add('hidden');
-      keeper.style.left = '50%'; keeper.textContent = '🧤';
-      ball.style.transition = 'none'; ball.style.left = '50%'; ball.style.bottom = '7%'; ball.style.top = 'auto';
-      penDots(); penDraw();
-      penRunning = true; penRaf = requestAnimationFrame(penLoop);
-    }
-    function penKick() {
-      if (penBusy || !penRunning) return;
-      penBusy = true; penRunning = false; cancelAnimationFrame(penRaf);
-      const shotPos = penPos;                        // 0..1 dentro del arco
-      const keeperZone = Math.floor(Math.random() * 3); // 0 izq · 1 centro · 2 der
-      const shotZone = shotPos < 0.34 ? 0 : shotPos < 0.66 ? 1 : 2;
-      // Portero se lanza
-      keeper.style.left = (keeperZone === 0 ? 28 : keeperZone === 1 ? 50 : 72) + '%';
-      // Balón viaja al punto elegido
-      const ballX = MIN_X + (MAX_X - MIN_X) * shotPos;
-      requestAnimationFrame(() => {
-        ball.style.transition = 'top .32s ease, left .32s ease, bottom .32s ease';
-        ball.style.left = ballX + '%';
-        ball.style.bottom = 'auto'; ball.style.top = '26%';
+    function zoneButtons() {
+      zonesEl.innerHTML = '';
+      ZONES.forEach((z, i) => {
+        const b = document.createElement('button');
+        b.className = 'zone'; b.textContent = z.ico; b.setAttribute('aria-label', 'Zona ' + (i + 1));
+        b.addEventListener('click', () => duelPick(i));
+        zonesEl.appendChild(b);
       });
-      const saved = shotZone === keeperZone;
-      setTimeout(() => {
-        const dot = $('pen-dots').children[penShot];
-        const msg = $('pen-msg');
-        if (saved) {
-          keeper.textContent = '🧤⚽';
-          msg.textContent = '🧤 ¡Atajada del portero!'; msg.className = 'msg mal';
-          dot.classList.add('f'); dot.textContent = '✕';
-        } else {
-          penScore++;
-          msg.textContent = '⚽ ¡GOOOL!'; msg.className = 'msg gol';
-          dot.classList.add('g'); dot.textContent = '✓';
-          penSpeed += 0.004;   // cada gol acelera el marcador
-        }
-        $('pen-score').textContent = penScore;
-        penShot++;
-        if (penShot >= 5) return penEnd();
-        $('pen-shot').textContent = penShot + 1;
-        // Preparar siguiente tiro
-        setTimeout(() => {
-          keeper.style.left = '50%'; keeper.textContent = '🧤';
-          ball.style.transition = 'none'; ball.style.top = 'auto'; ball.style.bottom = '7%'; ball.style.left = '50%';
-          penBusy = false; penRunning = true; penRaf = requestAnimationFrame(penLoop);
-        }, 900);
-      }, 360);
     }
-    function penEnd() {
-      penRunning = false;
-      const msg = $('pen-msg');
-      msg.textContent = penScore >= 4 ? `🏆 ¡Crack! Anotaste ${penScore}/5` : penScore >= 2 ? `👏 Anotaste ${penScore}/5` : `😅 Anotaste ${penScore}/5 · ¡Revancha!`;
-      msg.className = 'msg ' + (penScore >= 3 ? 'gol' : 'mal');
-      const best = Number(store.get('pen') || 0);
-      if (penScore > best) { store.set('pen', String(penScore)); msg.textContent += ' · ¡Nuevo récord!'; }
-      refreshBests();
-      $('pen-again').classList.remove('hidden');
+    function setChar(el, face, body) { el.querySelector('.face').textContent = face; el.querySelector('.body').textContent = body; }
+    function setTag(el, t) { el.querySelector('.tag').textContent = t; }
+    function showZones(on) { zonesEl.style.display = on ? 'grid' : 'none'; }
+    function setBanner(html, rojo) { banner.innerHTML = `<span class="tag${rojo ? ' rojo' : ''}">${html}</span>`; }
+    function resetPositions(youShoot) {
+      ball.style.transition = 'none';
+      ball.style.top = '66%'; ball.style.left = '50%'; ball.style.transform = 'translate(-50%,0)';
+      gk.style.top = '22%'; gk.style.left = '50%'; gk.style.transform = 'translateX(-50%)';
+      striker.style.top = '68%'; striker.style.left = '50%'; striker.style.transform = 'translateX(-50%)';
+      gk.classList.add('idle'); striker.classList.add('idle');
+      if (youShoot) {
+        // Tú abajo con el balón, la máquina en el arco
+        setChar(striker, '😤', '🏃'); setTag(striker, 'TÚ'); striker.className = 'char you idle';
+        setChar(gk, '😼', '🧤'); setTag(gk, 'PORTERO'); gk.className = 'char cpu idle';
+      } else {
+        // Tú eres el portero, la máquina patea
+        setChar(gk, '😎', '🧤'); setTag(gk, 'TÚ'); gk.className = 'char you idle';
+        setChar(striker, '🤖', '🏃'); setTag(striker, 'RIVAL'); striker.className = 'char cpu idle';
+      }
+      striker.style.top = '68%';
+      void ball.offsetWidth; // aplica el reset antes de animar
+      ball.style.transition = '';
     }
-    field.addEventListener('pointerdown', penKick);
-    $('pen-again').addEventListener('click', penReset);
+    function duelTicks() {
+      const mk = (arr) => arr.map(v => `<i class="${v ? 'g' : 'f'}"></i>`).join('') + '<i></i>'.repeat(Math.max(0, 5 - arr.length));
+      $('ticks-you').innerHTML = mk(duel.youShots);
+      $('ticks-cpu').innerHTML = mk(duel.cpuShots);
+    }
+    function duelStart() {
+      duel = { round: 1, you: 0, cpu: 0, youShots: [], cpuShots: [], phase: 'shoot', busy: false, sudden: false, over: false };
+      $('pts-you').textContent = '0'; $('pts-cpu').textContent = '0';
+      $('duel-round').textContent = '1';
+      $('duel-msg').textContent = ''; $('duel-msg').className = 'msg info';
+      $('duel-end').classList.add('hidden');
+      zoneButtons(); duelTicks();
+      resetPositions(true);
+      showZones(true); zonesEl.classList.add('pulse');
+      setBanner('🎯 TU TURNO: toca la zona donde quieres PATEAR');
+    }
+    function duelStop() { if (duel) duel.over = true; }
 
-    /* ═════════ 2) MEMORIA DEPORTIVA ═════════ */
+    async function duelPick(i) {
+      if (!duel || duel.busy || duel.over) return;
+      duel.busy = true;
+      showZones(false); zonesEl.classList.remove('pulse');
+      const z = ZONES[i];
+      if (duel.phase === 'shoot') await playShot(z, true);
+      else await playShot(z, false);
+      if (duel.over) return;
+      duelNextPhase();
+    }
+
+    // youShoot=true: z = a dónde pateas · youShoot=false: z = a dónde te lanzas
+    async function playShot(z, youShoot) {
+      const shooter = striker, keeper = gk;
+      shooter.classList.remove('idle'); keeper.classList.remove('idle');
+      const shotZ  = youShoot ? z : weightedCpuShot();   // a dónde va el balón
+      const diveZ  = youShoot ? cpuDive() : z;           // a dónde se lanza el portero
+      // Carrera del pateador hacia el balón
+      shooter.style.top = '58%';
+      await sleep(300);
+      // Balón vuela + portero se lanza
+      const missed = shotZ.row === 0 && shotZ.col !== 1 && Math.random() < 0.10; // esquinas altas: riesgo de tiro desviado
+      const bx = missed ? (shotZ.col === 0 ? 4 : 96) : shotZ.x;
+      const by = missed ? 4 : shotZ.y;
+      ball.style.left = bx + '%'; ball.style.top = by + '%'; ball.style.transform = 'translate(-50%,-50%) rotate(360deg)';
+      keeper.style.left = diveZ.x + '%';
+      keeper.style.top = (diveZ.row === 0 ? 14 : 30) + '%';
+      keeper.style.transform = `translateX(-50%) rotate(${diveZ.col === 0 ? -35 : diveZ.col === 2 ? 35 : 0}deg)`;
+      await sleep(420);
+      // Resultado
+      let saved = false;
+      if (!missed) {
+        if (diveZ.col === shotZ.col && diveZ.row === shotZ.row) saved = Math.random() < 0.85;
+        else if (diveZ.col === shotZ.col) saved = Math.random() < 0.35;
+      }
+      const gol = !missed && !saved;
+      const msg = $('duel-msg');
+      if (youShoot) {
+        duel.youShots.push(gol);
+        if (gol) { duel.you++; setBanner('⚽ ¡GOOOL TUYO!'); setChar(shooter, '🤩', '🕺'); setChar(keeper, '😭', '🧤'); }
+        else if (missed) { setBanner('😱 ¡Lo mandaste afuera!', true); setChar(shooter, '🤦', '🏃'); setChar(keeper, '😹', '🧤'); }
+        else { setBanner('🧤 ¡Te lo atajó la máquina!', true); setChar(shooter, '😩', '🏃'); setChar(keeper, '😎', '💪'); }
+        msg.textContent = gol ? '¡Bien colocado!' : missed ? 'Las esquinas altas son arriesgadas…' : 'Adivinó tu zona.';
+      } else {
+        duel.cpuShots.push(gol);
+        if (gol) { setBanner('😖 Gol de la máquina…', true); setChar(keeper, '😭', '🧤'); setChar(shooter, '🤖', '🕺'); duel.cpu++; }
+        else if (missed) { setBanner('🎉 ¡El rival tiró afuera!'); setChar(keeper, '😂', '🧤'); setChar(shooter, '🤖', '🤦'); }
+        else { setBanner('🧤 ¡ATAJADÓN TUYO!'); setChar(keeper, '😎', '💪'); setChar(shooter, '🤖', '😩'); }
+        msg.textContent = gol ? 'Se lanzó al otro lado.' : missed ? '¡Qué suerte!' : '¡Leíste perfecto el tiro!';
+      }
+      msg.className = 'msg ' + ((youShoot && gol) || (!youShoot && !gol) ? 'gol' : 'mal');
+      $('pts-you').textContent = duel.you; $('pts-cpu').textContent = duel.cpu;
+      duelTicks();
+      await sleep(1400);
+    }
+
+    function cpuDive() { return ZONES[rnd(6)]; }
+    function weightedCpuShot() {
+      // La máquina prefiere las esquinas
+      const w = [22, 6, 22, 16, 18, 16];
+      let t = rnd(100);
+      for (let i = 0; i < 6; i++) { if (t < w[i]) return ZONES[i]; t -= w[i]; }
+      return ZONES[4];
+    }
+
+    function duelNextPhase() {
+      if (duel.phase === 'shoot') {
+        duel.phase = 'save';
+        resetPositions(false);
+        showZones(true); zonesEl.classList.add('pulse');
+        setBanner('🧤 ¡AHORA ATAJA! Toca la zona a la que te lanzas', true);
+        $('duel-msg').textContent = '';
+      } else {
+        // Ronda completa
+        const doneRegular = duel.round >= 5;
+        const decidedSudden = duel.sudden && duel.you !== duel.cpu;
+        if ((doneRegular && !duel.sudden && duel.you !== duel.cpu) || decidedSudden) return duelEnd();
+        if (doneRegular && duel.you === duel.cpu && !duel.sudden) {
+          duel.sudden = true;
+          setBanner('🔥 ¡MUERTE SÚBITA! Quien falle, pierde', true);
+        }
+        duel.round++;
+        $('duel-round').textContent = duel.sudden ? '🔥' : duel.round;
+        duel.phase = 'shoot';
+        resetPositions(true);
+        showZones(true); zonesEl.classList.add('pulse');
+        if (!duel.sudden) setBanner('🎯 TU TURNO: toca la zona donde quieres PATEAR');
+        else setBanner('🔥 Muerte súbita: ¡PATEA!');
+        $('duel-msg').textContent = '';
+      }
+      duel.busy = false;
+    }
+
+    function duelEnd() {
+      duel.over = true;
+      showZones(false);
+      const win = duel.you > duel.cpu;
+      const t = $('duel-end-title');
+      t.textContent = win ? `🏆 ¡GANASTE ${duel.you} - ${duel.cpu}!` : `😭 Perdiste ${duel.you} - ${duel.cpu}`;
+      t.style.color = win ? '#a3e635' : '#ff5964';
+      setBanner(win ? '🎉 ¡Campeón de la tanda!' : '💪 La próxima cae', !win);
+      if (win) {
+        const wins = Number(store.get('duel') || 0) + 1;
+        store.set('duel', String(wins));
+      }
+      refreshBests();
+      $('duel-end').classList.remove('hidden');
+    }
+    $('duel-again').addEventListener('click', duelStart);
+    // Teclado (PC): 1-6 eligen zona
+    document.addEventListener('keydown', (e) => {
+      if (currentGame !== 'duel') return;
+      const n = Number(e.key);
+      if (n >= 1 && n <= 6) duelPick(n - 1);
+    });
+
+    /* ═════════ 2) CARRERA RELÁMPAGO ═════════ */
+    const META = 82;           // % del carril donde está la meta
+    let race = null;
+    function raceDraw() {
+      $('run-you').style.left = Math.min(race.you, META) + '%';
+      $('run-cpu').style.left = Math.min(race.cpu, META) + '%';
+    }
+    function raceReset() {
+      raceStop();
+      race = { you: 2, cpu: 2, on: false, t0: 0, timer: null, cpuTimer: null };
+      raceDraw();
+      $('run-you').classList.remove('go'); $('run-cpu').classList.remove('go');
+      $('run-you').querySelector('.face').textContent = '😤';
+      $('run-cpu').querySelector('.face').textContent = '🤖';
+      $('race-time').textContent = '0.0s';
+      $('race-msg').textContent = 'En PC también puedes usar la tecla Espacio.'; $('race-msg').className = 'msg info';
+      const b = $('tap-btn'); b.disabled = false; b.textContent = '▶️ Empezar carrera';
+      race.mode = 'ready';
+    }
+    function raceStop() {
+      if (!race) return;
+      clearInterval(race.timer); clearInterval(race.cpuTimer);
+      race.on = false;
+    }
+    async function raceCountdown() {
+      const c = $('race-count'); c.classList.add('on');
+      for (const t of ['3', '2', '1', '¡YA!']) { c.textContent = t; await sleep(700); }
+      c.classList.remove('on');
+    }
+    async function raceBegin() {
+      race.mode = 'counting';
+      const b = $('tap-btn'); b.disabled = true; b.textContent = 'Prepárate…';
+      await raceCountdown();
+      race.mode = 'running'; race.on = true; race.t0 = performance.now();
+      b.disabled = false; b.textContent = '👟 ¡TOCA! ¡TOCA! ¡TOCA!';
+      $('run-you').classList.add('go'); $('run-cpu').classList.add('go');
+      race.timer = setInterval(() => { $('race-time').textContent = ((performance.now() - race.t0) / 1000).toFixed(1) + 's'; }, 100);
+      race.cpuTimer = setInterval(() => {
+        if (!race.on) return;
+        race.cpu += 0.55 + Math.random() * 0.75;   // rival con ritmo variable
+        raceDraw();
+        if (race.cpu >= META) raceFinish(false);
+      }, 60);
+    }
+    function raceTap() {
+      if (!race) return;
+      if (race.mode === 'ready') { raceBegin(); return; }
+      if (race.mode !== 'running' || !race.on) return;
+      race.you += 2.1;
+      raceDraw();
+      if (race.you >= META) raceFinish(true);
+    }
+    function raceFinish(youWin) {
+      race.on = false;
+      clearInterval(race.timer); clearInterval(race.cpuTimer);
+      $('run-you').classList.remove('go'); $('run-cpu').classList.remove('go');
+      const secs = ((performance.now() - race.t0) / 1000).toFixed(1);
+      $('race-time').textContent = secs + 's';
+      const msg = $('race-msg');
+      if (youWin) {
+        $('run-you').querySelector('.face').textContent = '🤩';
+        $('run-cpu').querySelector('.face').textContent = '😵';
+        msg.textContent = `🏆 ¡GANASTE en ${secs}s!`; msg.className = 'msg gol';
+        const best = Number(store.get('race') || Infinity);
+        if (Number(secs) < best) { store.set('race', secs); msg.textContent += ' · ¡Nuevo récord!'; }
+      } else {
+        $('run-you').querySelector('.face').textContent = '😩';
+        $('run-cpu').querySelector('.face').textContent = '😏';
+        msg.textContent = '😭 Te ganó el rival… ¡revancha!'; msg.className = 'msg mal';
+      }
+      refreshBests();
+      const b = $('tap-btn'); b.textContent = '🔁 Correr de nuevo';
+      race.mode = 'ready';
+      race.you = 2; race.cpu = 2;
+      setTimeout(raceDraw, 900);
+    }
+    $('tap-btn').addEventListener('pointerdown', (e) => { e.preventDefault(); raceTap(); });
+    document.addEventListener('keydown', (e) => {
+      if (currentGame !== 'race' || e.code !== 'Space') return;
+      e.preventDefault(); raceTap();
+    });
+
+    /* ═════════ 3) MEMORIA DEPORTIVA ═════════ */
     const MEM_EMOJIS = ['⚽','🥊','🥋','🤼','🏀','🎾','🏎️','🏆'];
-    let memFirst = null, memLock = false, memMoves = 0, memFound = 0, memTimer = null, memSecs = 0;
+    let mem = null;
     function memStart() {
-      clearInterval(memTimer);
-      memFirst = null; memLock = false; memMoves = 0; memFound = 0; memSecs = 0;
+      memStop();
+      mem = { first: null, lock: false, moves: 0, found: 0, secs: 0, timer: null };
       $('mem-moves').textContent = '0'; $('mem-time').textContent = '0s';
       $('mem-msg').textContent = ''; $('mem-msg').className = 'msg info';
       const deck = [...MEM_EMOJIS, ...MEM_EMOJIS].sort(() => Math.random() - 0.5);
-      const grid = $('mem-grid');
-      grid.innerHTML = '';
+      const grid = $('mem-grid'); grid.innerHTML = '';
       deck.forEach(e => {
         const c = document.createElement('button');
         c.className = 'mem-card'; c.textContent = e; c.setAttribute('aria-label', 'Carta');
         c.addEventListener('click', () => memFlip(c));
         grid.appendChild(c);
       });
-      memTimer = setInterval(() => { memSecs++; $('mem-time').textContent = memSecs + 's'; }, 1000);
+      mem.timer = setInterval(() => { mem.secs++; $('mem-time').textContent = mem.secs + 's'; }, 1000);
     }
+    function memStop() { if (mem) clearInterval(mem.timer); }
     function memFlip(c) {
-      if (memLock || c.classList.contains('up') || c.classList.contains('ok')) return;
+      if (!mem || mem.lock || c.classList.contains('up') || c.classList.contains('ok')) return;
       c.classList.add('up');
-      if (!memFirst) { memFirst = c; return; }
-      memMoves++; $('mem-moves').textContent = memMoves;
-      const a = memFirst; memFirst = null;
+      if (!mem.first) { mem.first = c; return; }
+      mem.moves++; $('mem-moves').textContent = mem.moves;
+      const a = mem.first; mem.first = null;
       if (a.textContent === c.textContent) {
         a.classList.replace('up', 'ok'); c.classList.replace('up', 'ok');
-        memFound++;
-        if (memFound === MEM_EMOJIS.length) memEnd();
+        mem.found++;
+        if (mem.found === MEM_EMOJIS.length) memEnd();
       } else {
-        memLock = true;
-        setTimeout(() => { a.classList.remove('up'); c.classList.remove('up'); memLock = false; }, 750);
+        mem.lock = true;
+        setTimeout(() => { a.classList.remove('up'); c.classList.remove('up'); mem.lock = false; }, 750);
       }
     }
     function memEnd() {
-      clearInterval(memTimer);
-      const result = `${memMoves} mov · ${memSecs}s`;
+      clearInterval(mem.timer);
+      const result = `${mem.moves} mov · ${mem.secs}s`;
       const msg = $('mem-msg');
       msg.textContent = `🎉 ¡Completado en ${result}!`; msg.className = 'msg gol';
       const best = store.get('mem');
       const bestMoves = best ? Number(best.split(' ')[0]) : Infinity;
-      if (memMoves < bestMoves) { store.set('mem', result); msg.textContent += ' · ¡Nuevo récord!'; }
+      if (mem.moves < bestMoves) { store.set('mem', result); msg.textContent += ' · ¡Nuevo récord!'; }
       refreshBests();
     }
     $('mem-again').addEventListener('click', memStart);
 
-    /* ═════════ 3) REFLEJOS DE PORTERO ═════════ */
-    const rxZone = $('rx-zone');
-    let rxState = 'idle', rxT0 = 0, rxTimeout = null, rxTimes = [], rxRound = 0;
-    function rxIdle() {
-      clearTimeout(rxTimeout);
-      rxState = 'idle'; rxTimes = []; rxRound = 0;
-      rxZone.className = 'idle';
-      rxZone.innerHTML = '<span>Toca para empezar</span><small>Reacciona lo más rápido posible</small>';
-      $('rx-round').textContent = '0'; $('rx-avg').textContent = '—';
-      $('rx-msg').textContent = ''; $('rx-msg').className = 'msg info';
-    }
-    function rxWait() {
-      rxState = 'wait';
-      rxZone.className = 'wait';
-      rxZone.innerHTML = '<span>Espera el verde…</span><small>🧤 No te lances antes</small>';
-      rxTimeout = setTimeout(() => {
-        rxState = 'go'; rxT0 = performance.now();
-        rxZone.className = 'go';
-        rxZone.innerHTML = '<span>¡AHORA! 🥅</span><small>¡Toca!</small>';
-      }, 1000 + Math.random() * 2500);
-    }
-    function rxTap() {
-      if (rxState === 'idle') { rxWait(); return; }
-      if (rxState === 'wait') {
-        clearTimeout(rxTimeout);
-        rxTimes.push(1000);   // salida en falso = 1000 ms de castigo
-        $('rx-msg').textContent = '🟥 ¡Te lanzaste antes! (+1000 ms)'; $('rx-msg').className = 'msg mal';
-        rxNext(); return;
-      }
-      if (rxState === 'go') {
-        const ms = Math.round(performance.now() - rxT0);
-        rxTimes.push(ms);
-        const msg = $('rx-msg');
-        msg.textContent = ms < 250 ? `⚡ ${ms} ms · ¡Reflejos de crack!` : ms < 400 ? `👍 ${ms} ms · ¡Bien!` : `🐢 ${ms} ms · Puedes más`;
-        msg.className = 'msg ' + (ms < 400 ? 'gol' : 'info');
-        rxNext();
-      }
-    }
-    function rxNext() {
-      rxRound++;
-      $('rx-round').textContent = rxRound;
-      if (rxRound >= 5) {
-        const avg = Math.round(rxTimes.reduce((a, b) => a + b, 0) / rxTimes.length);
-        $('rx-avg').textContent = avg + ' ms';
-        rxState = 'idle';
-        rxZone.className = 'idle';
-        rxZone.innerHTML = `<span>Promedio: ${avg} ms</span><small>Toca para jugar de nuevo</small>`;
-        const best = Number(store.get('rx') || Infinity);
-        if (avg < best) { store.set('rx', String(avg)); $('rx-msg').textContent += ' · 🏆 ¡Nuevo récord!'; }
-        refreshBests();
-        rxTimes = []; rxRound = 0;
-        $('rx-round').textContent = '0';
-      } else {
-        rxWait();
-      }
-    }
-    rxZone.addEventListener('pointerdown', rxTap);
-
-    // Teclado (PC): Espacio/Enter actúan en el juego visible
-    document.addEventListener('keydown', (e) => {
-      if (e.code !== 'Space' && e.code !== 'Enter') return;
-      if (e.target && (e.target.tagName === 'BUTTON' || e.target.tagName === 'A')) return;
-      e.preventDefault();
-      if (current === 'pen') penKick();
-      if (current === 'rx') rxTap();
-    });
-
     // ── Inicio ──
     refreshBests();
-    penReset();
-
-    // PWA: mismo service worker de la plataforma
     if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js').catch(() => {}); }
   </script>
 </body>
