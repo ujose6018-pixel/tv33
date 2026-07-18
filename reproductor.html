@@ -391,7 +391,13 @@
           v.addEventListener('error', onMediaError);   // auto-fallback si el stream cae
           wrap.appendChild(v);
           if (/\.m3u8?(\?|$)/i.test(url)) {
-            mountHls(v, url);
+            _ensureHLS(() => {
+              if (window.Hls && Hls.isSupported()) {
+                const hls = new Hls(); hls.loadSource(url); hls.attachMedia(v);
+                hls.on(Hls.Events.ERROR, (_e, data) => { if (data && data.fatal) onMediaError(); });
+              }
+              else if (v.canPlayType('application/vnd.apple.mpegurl')) { v.src = url; }
+            });
           } else { v.src = url; }
 
         } else {
@@ -401,66 +407,6 @@
       }
 
       function stopPlayer() { videoContainer.innerHTML = ''; }
-
-      // ── HLS a prueba de TVs ──────────────────────────────────────
-      // En celulares (sobre todo iPhone) el HLS nativo NO exige CORS, pero en
-      // navegadores de TV hls.js descarga el manifiesto por XHR y si el servidor
-      // del stream no envía CORS falla con "manifestLoadError". Escalera de
-      // reintentos automáticos: 1) directo → 2) por el proxy del Worker (que
-      // añade CORS) → 3) HLS nativo del navegador → 4) siguiente señal.
-      let _workerUrl;   // undefined = sin consultar · null = no configurado
-      async function getWorkerUrl() {
-        if (_workerUrl !== undefined) return _workerUrl;
-        try {
-          const snap = await getDoc(doc(db, 'config', 'importer'));
-          _workerUrl = (snap.exists() && snap.data().workerUrl) ? String(snap.data().workerUrl).replace(/\/+$/, '') : null;
-        } catch (_) { _workerUrl = null; }
-        return _workerUrl;
-      }
-      function mountHls(v, url) {
-        _ensureHLS(async () => {
-          const nativeOk = v.canPlayType('application/vnd.apple.mpegurl');
-          const tryNative = (u) => { v.src = u; v.play && v.play().catch(() => {}); };
-          if (!(window.Hls && Hls.isSupported())) {
-            if (nativeOk) tryNative(url); else onMediaError();
-            return;
-          }
-          // Contenido mixto: página https + stream http → el navegador lo
-          // bloquea siempre; si hay proxy, entrar directo por él.
-          let firstUrl = url;
-          if (location.protocol === 'https:' && /^http:\/\//i.test(url)) {
-            const w = await getWorkerUrl();
-            if (w) firstUrl = w + '/hls?u=' + encodeURIComponent(url);
-          }
-          let triedProxy = firstUrl !== url, triedRecover = false, hls = null;
-          const start = (srcUrl) => {
-            if (hls) { try { hls.destroy(); } catch (_) {} }
-            hls = new Hls({
-              // Reintentos generosos: las TVs tienen redes/CPU más lentas
-              manifestLoadingMaxRetry: 3, manifestLoadingRetryDelay: 800, manifestLoadingTimeOut: 15000,
-              levelLoadingMaxRetry: 3, levelLoadingTimeOut: 15000,
-              fragLoadingMaxRetry: 4, fragLoadingTimeOut: 25000
-            });
-            hls.loadSource(srcUrl); hls.attachMedia(v);
-            hls.on(Hls.Events.ERROR, async (_e, data) => {
-              if (!data || !data.fatal) return;
-              if (data.type === Hls.ErrorTypes.MEDIA_ERROR && !triedRecover) {
-                triedRecover = true;
-                try { hls.recoverMediaError(); return; } catch (_) {}
-              }
-              try { hls.destroy(); } catch (_) {}
-              if (data.type === Hls.ErrorTypes.NETWORK_ERROR && !triedProxy) {
-                triedProxy = true;
-                const w = await getWorkerUrl();
-                if (w) { start(w + '/hls?u=' + encodeURIComponent(url)); return; }
-              }
-              if (nativeOk) { tryNative(url); return; }   // algunas TVs sí lo reproducen nativo
-              onMediaError();
-            });
-          };
-          start(firstUrl);
-        });
-      }
 
       function hideSigBar() { sigBar.classList.add('hidden'); sigBar.innerHTML = ''; }
       function showViewer() { matchOverlay.classList.add('hidden'); expiredView.classList.add('hidden'); viewerView.classList.remove('hidden'); }
