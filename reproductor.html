@@ -93,9 +93,11 @@
 
     /* ── Barra de señales flotante (cambiar de señal sin salir) ──
        Ligerísima: solo pills con opacity; sin blur ni animaciones continuas. */
-    #viewers-pill { position: fixed; top: 16px; left: 16px; z-index: 50; pointer-events: none;
-      background: rgba(2,6,23,0.72); border: 1px solid rgba(163,230,53,0.45); color: #d9f99d;
-      font-weight: 800; font-size: 13px; padding: 6px 13px; border-radius: 999px; }
+    /* Contador de espectadores: esquina inferior derecha, DENTRO de #viewer-view
+       para que siga visible en pantalla completa. Discreto para no tapar el evento. */
+    #viewers-pill { position: absolute; bottom: 14px; right: 14px; z-index: 30; pointer-events: none;
+      background: rgba(2,6,23,0.55); border: 1px solid rgba(163,230,53,0.35); color: #d9f99d;
+      font-weight: 800; font-size: 12.5px; padding: 5px 12px; border-radius: 999px; opacity: 0.85; }
     #sig-bar { position: fixed; top: 16px; right: 16px; z-index: 50; display: flex; gap: 8px;
       align-items: center; flex-wrap: wrap; justify-content: flex-end; max-width: calc(100% - 120px); }
     .sig-pill { border: none; cursor: pointer; background: rgba(0,0,0,0.72); color: #fff; border-radius: 999px;
@@ -104,8 +106,19 @@
       display: inline-flex; align-items: center; gap: 5px; line-height: 1; }
     .sig-pill:hover { opacity: 0.97; }
     .sig-pill.active { background: linear-gradient(135deg,#a3e635,#65a30d); color: #0c1502; opacity: 1; }
-    .sig-pill.report { background: rgba(127,29,29,0.82); }
+    .sig-pill.report { background: rgba(180,50,30,0.9); opacity: 0.95; font-weight: 800; }
     .sig-pill.next { background: rgba(30,46,140,0.82); }
+    .sig-pill .num { background: rgba(255,255,255,0.22); border-radius: 6px; padding: 1px 6px; font-size: 12px; font-weight: 900; }
+    .sig-pill.active .num { background: rgba(12,21,2,0.25); }
+    /* En pantallas grandes (TVs) todo más grande y legible desde el sofá */
+    @media (min-width: 1000px) {
+      #sig-bar { gap: 10px; top: 20px; right: 20px; }
+      .sig-pill { padding: 12px 20px; font-size: 17px; max-width: 220px; opacity: 0.78; }
+      .sig-pill .num { font-size: 15px; padding: 1px 8px; }
+    }
+    /* Foco del control remoto: borde verde grueso imposible de no ver */
+    .sig-pill:focus, .sig-pill:focus-visible { outline: none; opacity: 1;
+      box-shadow: 0 0 0 4px #a3e635, 0 3px 14px rgba(0,0,0,0.6); transform: scale(1.06); }
 
     /* Aviso breve (toast) */
     #rp-toast { position: fixed; left: 50%; bottom: 78px; transform: translateX(-50%); z-index: 60;
@@ -133,13 +146,13 @@
       <svg id="icon-fullscreen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
     </button>
     <div id="video-container"></div>
+    <div id="viewers-pill" class="hidden">👁</div>
   </div>
 
   <!-- Overlay pre-partido / finalizado -->
   <div id="match-overlay" class="hidden"><div id="mo-content"></div></div>
 
   <!-- Barra de señales flotante (se llena solo si el partido tiene >1 señal) -->
-  <div id="viewers-pill" class="hidden">👁</div>
   <div id="sig-bar" class="hidden"></div>
 
   <!-- Aviso breve -->
@@ -267,9 +280,10 @@
         let html = '';
         if (sigs.length >= 2) {
           html += sigs.map((s, i) =>
-            `<button class="sig-pill${i === activeIdx ? ' active' : ''}" data-sig="${i}">📶 ${esc(s.name || ('Señal ' + (i + 1)))}</button>`
+            `<button class="sig-pill${i === activeIdx ? ' active' : ''}" data-sig="${i}"><span class="num">${i + 1}</span> ${esc(s.name || ('Señal ' + (i + 1)))}</button>`
           ).join('');
-          html += `<button class="sig-pill report" data-report="1">⚠️ No funciona</button>`;
+          // Botón grande para TV: prueba la SIGUIENTE señal de un toque
+          html += `<button class="sig-pill report" data-report="1">🔄 Probar otra señal</button>`;
         }
         if (nextSlug) html += `<a class="sig-pill next" href="reproductor.html?slug=${encodeURIComponent(nextSlug)}" title="Siguiente evento">⏭</a>`;
         sigBar.innerHTML = html;
@@ -277,7 +291,16 @@
         sigBar.querySelectorAll('[data-sig]').forEach(b =>
           b.addEventListener('click', () => switchSignal(Number(b.dataset.sig), true)));
         const rep = sigBar.querySelector('[data-report]');
-        if (rep) rep.addEventListener('click', () => { failedSigs.add(currentSigIdx); tryNextSignal(); });
+        if (rep) rep.addEventListener('click', rotateSignal);
+      }
+
+      // Pasar a la siguiente señal en orden circular (para el botón y las teclas de TV)
+      function rotateSignal() {
+        const sigs = window._sigs || [];
+        if (sigs.length < 2) return;
+        const base = (currentSigIdx != null ? currentSigIdx : 0);
+        const next = (base + 1) % sigs.length;
+        switchSignal(next, true);
       }
 
       // Cambiar a una señal concreta (manual = elegida por el usuario)
@@ -368,13 +391,7 @@
           v.addEventListener('error', onMediaError);   // auto-fallback si el stream cae
           wrap.appendChild(v);
           if (/\.m3u8?(\?|$)/i.test(url)) {
-            _ensureHLS(() => {
-              if (window.Hls && Hls.isSupported()) {
-                const hls = new Hls(); hls.loadSource(url); hls.attachMedia(v);
-                hls.on(Hls.Events.ERROR, (_e, data) => { if (data && data.fatal) onMediaError(); });
-              }
-              else if (v.canPlayType('application/vnd.apple.mpegurl')) { v.src = url; }
-            });
+            mountHls(v, url);
           } else { v.src = url; }
 
         } else {
@@ -384,6 +401,67 @@
       }
 
       function stopPlayer() { videoContainer.innerHTML = ''; }
+
+      // ── HLS a prueba de TVs ──────────────────────────────────────
+      // En celulares (sobre todo iPhone) el HLS nativo NO exige CORS, pero en
+      // navegadores de TV hls.js descarga el manifiesto por XHR y si el servidor
+      // del stream no envía CORS falla con "manifestLoadError". Escalera de
+      // reintentos automáticos: 1) directo → 2) por el proxy del Worker (que
+      // añade CORS) → 3) HLS nativo del navegador → 4) siguiente señal.
+      let _workerUrl;   // undefined = sin consultar · null = no configurado
+      async function getWorkerUrl() {
+        if (_workerUrl !== undefined) return _workerUrl;
+        try {
+          const snap = await getDoc(doc(db, 'config', 'importer'));
+          _workerUrl = (snap.exists() && snap.data().workerUrl) ? String(snap.data().workerUrl).replace(/\/+$/, '') : null;
+        } catch (_) { _workerUrl = null; }
+        return _workerUrl;
+      }
+      function mountHls(v, url) {
+        _ensureHLS(async () => {
+          const nativeOk = v.canPlayType('application/vnd.apple.mpegurl');
+          const tryNative = (u) => { v.src = u; v.play && v.play().catch(() => {}); };
+          if (!(window.Hls && Hls.isSupported())) {
+            if (nativeOk) tryNative(url); else onMediaError();
+            return;
+          }
+          // Contenido mixto: página https + stream http → el navegador lo
+          // bloquea siempre; si hay proxy, entrar directo por él.
+          let firstUrl = url;
+          if (location.protocol === 'https:' && /^http:\/\//i.test(url)) {
+            const w = await getWorkerUrl();
+            if (w) firstUrl = w + '/hls?u=' + encodeURIComponent(url);
+          }
+          let triedProxy = firstUrl !== url, triedRecover = false, hls = null;
+          const start = (srcUrl) => {
+            if (hls) { try { hls.destroy(); } catch (_) {} }
+            hls = new Hls({
+              // Reintentos generosos: las TVs tienen redes/CPU más lentas
+              manifestLoadingMaxRetry: 3, manifestLoadingRetryDelay: 800, manifestLoadingTimeOut: 15000,
+              levelLoadingMaxRetry: 3, levelLoadingTimeOut: 15000,
+              fragLoadingMaxRetry: 4, fragLoadingTimeOut: 25000
+            });
+            hls.loadSource(srcUrl); hls.attachMedia(v);
+            hls.on(Hls.Events.ERROR, async (_e, data) => {
+              if (!data || !data.fatal) return;
+              if (data.type === Hls.ErrorTypes.MEDIA_ERROR && !triedRecover) {
+                triedRecover = true;
+                try { hls.recoverMediaError(); return; } catch (_) {}
+              }
+              try { hls.destroy(); } catch (_) {}
+              if (data.type === Hls.ErrorTypes.NETWORK_ERROR && !triedProxy) {
+                triedProxy = true;
+                const w = await getWorkerUrl();
+                if (w) { start(w + '/hls?u=' + encodeURIComponent(url)); return; }
+              }
+              if (nativeOk) { tryNative(url); return; }   // algunas TVs sí lo reproducen nativo
+              onMediaError();
+            });
+          };
+          start(firstUrl);
+        });
+      }
+
       function hideSigBar() { sigBar.classList.add('hidden'); sigBar.innerHTML = ''; }
       function showViewer() { matchOverlay.classList.add('hidden'); expiredView.classList.add('hidden'); viewerView.classList.remove('hidden'); }
       function showMatchOverlay(html) {
@@ -591,6 +669,20 @@
         stopViewers();
       });
 
+      // Control remoto de la TV: teclas 1-9 eligen señal directa;
+      // teclas de color/canal o ← → rotan a la siguiente señal.
+      document.addEventListener('keydown', (e) => {
+        if (viewerView.classList.contains('hidden')) return;   // solo mientras se ve el evento
+        const sigs = window._sigs || [];
+        if (sigs.length < 2) return;
+        const n = Number(e.key);
+        if (n >= 1 && n <= 9 && n <= sigs.length) { e.preventDefault(); switchSignal(n - 1, true); return; }
+        // Flechas izquierda/derecha o teclas de canal +/- para rotar
+        if (['ArrowRight', 'ArrowLeft', 'ChannelUp', 'ChannelDown', 'MediaTrackNext', 'MediaTrackPrevious'].includes(e.key)) {
+          e.preventDefault(); rotateSignal();
+        }
+      });
+
       function applyMatchState(m) {
         clearCountdown();
         window._m = m;
@@ -609,6 +701,7 @@
             : (sIdx != null ? sIdx : (m.activeSignal || 0));
           if (idx < 0 || idx >= signals.length) idx = 0;
           currentSigIdx = signals.length ? idx : null;
+          if (signals.length) { try { sessionStorage.setItem('tf-sig-' + m.slug, String(idx)); } catch (_) {} }
           const sig = signals[idx] || signals[0];
           if (!sig || !sig.url) {
             hideSigBar();
@@ -623,7 +716,14 @@
           }
           showViewer();
           renderSignalBar(signals, idx);
-          if (currentSignalUrl !== sig.url) { currentSignalUrl = sig.url; mountSingle(sig.url); }
+          if (currentSignalUrl !== sig.url) {
+            currentSignalUrl = sig.url; mountSingle(sig.url);
+            // Aviso una sola vez por sesión: si no se ve, cómo cambiar de señal
+            if (signals.length >= 2 && !window._sigHintShown) {
+              window._sigHintShown = true;
+              setTimeout(() => toast('¿No se ve? Usa los botones de señal ↗ o toca 🔄 Probar otra señal'), 3500);
+            }
+          }
           trackView(m.slug, idx, m.title);   // cuenta la vista + la señal usada
           startViewers(m.slug);              // contador de espectadores en vivo
           return;
@@ -692,7 +792,16 @@
       const params = new URLSearchParams(window.location.search);
       const slug = params.get('slug');
       let sIdx = parseInt(params.get('s'));
-      if (isNaN(sIdx)) sIdx = null;   // señal elegida por el cliente (0 o 1)
+      if (isNaN(sIdx)) sIdx = null;   // señal elegida por el cliente
+      // La señal en la que te quedas SOBREVIVE a las recargas: se guarda por
+      // evento en esta pestaña (sessionStorage). Si recargas viendo la 3ª,
+      // vuelves a la 3ª. Un ?s= nuevo en el enlace tiene prioridad.
+      if (sIdx == null && slug) {
+        try {
+          const sv = parseInt(sessionStorage.getItem('tf-sig-' + slug));
+          if (!isNaN(sv)) sIdx = sv;
+        } catch (_) {}
+      }
       const s1 = params.get('s1'), s2 = params.get('s2');
       const linkId = params.get('linkId');
       const firstParamStream = (s1 && safeDecode(s1)) || (s2 && safeDecode(s2)) || null;
