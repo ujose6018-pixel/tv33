@@ -40,6 +40,54 @@ export default {
     if (request.method === 'OPTIONS') return new Response(null, { headers: cors });
     if (request.method !== 'GET') return json({ message: 'Solo GET' }, 405, cors);
 
+    // ── Proxy HLS con CORS (para navegadores de TV) ─────────────────────────
+    // Los navegadores de Smart TV bloquean streams .m3u8 cuyo servidor no envía
+    // CORS (en iPhone funcionan porque el HLS nativo no lo exige). Esta ruta
+    // reenvía el manifiesto REESCRIBIENDO cada URI para que segmentos y
+    // sub-playlists también pasen por aquí, y sirve los segmentos con CORS.
+    // El reproductor la usa SOLO como reintento automático cuando la carga
+    // directa falla, para no gastar ancho de banda del Worker sin necesidad.
+    if (url.pathname === '/hls' || url.pathname === '/hls/') {
+      const raw = url.searchParams.get('u');
+      let target;
+      try { target = new URL(raw); } catch (_) { return json({ message: 'Parámetro u inválido' }, 400, cors); }
+      if (target.protocol !== 'http:' && target.protocol !== 'https:') {
+        return json({ message: 'Solo http/https' }, 400, cors);
+      }
+      let up;
+      try {
+        up = await fetch(target.href, {
+          headers: {
+            'User-Agent': request.headers.get('User-Agent') || 'Mozilla/5.0',
+            'Referer': target.origin + '/',
+            'Origin': target.origin
+          },
+          redirect: 'follow'
+        });
+      } catch (_) { return json({ message: 'No se pudo contactar el stream' }, 502, cors); }
+      const ct = up.headers.get('content-type') || '';
+      const isManifest = /mpegurl|m3u8/i.test(ct) || /\.m3u8?(\?|$)/i.test(target.pathname);
+      if (isManifest) {
+        const text = await up.text();
+        const prox = (u) => { try { return '/hls?u=' + encodeURIComponent(new URL(u, up.url || target.href).href); } catch (_) { return u; } };
+        const rewritten = text.split('\n').map((line) => {
+          const t = line.trim();
+          if (!t) return line;
+          if (t.startsWith('#')) return line.replace(/URI="([^"]+)"/g, (_m, u) => 'URI="' + prox(u) + '"');
+          return prox(t);
+        }).join('\n');
+        return new Response(rewritten, {
+          status: up.status,
+          headers: { ...cors, 'Content-Type': 'application/vnd.apple.mpegurl', 'Cache-Control': 'no-store' }
+        });
+      }
+      // Segmentos (.ts/.m4s/llaves): pasar los bytes tal cual, con CORS
+      const h = new Headers(cors);
+      h.set('Content-Type', ct || 'application/octet-stream');
+      const len = up.headers.get('content-length'); if (len) h.set('Content-Length', len);
+      return new Response(up.body, { status: up.status, headers: h });
+    }
+
     const url = new URL(request.url);
 
     // ── 2) YouTube: buscar resumen del partido (oculta YT_KEY) ──
