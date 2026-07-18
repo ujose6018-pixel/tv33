@@ -74,16 +74,15 @@
     #field { position: relative; width: 100%; max-width: 560px; margin: 0 auto; aspect-ratio: 10/9; background: linear-gradient(#155e26, #0d3a17 70%, #0a2e12); border-radius: 16px; overflow: hidden; border: 1px solid rgba(255,255,255,0.12); user-select: none; touch-action: manipulation; }
     #field .grass { position: absolute; inset: 0; background: repeating-linear-gradient(90deg, rgba(255,255,255,0.05) 0 44px, transparent 44px 88px); }
     #field .area { position: absolute; left: 20%; width: 60%; top: 52%; height: 30%; border: 2px solid rgba(255,255,255,0.35); border-top: none; border-radius: 0 0 10px 10px; }
-    .goal-frame { position: absolute; top: 6%; left: 10%; width: 80%; height: 44%; border: 5px solid #f1f5f9; border-bottom: 3px solid rgba(255,255,255,0.5); border-radius: 5px 5px 0 0; background: repeating-linear-gradient(45deg, rgba(255,255,255,0.09) 0 2px, transparent 2px 13px), repeating-linear-gradient(-45deg, rgba(255,255,255,0.09) 0 2px, transparent 2px 13px); }
-
-    /* Zonas para elegir (2 filas × 3 columnas sobre el arco) */
-    #zones { position: absolute; top: 6%; left: 10%; width: 80%; height: 44%; display: grid; grid-template-columns: 1fr 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 4px; padding: 6px; }
-    .zone { border: 2px dashed rgba(163,230,53,0.65); background: rgba(163,230,53,0.10); border-radius: 10px; cursor: pointer; color: #d9f99d; font-size: clamp(15px, 4vw, 20px); display: flex; align-items: center; justify-content: center; transition: background .12s; }
-    .zone:hover, .zone:focus-visible { background: rgba(163,230,53,0.3); outline: none; }
+    /* Puntería libre: el arco brilla cuando te toca elegir, y un 🎯 sigue el puntero (PC) */
+    .goal-frame { position: absolute; top: 6%; left: 10%; width: 80%; height: 44%; border: 5px solid #f1f5f9; border-bottom: 3px solid rgba(255,255,255,0.5); border-radius: 5px 5px 0 0; background: repeating-linear-gradient(45deg, rgba(255,255,255,0.09) 0 2px, transparent 2px 13px), repeating-linear-gradient(-45deg, rgba(255,255,255,0.09) 0 2px, transparent 2px 13px); transition: box-shadow .2s; }
+    #field.picking { cursor: crosshair; }
     @media (prefers-reduced-motion: no-preference) {
-      #zones.pulse .zone { animation: zpulse 1.1s ease-in-out infinite; }
-      @keyframes zpulse { 0%,100% { background: rgba(163,230,53,0.08); } 50% { background: rgba(163,230,53,0.22); } }
+      #field.picking .goal-frame { animation: gglow 1.2s ease-in-out infinite; }
+      @keyframes gglow { 0%,100% { box-shadow: 0 0 0 rgba(163,230,53,0); } 50% { box-shadow: 0 0 26px rgba(163,230,53,0.55), inset 0 0 22px rgba(163,230,53,0.18); } }
     }
+    #aim { position: absolute; z-index: 6; font-size: clamp(20px, 5vw, 28px); transform: translate(-50%,-50%); pointer-events: none; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.6)); }
+    #impact { position: absolute; z-index: 6; width: 34px; height: 34px; border: 3px solid #a3e635; border-radius: 50%; transform: translate(-50%,-50%); pointer-events: none; box-shadow: 0 0 14px rgba(163,230,53,0.8); }
 
     /* Personajes */
     .char { position: absolute; display: flex; flex-direction: column; align-items: center; line-height: 1; filter: drop-shadow(0 3px 4px rgba(0,0,0,0.55)); transition: left .45s ease, top .45s ease, transform .45s ease; z-index: 4; }
@@ -146,7 +145,7 @@
     <div class="picker">
       <button class="game-card" data-game="duel">
         <div class="ico">⚽🧤</div><div class="nm">Duelo de Penales</div>
-        <div class="ds">Tú pateas Y tú atajas: toca la zona del arco donde quieres tirar… y luego a dónde lanzarte. 5 rondas contra la máquina.</div>
+        <div class="ds">Tú pateas Y tú atajas: toca el punto EXACTO del arco donde quieres tirar… y luego a dónde te lanzas. 5 rondas contra la máquina.</div>
         <div class="bst" id="best-duel"></div>
         <span class="play">▶️ Jugar</span>
       </button>
@@ -178,12 +177,13 @@
         <div class="rnd">RONDA<br><b id="duel-round" style="font-size:20px;color:#fff;">1</b>/5</div>
         <div class="side cpu"><span class="who">MÁQUINA</span><span class="pts" id="pts-cpu">0</span><div class="ticks" id="ticks-cpu"></div></div>
       </div>
-      <div id="banner"><span class="tag">🎯 TU TURNO: toca la zona donde quieres PATEAR</span></div>
+      <div id="banner"><span class="tag">🎯 TU TURNO: toca el punto del arco donde quieres PATEAR</span></div>
       <div id="field">
         <div class="grass"></div>
         <div class="area"></div>
-        <div class="goal-frame"></div>
-        <div id="zones" class="pulse"></div>
+        <div class="goal-frame" id="goal-frame"></div>
+        <div id="aim" class="hidden">🎯</div>
+        <div id="impact" class="hidden"></div>
         <div class="char cpu idle" id="gk"><span class="face">😼</span><span class="body">🧤</span><span class="tag">PORTERO</span></div>
         <div id="ball">⚽</div>
         <div class="char you idle" id="striker"><span class="face">😤</span><span class="body">🏃</span><span class="tag">TÚ</span></div>
@@ -293,28 +293,32 @@
     }
 
     /* ═════════ 1) DUELO DE PENALES ═════════
-       Cada ronda tiene 2 momentos: TÚ PATEAS (tocas la zona del arco)
-       y TÚ ATAJAS (tocas la zona a la que te lanzas). 5 rondas; empate → muerte súbita. */
-    const ZONES = [
-      { col: 0, row: 0, x: 24, y: 15, ico: '↖️' }, { col: 1, row: 0, x: 50, y: 15, ico: '⬆️' }, { col: 2, row: 0, x: 76, y: 15, ico: '↗️' },
-      { col: 0, row: 1, x: 24, y: 38, ico: '↙️' }, { col: 1, row: 1, x: 50, y: 38, ico: '⬇️' }, { col: 2, row: 1, x: 76, y: 38, ico: '↘️' }
-    ];
-    const gk = $('gk'), striker = $('striker'), ball = $('ball'), zonesEl = $('zones'), banner = $('banner');
+       Puntería LIBRE: tocas (o haces clic en) cualquier punto del arco para
+       dirigir el tiro, y también para elegir a dónde te lanzas al atajar.
+       El resultado depende de la DISTANCIA entre el balón y el portero. */
+    const GOAL = { x1: 10, x2: 90, y1: 6, y2: 50 };   // rectángulo del arco (en % del campo)
+    const gk = $('gk'), striker = $('striker'), ball = $('ball'), banner = $('banner');
+    const fieldEl = $('field'), aimEl = $('aim'), impactEl = $('impact');
     let duel = null;
 
-    function zoneButtons() {
-      zonesEl.innerHTML = '';
-      ZONES.forEach((z, i) => {
-        const b = document.createElement('button');
-        b.className = 'zone'; b.textContent = z.ico; b.setAttribute('aria-label', 'Zona ' + (i + 1));
-        b.addEventListener('click', () => duelPick(i));
-        zonesEl.appendChild(b);
-      });
-    }
     function setChar(el, face, body) { el.querySelector('.face').textContent = face; el.querySelector('.body').textContent = body; }
     function setTag(el, t) { el.querySelector('.tag').textContent = t; }
-    function showZones(on) { zonesEl.style.display = on ? 'grid' : 'none'; }
     function setBanner(html, rojo) { banner.innerHTML = `<span class="tag${rojo ? ' rojo' : ''}">${html}</span>`; }
+    function setPicking(on) {
+      fieldEl.classList.toggle('picking', on);
+      if (!on) aimEl.classList.add('hidden');
+    }
+    function fieldPoint(ev) {
+      const r = fieldEl.getBoundingClientRect();
+      return { x: (ev.clientX - r.left) / r.width * 100, y: (ev.clientY - r.top) / r.height * 100 };
+    }
+    const inGoal = (p) => p.x >= GOAL.x1 && p.x <= GOAL.x2 && p.y >= GOAL.y1 && p.y <= GOAL.y2;
+    function flashImpact(p) {
+      impactEl.style.left = p.x + '%'; impactEl.style.top = p.y + '%';
+      impactEl.classList.remove('hidden');
+      setTimeout(() => impactEl.classList.add('hidden'), 700);
+    }
+
     function resetPositions(youShoot) {
       ball.style.transition = 'none';
       ball.style.top = '66%'; ball.style.left = '50%'; ball.style.transform = 'translate(-50%,0)';
@@ -322,16 +326,13 @@
       striker.style.top = '68%'; striker.style.left = '50%'; striker.style.transform = 'translateX(-50%)';
       gk.classList.add('idle'); striker.classList.add('idle');
       if (youShoot) {
-        // Tú abajo con el balón, la máquina en el arco
         setChar(striker, '😤', '🏃'); setTag(striker, 'TÚ'); striker.className = 'char you idle';
         setChar(gk, '😼', '🧤'); setTag(gk, 'PORTERO'); gk.className = 'char cpu idle';
       } else {
-        // Tú eres el portero, la máquina patea
         setChar(gk, '😎', '🧤'); setTag(gk, 'TÚ'); gk.className = 'char you idle';
         setChar(striker, '🤖', '🏃'); setTag(striker, 'RIVAL'); striker.className = 'char cpu idle';
       }
-      striker.style.top = '68%';
-      void ball.offsetWidth; // aplica el reset antes de animar
+      void ball.offsetWidth;
       ball.style.transition = '';
     }
     function duelTicks() {
@@ -345,62 +346,84 @@
       $('duel-round').textContent = '1';
       $('duel-msg').textContent = ''; $('duel-msg').className = 'msg info';
       $('duel-end').classList.add('hidden');
-      zoneButtons(); duelTicks();
+      duelTicks();
       resetPositions(true);
-      showZones(true); zonesEl.classList.add('pulse');
-      setBanner('🎯 TU TURNO: toca la zona donde quieres PATEAR');
+      setPicking(true);
+      setBanner('🎯 TU TURNO: toca el punto del arco donde quieres PATEAR');
     }
     function duelStop() { if (duel) duel.over = true; }
 
-    async function duelPick(i) {
+    // Puntero moviéndose sobre el campo (PC): la mirilla sigue al mouse dentro del arco
+    fieldEl.addEventListener('pointermove', (ev) => {
+      if (!duel || duel.busy || duel.over || ev.pointerType === 'touch') return;
+      const p = fieldPoint(ev);
+      if (inGoal(p)) {
+        aimEl.style.left = p.x + '%'; aimEl.style.top = p.y + '%';
+        aimEl.classList.remove('hidden');
+      } else aimEl.classList.add('hidden');
+    });
+
+    fieldEl.addEventListener('pointerdown', async (ev) => {
       if (!duel || duel.busy || duel.over) return;
+      const p = fieldPoint(ev);
+      if (!inGoal(p)) {
+        // Toque fuera del arco: no gasta el tiro, solo avisa
+        const msg = $('duel-msg');
+        msg.textContent = '👆 Toca DENTRO del arco'; msg.className = 'msg info';
+        return;
+      }
       duel.busy = true;
-      showZones(false); zonesEl.classList.remove('pulse');
-      const z = ZONES[i];
-      if (duel.phase === 'shoot') await playShot(z, true);
-      else await playShot(z, false);
+      setPicking(false);
+      flashImpact(p);
+      await playShot(p, duel.phase === 'shoot');
       if (duel.over) return;
       duelNextPhase();
-    }
+    });
 
-    // youShoot=true: z = a dónde pateas · youShoot=false: z = a dónde te lanzas
-    async function playShot(z, youShoot) {
-      const shooter = striker, keeper = gk;
-      shooter.classList.remove('idle'); keeper.classList.remove('idle');
-      const shotZ  = youShoot ? z : weightedCpuShot();   // a dónde va el balón
-      const diveZ  = youShoot ? cpuDive() : z;           // a dónde se lanza el portero
+    // youShoot=true: p = punto exacto del tiro · youShoot=false: p = punto a donde te lanzas
+    async function playShot(p, youShoot) {
+      striker.classList.remove('idle'); gk.classList.remove('idle');
+      const shot = youShoot ? p : cpuShotPoint();   // dónde va el balón
+      const dive = youShoot ? cpuDivePoint() : p;   // dónde se lanza el portero
+      // Riesgo de palo/afuera: tiros pegados al marco (a menos de 4% del borde)
+      const nearEdge = Math.min(shot.x - GOAL.x1, GOAL.x2 - shot.x, shot.y - GOAL.y1) < 4;
+      const cpuAiming = !youShoot;
+      const missed = nearEdge && Math.random() < (cpuAiming ? 0.10 : 0.14);
       // Carrera del pateador hacia el balón
-      shooter.style.top = '58%';
+      striker.style.top = '58%';
       await sleep(300);
-      // Balón vuela + portero se lanza
-      const missed = shotZ.row === 0 && shotZ.col !== 1 && Math.random() < 0.10; // esquinas altas: riesgo de tiro desviado
-      const bx = missed ? (shotZ.col === 0 ? 4 : 96) : shotZ.x;
-      const by = missed ? 4 : shotZ.y;
+      // Balón vuela al punto exacto + portero se lanza al punto exacto
+      const bx = missed ? (shot.x < 50 ? Math.max(2, shot.x - 10) : Math.min(98, shot.x + 10)) : shot.x;
+      const by = missed ? Math.max(2, shot.y - 8) : shot.y;
       ball.style.left = bx + '%'; ball.style.top = by + '%'; ball.style.transform = 'translate(-50%,-50%) rotate(360deg)';
-      keeper.style.left = diveZ.x + '%';
-      keeper.style.top = (diveZ.row === 0 ? 14 : 30) + '%';
-      keeper.style.transform = `translateX(-50%) rotate(${diveZ.col === 0 ? -35 : diveZ.col === 2 ? 35 : 0}deg)`;
+      gk.style.left = dive.x + '%';
+      gk.style.top = Math.max(GOAL.y1 + 6, Math.min(GOAL.y2 - 8, dive.y)) + '%';
+      gk.style.transform = `translateX(-50%) rotate(${dive.x < 40 ? -35 : dive.x > 60 ? 35 : 0}deg)`;
       await sleep(420);
-      // Resultado
+      // Resultado por DISTANCIA entre el balón y las manos del portero
       let saved = false;
       if (!missed) {
-        if (diveZ.col === shotZ.col && diveZ.row === shotZ.row) saved = Math.random() < 0.85;
-        else if (diveZ.col === shotZ.col) saved = Math.random() < 0.35;
+        const dx = (shot.x - dive.x) / 40;          // 40 = medio ancho del arco
+        const dy = (shot.y - dive.y) / 30;          // alcance vertical algo menor
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 0.42) saved = Math.random() < 0.88;       // le cayó en las manos
+        else if (dist < 0.75) saved = Math.random() < 0.40;  // la alcanza estirándose
+        // más lejos: imposible
       }
       const gol = !missed && !saved;
       const msg = $('duel-msg');
       if (youShoot) {
         duel.youShots.push(gol);
-        if (gol) { duel.you++; setBanner('⚽ ¡GOOOL TUYO!'); setChar(shooter, '🤩', '🕺'); setChar(keeper, '😭', '🧤'); }
-        else if (missed) { setBanner('😱 ¡Lo mandaste afuera!', true); setChar(shooter, '🤦', '🏃'); setChar(keeper, '😹', '🧤'); }
-        else { setBanner('🧤 ¡Te lo atajó la máquina!', true); setChar(shooter, '😩', '🏃'); setChar(keeper, '😎', '💪'); }
-        msg.textContent = gol ? '¡Bien colocado!' : missed ? 'Las esquinas altas son arriesgadas…' : 'Adivinó tu zona.';
+        if (gol) { duel.you++; setBanner('⚽ ¡GOOOL TUYO!'); setChar(striker, '🤩', '🕺'); setChar(gk, '😭', '🧤'); }
+        else if (missed) { setBanner('😱 ¡Pegó en el palo y salió!', true); setChar(striker, '🤦', '🏃'); setChar(gk, '😹', '🧤'); }
+        else { setBanner('🧤 ¡Te lo atajó la máquina!', true); setChar(striker, '😩', '🏃'); setChar(gk, '😎', '💪'); }
+        msg.textContent = gol ? '¡Qué colocación!' : missed ? 'Muy pegado al palo…' : 'Le pegaste muy cerca del portero.';
       } else {
         duel.cpuShots.push(gol);
-        if (gol) { setBanner('😖 Gol de la máquina…', true); setChar(keeper, '😭', '🧤'); setChar(shooter, '🤖', '🕺'); duel.cpu++; }
-        else if (missed) { setBanner('🎉 ¡El rival tiró afuera!'); setChar(keeper, '😂', '🧤'); setChar(shooter, '🤖', '🤦'); }
-        else { setBanner('🧤 ¡ATAJADÓN TUYO!'); setChar(keeper, '😎', '💪'); setChar(shooter, '🤖', '😩'); }
-        msg.textContent = gol ? 'Se lanzó al otro lado.' : missed ? '¡Qué suerte!' : '¡Leíste perfecto el tiro!';
+        if (gol) { setBanner('😖 Gol de la máquina…', true); setChar(gk, '😭', '🧤'); setChar(striker, '🤖', '🕺'); duel.cpu++; }
+        else if (missed) { setBanner('🎉 ¡El rival la mandó afuera!'); setChar(gk, '😂', '🧤'); setChar(striker, '🤖', '🤦'); }
+        else { setBanner('🧤 ¡ATAJADÓN TUYO!'); setChar(gk, '😎', '💪'); setChar(striker, '🤖', '😩'); }
+        msg.textContent = gol ? 'Te lanzaste lejos del balón.' : missed ? '¡Qué suerte!' : '¡Te lanzaste justo al punto!';
       }
       msg.className = 'msg ' + ((youShoot && gol) || (!youShoot && !gol) ? 'gol' : 'mal');
       $('pts-you').textContent = duel.you; $('pts-cpu').textContent = duel.cpu;
@@ -408,24 +431,32 @@
       await sleep(1400);
     }
 
-    function cpuDive() { return ZONES[rnd(6)]; }
-    function weightedCpuShot() {
-      // La máquina prefiere las esquinas
-      const w = [22, 6, 22, 16, 18, 16];
-      let t = rnd(100);
-      for (let i = 0; i < 6; i++) { if (t < w[i]) return ZONES[i]; t -= w[i]; }
-      return ZONES[4];
+    // La máquina al atajar: elige un costado y una altura al azar (con jitter)
+    function cpuDivePoint() {
+      const side = [25, 50, 75][rnd(3)];
+      return { x: side + (Math.random() * 16 - 8), y: 14 + Math.random() * 30 };
+    }
+    // La máquina al patear: prefiere las esquinas
+    function cpuShotPoint() {
+      const corners = [
+        { x: 17, y: 13 }, { x: 83, y: 13 },   // esquinas altas
+        { x: 16, y: 43 }, { x: 84, y: 43 },   // esquinas bajas
+        { x: 50, y: 44 }, { x: 35, y: 25 }, { x: 65, y: 25 }
+      ];
+      const w = [20, 20, 17, 17, 12, 7, 7];
+      let t = rnd(100), c = corners[4];
+      for (let i = 0; i < corners.length; i++) { if (t < w[i]) { c = corners[i]; break; } t -= w[i]; }
+      return { x: c.x + (Math.random() * 6 - 3), y: c.y + (Math.random() * 6 - 3) };
     }
 
     function duelNextPhase() {
       if (duel.phase === 'shoot') {
         duel.phase = 'save';
         resetPositions(false);
-        showZones(true); zonesEl.classList.add('pulse');
-        setBanner('🧤 ¡AHORA ATAJA! Toca la zona a la que te lanzas', true);
+        setPicking(true);
+        setBanner('🧤 ¡AHORA ATAJA! Toca el punto del arco a donde te lanzas', true);
         $('duel-msg').textContent = '';
       } else {
-        // Ronda completa
         const doneRegular = duel.round >= 5;
         const decidedSudden = duel.sudden && duel.you !== duel.cpu;
         if ((doneRegular && !duel.sudden && duel.you !== duel.cpu) || decidedSudden) return duelEnd();
@@ -437,9 +468,8 @@
         $('duel-round').textContent = duel.sudden ? '🔥' : duel.round;
         duel.phase = 'shoot';
         resetPositions(true);
-        showZones(true); zonesEl.classList.add('pulse');
-        if (!duel.sudden) setBanner('🎯 TU TURNO: toca la zona donde quieres PATEAR');
-        else setBanner('🔥 Muerte súbita: ¡PATEA!');
+        setPicking(true);
+        setBanner(duel.sudden ? '🔥 Muerte súbita: ¡PATEA!' : '🎯 TU TURNO: toca el punto del arco donde quieres PATEAR');
         $('duel-msg').textContent = '';
       }
       duel.busy = false;
@@ -447,26 +477,17 @@
 
     function duelEnd() {
       duel.over = true;
-      showZones(false);
+      setPicking(false);
       const win = duel.you > duel.cpu;
       const t = $('duel-end-title');
       t.textContent = win ? `🏆 ¡GANASTE ${duel.you} - ${duel.cpu}!` : `😭 Perdiste ${duel.you} - ${duel.cpu}`;
       t.style.color = win ? '#a3e635' : '#ff5964';
       setBanner(win ? '🎉 ¡Campeón de la tanda!' : '💪 La próxima cae', !win);
-      if (win) {
-        const wins = Number(store.get('duel') || 0) + 1;
-        store.set('duel', String(wins));
-      }
+      if (win) store.set('duel', String(Number(store.get('duel') || 0) + 1));
       refreshBests();
       $('duel-end').classList.remove('hidden');
     }
     $('duel-again').addEventListener('click', duelStart);
-    // Teclado (PC): 1-6 eligen zona
-    document.addEventListener('keydown', (e) => {
-      if (currentGame !== 'duel') return;
-      const n = Number(e.key);
-      if (n >= 1 && n <= 6) duelPick(n - 1);
-    });
 
     /* ═════════ 2) CARRERA RELÁMPAGO ═════════ */
     const META = 82;           // % del carril donde está la meta

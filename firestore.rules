@@ -27,6 +27,16 @@ service cloud.firestore {
       allow write: if true;
     }
 
+    // Presencia de espectadores (contador "👁 viendo" del reproductor).
+    // Cada espectador escribe SOLO su doc con un timestamp; el conteo se hace
+    // con consultas de agregación count(). Escritura abierta pero con datos
+    // mínimos (solo el campo 't'); impacto bajo, igual que /public/stats.
+    match /presence/{slug}/v/{vid} {
+      allow read: if true;
+      allow create, update: if request.resource.data.keys().hasOnly(['t']);
+      allow delete: if true;
+    }
+
     // Partidos: lectura pública (respaldo del cliente). Escritura solo el panel.
     match /matches/{id} {
       allow read: if true;

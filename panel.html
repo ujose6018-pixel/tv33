@@ -992,7 +992,16 @@
             if (m.status !== 'finished') continue;
             const t = m.finishedAt?.seconds ? m.finishedAt.seconds * 1000
               : (m.updatedAt?.seconds ? m.updatedAt.seconds * 1000 : null);
-            if (t != null && t < cutoff) await deleteDoc(doc(db, 'matches', d.id));
+            if (t != null && t < cutoff) {
+              await deleteDoc(doc(db, 'matches', d.id));
+              // Limpieza de la presencia de espectadores del evento borrado
+              if (m.slug) {
+                try {
+                  const pv = await getDocs(collection(db, 'presence', m.slug, 'v'));
+                  for (const p of pv.docs) await deleteDoc(p.ref);
+                } catch (_) { /* mejor esfuerzo */ }
+              }
+            }
           }
         } catch (e) { console.error('purgeOldFinished', e); }
       }

@@ -93,6 +93,9 @@
 
     /* ── Barra de señales flotante (cambiar de señal sin salir) ──
        Ligerísima: solo pills con opacity; sin blur ni animaciones continuas. */
+    #viewers-pill { position: fixed; top: 16px; left: 16px; z-index: 50; pointer-events: none;
+      background: rgba(2,6,23,0.72); border: 1px solid rgba(163,230,53,0.45); color: #d9f99d;
+      font-weight: 800; font-size: 13px; padding: 6px 13px; border-radius: 999px; }
     #sig-bar { position: fixed; top: 16px; right: 16px; z-index: 50; display: flex; gap: 8px;
       align-items: center; flex-wrap: wrap; justify-content: flex-end; max-width: calc(100% - 120px); }
     .sig-pill { border: none; cursor: pointer; background: rgba(0,0,0,0.72); color: #fff; border-radius: 999px;
@@ -136,6 +139,7 @@
   <div id="match-overlay" class="hidden"><div id="mo-content"></div></div>
 
   <!-- Barra de señales flotante (se llena solo si el partido tiene >1 señal) -->
+  <div id="viewers-pill" class="hidden">👁</div>
   <div id="sig-bar" class="hidden"></div>
 
   <!-- Aviso breve -->
@@ -152,7 +156,7 @@
   </div>
 
   <script type="module">
-    import { getFirestore, collection, getDocs, getDoc, doc, onSnapshot, setDoc, increment } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
+    import { getFirestore, collection, getDocs, getDoc, doc, onSnapshot, setDoc, deleteDoc, increment, query, where, getCountFromServer, serverTimestamp, Timestamp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
 
     document.addEventListener('DOMContentLoaded', async () => {
       const db = getFirestore();
@@ -394,6 +398,7 @@
       function goHome() {
         if (redirecting) return;
         redirecting = true;
+        try { stopViewers(); } catch (_) {}
         try { history.replaceState(null, '', getBaseDir()); } catch (_) {}
         window.location.replace(getBaseDir());
       }
@@ -530,13 +535,69 @@
         return `<div style="display:flex;align-items:center;justify-content:center;gap:16px;">${badge(m.home, m.homeLogo)}<span style="font-size:22px;font-weight:900;color:#64748b;">VS</span>${badge(m.away, m.awayLogo)}</div>`;
       }
 
+      // ── Espectadores en vivo (ultraliviano para TVs) ─────────────
+      // Sin listeners en tiempo real: cada espectador escribe un "latido"
+      // (1 doc mínimo) cada 60 s y consulta el TOTAL con una agregación
+      // count() cada 60 s. Total: ~2 peticiones pequeñas por minuto.
+      const VIEW_HB_MS = 60000;          // latido cada 60 s
+      const VIEW_WINDOW_MS = 150000;     // se cuenta a quien latió en los últimos 2.5 min
+      let viewHbT = null, viewCountT = null, viewSlugNow = null, viewLive = false, viewIdCache = null;
+      function viewerId() {
+        if (viewIdCache) return viewIdCache;
+        try {
+          viewIdCache = sessionStorage.getItem('tf-vid');
+          if (!viewIdCache) { viewIdCache = Math.random().toString(36).slice(2, 10); sessionStorage.setItem('tf-vid', viewIdCache); }
+        } catch (_) { viewIdCache = Math.random().toString(36).slice(2, 10); }
+        return viewIdCache;
+      }
+      function viewBeat() {
+        if (!viewSlugNow) return;
+        setDoc(doc(db, 'presence', viewSlugNow, 'v', viewerId()), { t: serverTimestamp() }).catch(() => {});
+      }
+      async function viewCount() {
+        if (!viewSlugNow) return;
+        try {
+          const cutoff = Timestamp.fromMillis(Date.now() - VIEW_WINDOW_MS);
+          const snap = await getCountFromServer(query(collection(db, 'presence', viewSlugNow, 'v'), where('t', '>', cutoff)));
+          const n = snap.data().count || 0;
+          const pill = $('viewers-pill');
+          if (n >= 1) { pill.textContent = '👁 ' + n + ' viendo'; pill.classList.remove('hidden'); }
+          else pill.classList.add('hidden');
+        } catch (_) { /* si falla, simplemente no se muestra */ }
+      }
+      function startViewers(slug) {
+        if (viewHbT && viewSlugNow === slug) return;
+        stopViewers();
+        viewSlugNow = slug; viewLive = true;
+        viewBeat();
+        setTimeout(viewCount, 2500);
+        viewHbT = setInterval(viewBeat, VIEW_HB_MS);
+        viewCountT = setInterval(viewCount, VIEW_HB_MS);
+      }
+      function stopViewers(keepSlug) {
+        clearInterval(viewHbT); clearInterval(viewCountT);
+        viewHbT = viewCountT = null;
+        if (!keepSlug) { viewSlugNow = null; viewLive = false; }
+        const pill = $('viewers-pill'); if (pill) pill.classList.add('hidden');
+      }
+      // Pestaña oculta / TV en standby: pausa todo. Al volver, se reanuda.
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) stopViewers(true);
+        else if (viewSlugNow && viewLive) { const sl = viewSlugNow; viewSlugNow = null; startViewers(sl); }
+      });
+      // Al salir: intento de borrar mi latido (si no llega, el filtro por tiempo lo descarta solo)
+      window.addEventListener('pagehide', () => {
+        if (viewSlugNow) { try { deleteDoc(doc(db, 'presence', viewSlugNow, 'v', viewerId())); } catch (_) {} }
+        stopViewers();
+      });
+
       function applyMatchState(m) {
         clearCountdown();
         window._m = m;
         document.title = (m.title || 'Evento') + ' · En Vivo';
 
         // ¿Partido finalizado? → despedida
-        if (m.status === 'finished') { showFinishedScreen(m); return; }
+        if (m.status === 'finished') { stopViewers(); showFinishedScreen(m); return; }
 
         // ¿Toca reproducir? (admin en vivo, o faltan <= AUTO_PLAY_MIN min)
         if (shouldPlay(m)) {
@@ -564,9 +625,11 @@
           renderSignalBar(signals, idx);
           if (currentSignalUrl !== sig.url) { currentSignalUrl = sig.url; mountSingle(sig.url); }
           trackView(m.slug, idx, m.title);   // cuenta la vista + la señal usada
+          startViewers(m.slug);              // contador de espectadores en vivo
           return;
         }
 
+        stopViewers();
         // Próximamente → cuenta regresiva y auto-arranque
         const timeStr = koMillis(m) ? timeLabel(m) : 'Por confirmar';
         showMatchOverlay(`
