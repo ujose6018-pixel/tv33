@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TOP FUT · Fútbol en Vivo</title>
+  <title>TOP FUT · Deportes en Vivo</title>
   <link rel="icon" href="icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icon.svg">
   <link rel="manifest" href="manifest.json">
@@ -86,6 +86,9 @@
     .hero-inner img { width: 74px; height: 74px; object-fit: contain; border-radius: 16px; box-shadow: 0 6px 20px rgba(0,0,0,0.4); }
     .hero h2 { margin: 0; font-size: 26px; font-weight: 900; }
     .hero p { margin: 4px 0 0; color: #bcc7f7; font-weight: 600; }
+    .hero-live { flex-shrink: 0; display: inline-flex; align-items: center; gap: 7px; background: rgba(255,59,70,0.16); border: 1px solid rgba(255,89,100,0.5); color: #ffb3b8; font-weight: 800; font-size: 14px; padding: 8px 16px; border-radius: 999px; }
+    .hl-dot { width: 9px; height: 9px; border-radius: 50%; background: #ff3b46; animation: blink 1.1s infinite; }
+    @media (max-width: 640px) { .hero-live { font-size: 12.5px; padding: 6px 12px; } }
 
     /* ── Sección ── */
     .section { max-width: 1200px; margin: 26px auto 0; padding: 0 18px; }
@@ -114,10 +117,11 @@
     @media (prefers-reduced-motion: reduce) { .skel-card > div { animation: none; } }
 
     /* ── Tarjeta de evento ── */
-    .event-card { position: relative; width: 100%; max-width: 340px; transition: transform .2s; }
-    .event-card:hover { transform: translateY(-4px); }
+    .event-card { position: relative; width: 100%; max-width: 340px; transition: transform .2s; border-radius: 16px; box-shadow: 0 6px 18px rgba(0,0,0,0.28); }
+    .event-card:hover { transform: translateY(-4px); box-shadow: 0 14px 34px rgba(0,0,0,0.4); }
     .event-card.locked { opacity: 0.72; }
     .event-card.locked:hover { transform: none; }
+    .event-card.is-live { box-shadow: 0 0 0 2px rgba(255,59,70,0.55), 0 8px 26px rgba(255,59,70,0.22); }
     .event-top {
       position: relative; border-radius: 16px 16px 0 0; padding: 16px 14px 18px; overflow: hidden;
       background-color: #141a12;
@@ -281,9 +285,12 @@
   <div class="hero">
     <div class="hero-inner">
       <img src="icon.svg" alt="">
-      <div>
+      <div style="flex:1;min-width:0;">
         <h2>TOP <span style="color:#a3e635;">FUT</span> ⚽</h2>
         <p>Streaming en vivo: fútbol, UFC, lucha libre y más</p>
+      </div>
+      <div id="hero-live" class="hero-live hidden">
+        <span class="hl-dot"></span><span id="hero-live-n">0</span> en vivo
       </div>
     </div>
   </div>
@@ -499,7 +506,7 @@
           actions = `<div class="event-actions"><button class="sig-btn" onclick="goMatch('${key}',0)">▶️ Ver ahora</button></div>`;
         }
         return `
-          <div class="event-card ${clickable ? '' : 'locked'}">
+          <div class="event-card ${clickable ? '' : 'locked'}${phase === 'live' ? ' is-live' : ''}">
             <button class="card-share" title="Compartir" aria-label="Compartir" onclick="shareMatch('${key}')">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>
             </button>
@@ -545,6 +552,14 @@
 
       function renderGrid() {
         renderSportChips();
+        // Contador de eventos en vivo (badge del hero)
+        const liveCount = allMatches.filter(m => computePhase(m) === 'live').length;
+        const heroLive = document.getElementById('hero-live');
+        if (heroLive) {
+          heroLive.classList.toggle('hidden', liveCount === 0);
+          const n = document.getElementById('hero-live-n');
+          if (n) n.textContent = liveCount;
+        }
         let list = allMatches.filter(passesSearch);
         if (sportFilter !== 'all') list = list.filter(m => sportOf(m) === sportFilter);
         const isFinished = currentFilter === 'finished';

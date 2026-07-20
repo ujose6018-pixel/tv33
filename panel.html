@@ -174,8 +174,25 @@
                   <p class="text-xs text-slate-500">Con proxy (football-data.org) trae rondas/jornadas <b>completas</b> del Mundial y ligas top. Sin proxy usa TheSportsDB. Guía: <span class="text-slate-400 font-mono">proxy/README.md</span></p>
                 </div>
 
-                <!-- Liga (lista curada por ID — el buscador por nombre del plan gratis
-                     de TheSportsDB quedó capado a 5 ligas, así que elegimos por ID) -->
+                <!-- ⭐ Equipos favoritos: importa sus próximos partidos con un clic -->
+                <div class="bg-gradient-to-r from-amber-900/40 to-yellow-900/30 border border-amber-500/40 rounded-2xl p-4 space-y-3">
+                  <div class="flex items-center justify-between gap-2 flex-wrap">
+                    <label class="text-sm font-bold text-amber-200">⭐ Equipos favoritos</label>
+                    <span class="text-xs text-amber-100/60">Guarda tus equipos y trae sus partidos al instante</span>
+                  </div>
+                  <div class="flex flex-col sm:flex-row gap-2">
+                    <input id="fav-search" type="text" placeholder="Escribe un equipo… ej: Real Madrid, Barcelona, Honduras" class="flex-1 bg-slate-900/60 border border-slate-700 rounded-xl px-4 py-3 text-white text-sm placeholder-slate-500 focus:outline-none focus:border-amber-500">
+                    <button id="btn-fav-add" class="px-4 py-3 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-xl text-sm whitespace-nowrap">⭐ Guardar equipo</button>
+                  </div>
+                  <div id="fav-search-results" class="hidden flex-wrap gap-2"></div>
+                  <div id="fav-chips" class="flex flex-wrap gap-2"></div>
+                  <div class="flex flex-col sm:flex-row gap-2">
+                    <button id="btn-fav-import" class="flex-1 bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-500 hover:to-yellow-500 text-white font-black py-3 px-6 rounded-xl shadow-lg">🔎 Buscar partidos de mis favoritos</button>
+                  </div>
+                  <p id="fav-empty-hint" class="text-xs text-amber-100/50">Aún no tienes equipos guardados. Búscalos arriba y tócalos para guardarlos.</p>
+                </div>
+
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label class="block text-sm font-bold text-slate-300 mb-2">🏆 Liga / competición</label>
@@ -196,23 +213,23 @@
                     <input id="season-input" type="text" placeholder="Ej: 2026 · 2026-2027" class="w-full bg-slate-800/60 border border-slate-700 rounded-2xl px-5 py-4 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500">
                   </div>
                   <div>
-                    <label class="block text-sm font-bold text-slate-300 mb-2">🎯 Ronda / Jornada <span class="text-slate-500 font-normal">(opcional)</span></label>
-                    <select id="round-select" class="w-full bg-slate-800/60 border border-slate-700 rounded-2xl px-5 py-4 text-white focus:outline-none focus:border-indigo-500 cursor-pointer">
-                      <option value="">-- Toda la temporada --</option>
-                    </select>
+                    <label class="block text-sm font-bold text-slate-300 mb-2">🔢 Jornada de liga <span class="text-slate-500 font-normal">(La Liga, Liga MX, Premier…)</span></label>
+                    <input id="round-input" type="text" inputmode="numeric" placeholder="Ej: 1 → trae TODOS los partidos de la jornada 1" class="w-full bg-slate-800/60 border border-slate-700 rounded-2xl px-5 py-4 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500">
                   </div>
                 </div>
                 <div>
-                  <label class="block text-sm font-bold text-slate-300 mb-2">🔢 O nº de jornada/ronda manual <span class="text-slate-500 font-normal">(ligas — tiene prioridad)</span></label>
-                  <input id="round-input" type="text" inputmode="numeric" placeholder="Ej: 10 → jornada 10 de la liga" class="w-full bg-slate-800/60 border border-slate-700 rounded-2xl px-5 py-4 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500">
+                  <label class="block text-sm font-bold text-slate-300 mb-2">🏆 O fase de copa/torneo <span class="text-slate-500 font-normal">(Mundial, Champions — deja la jornada vacía)</span></label>
+                  <select id="round-select" class="w-full bg-slate-800/60 border border-slate-700 rounded-2xl px-5 py-4 text-white focus:outline-none focus:border-indigo-500 cursor-pointer">
+                    <option value="">-- Toda la temporada / competición --</option>
+                  </select>
                 </div>
 
                 <!-- Botones de búsqueda -->
                 <div class="flex flex-col sm:flex-row gap-3">
                   <button id="btn-search-next" class="flex-1 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black py-4 px-6 rounded-2xl shadow-lg">⚡ Traer próximos partidos</button>
-                  <button id="btn-search-matches" class="flex-1 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-bold py-4 px-6 rounded-2xl shadow-lg">🎯 Buscar ronda / temporada</button>
+                  <button id="btn-search-matches" class="flex-1 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-bold py-4 px-6 rounded-2xl shadow-lg">🎯 Buscar ronda / temporada completa</button>
                 </div>
-                <p class="text-xs text-slate-400 -mt-2">💡 <b>⚡ Próximos</b> = los siguientes ya calendarizados. <b>🎯 Ronda/Jornada</b> = elige una fase (octavos, cuartos, semis…) o escribe el nº de jornada de una liga para traer TODOS sus partidos, aunque sean de días futuros. La cobertura del plan gratis varía.</p>
+                <p class="text-xs text-slate-400 -mt-2">💡 <b>⚡ Próximos</b> = los siguientes ya calendarizados. Para <b>ligas</b> (La Liga, Liga MX, Premier…) escribe el <b>nº de jornada</b> y trae TODOS los partidos de esa jornada para que elijas cuáles subir. Para <b>copas</b> (Mundial, Champions) usa la fase, o deja todo vacío para la competición completa. La cobertura del plan gratis varía; con proxy salen completos.</p>
 
                 <!-- Loading -->
                 <div id="import-loading" class="hidden text-center py-10">
@@ -222,11 +239,11 @@
 
                 <!-- Matches Preview -->
                 <div id="matches-preview" class="hidden space-y-3">
-                  <div class="flex items-center justify-between">
-                    <h4 class="text-lg font-bold text-slate-200">Partidos encontrados</h4>
+                  <div class="flex items-center justify-between flex-wrap gap-2">
+                    <h4 class="text-lg font-bold text-slate-200">Partidos encontrados <span id="preview-count" class="text-sm font-semibold text-indigo-300"></span></h4>
                     <div class="flex gap-2">
                       <button id="btn-select-all" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded-xl text-sm">✓ Seleccionar todos</button>
-                      <button id="btn-deselect-all" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded-xl text-sm">✕ Deseleccionar todos</button>
+                      <button id="btn-deselect-all" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded-xl text-sm">✕ Ninguno</button>
                     </div>
                   </div>
                   <div id="preview-list" class="max-h-[400px] overflow-y-auto space-y-2"></div>
@@ -1181,6 +1198,16 @@
       });
       $leagueId.addEventListener('input', updateSrcStatus);
 
+      // El botón de búsqueda se adapta: jornada N, fase de copa, o temporada completa
+      function updateSearchBtnLabel() {
+        const spec = activeRoundSpec();
+        let label;
+        if (spec?.manual) label = `🔢 Traer TODA la jornada ${spec.manual}`;
+        else if (spec?.preset) label = `🏆 Traer ${spec.preset.label}`;
+        else label = '📋 Traer temporada / competición completa';
+        $btnSearchMatches.textContent = label;
+      }
+
       // La id manual tiene prioridad; si no, la de la lista.
       const activeLeagueId = () => ($leagueId.value.trim() || $leagueSelect.value || '').trim();
       // football-data: código de la liga elegida (solo si NO hay ID manual y hay proxy).
@@ -1228,8 +1255,18 @@
         { label: 'Tercer lugar',      tsdb: '170',    fd: { stage: 'THIRD_PLACE' } },
         { label: 'Final',             tsdb: '180',    fd: { stage: 'FINAL' } },
       ];
-      $roundSelect.innerHTML = '<option value="">-- Toda la temporada --</option>' +
+      $roundSelect.innerHTML = '<option value="">-- Toda la temporada / competición --</option>' +
         ROUND_PRESETS.map((p, i) => `<option value="${i}">${esc(p.label)}</option>`).join('');
+      // Al escribir jornada o elegir fase, refrescar el texto del botón
+      $roundInput.addEventListener('input', () => {
+        // Si el usuario escribe jornada, la fase de copa pierde sentido: la limpiamos
+        if ($roundInput.value.trim() && $roundSelect.value) $roundSelect.value = '';
+        updateSearchBtnLabel();
+      });
+      $roundSelect.addEventListener('change', () => {
+        if ($roundSelect.value && $roundInput.value.trim()) $roundInput.value = '';
+        updateSearchBtnLabel();
+      });
       // Devuelve { manual: '<nº jornada>' } | { preset: {...} } | null
       function activeRoundSpec() {
         const manual = $roundInput.value.trim();
@@ -1239,11 +1276,145 @@
       }
 
       function showImportSection() {
+        loadFavs(); renderFavChips();
+        updateSearchBtnLabel();
         $importSection.classList.remove('hidden');
         $('matches-list-section').classList.add('hidden');
         $('btn-create-match').classList.add('hidden');
         $('match-form-section').classList.add('hidden');
       }
+      // ══════════ ⭐ EQUIPOS FAVORITOS ══════════
+      // Mini-aviso flotante (sin dependencias)
+      let _toastT = null;
+      function showToast(msg) {
+        let el = $('panel-toast');
+        if (!el) {
+          el = document.createElement('div');
+          el.id = 'panel-toast';
+          el.className = 'fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] bg-slate-900 border border-amber-500/50 text-white text-sm font-semibold px-5 py-3 rounded-full shadow-2xl transition-opacity duration-300 opacity-0 pointer-events-none';
+          document.body.appendChild(el);
+        }
+        el.textContent = msg;
+        el.style.opacity = '1';
+        clearTimeout(_toastT);
+        _toastT = setTimeout(() => { el.style.opacity = '0'; }, 2200);
+      }
+
+      // Se guardan en localStorage (por navegador). Cada favorito = { id, name, badge }.
+      // id = idTeam de TheSportsDB → permite traer sus próximos partidos directo.
+      const FAV_KEY = 'topfut-fav-teams';
+      let favTeams = [];
+      function loadFavs() { try { favTeams = JSON.parse(localStorage.getItem(FAV_KEY) || '[]'); } catch (_) { favTeams = []; } }
+      function saveFavs() { try { localStorage.setItem(FAV_KEY, JSON.stringify(favTeams)); } catch (_) {} }
+
+      function renderFavChips() {
+        const cont = $('fav-chips'); if (!cont) return;
+        $('fav-empty-hint').classList.toggle('hidden', favTeams.length > 0);
+        cont.innerHTML = favTeams.map((t, i) => `
+          <span class="inline-flex items-center gap-2 bg-slate-800 border border-amber-500/40 rounded-full pl-2 pr-1 py-1 text-sm">
+            ${t.badge ? `<img src="${esc(t.badge)}" class="w-5 h-5 object-contain" alt="">` : '⚽'}
+            <span class="text-white font-semibold">${esc(t.name)}</span>
+            <button data-fav-del="${i}" class="w-6 h-6 rounded-full bg-slate-700 hover:bg-red-600 text-white text-xs leading-none" title="Quitar">✕</button>
+          </span>`).join('');
+        cont.querySelectorAll('[data-fav-del]').forEach(b => b.addEventListener('click', () => {
+          favTeams.splice(Number(b.dataset.favDel), 1); saveFavs(); renderFavChips();
+        }));
+      }
+
+      function addFav(team) {
+        if (favTeams.some(t => t.id === team.id)) { showToast('Ya está en favoritos'); return; }
+        favTeams.push(team); saveFavs(); renderFavChips();
+        showToast('⭐ ' + team.name + ' guardado');
+      }
+
+      // Buscar equipos por nombre (TheSportsDB searchteams — gratis, sí funciona)
+      const $favSearch = $('fav-search'), $favResults = $('fav-search-results');
+      let favSearchTimer = null;
+      async function searchTeams(name) {
+        try {
+          const r = await fetch(`${API_BASE}/searchteams.php?t=${encodeURIComponent(name)}`);
+          const data = await r.json();
+          return (data.teams || []).filter(t => (t.strSport || '').toLowerCase() === 'soccer').slice(0, 6);
+        } catch (_) { return []; }
+      }
+      function renderTeamResults(teams) {
+        if (!teams.length) { $favResults.classList.add('hidden'); $favResults.innerHTML = ''; return; }
+        $favResults.classList.remove('hidden');
+        $favResults.className = 'flex flex-wrap gap-2';
+        $favResults.innerHTML = teams.map((t, i) => `
+          <button data-team-idx="${i}" class="inline-flex items-center gap-2 bg-slate-900 hover:bg-amber-600/30 border border-slate-700 hover:border-amber-500 rounded-full pl-2 pr-3 py-1.5 text-sm transition-colors">
+            ${t.strBadge ? `<img src="${esc(t.strBadge)}" class="w-5 h-5 object-contain" alt="">` : '⚽'}
+            <span class="text-white">${esc(t.strTeam)}</span>
+            <span class="text-amber-300 font-bold">+</span>
+          </button>`).join('');
+        $favResults.querySelectorAll('[data-team-idx]').forEach(b => b.addEventListener('click', () => {
+          const t = teams[Number(b.dataset.teamIdx)];
+          addFav({ id: t.idTeam, name: t.strTeam, badge: t.strBadge || '' });
+          $favSearch.value = ''; renderTeamResults([]);
+        }));
+      }
+      if ($favSearch) {
+        $favSearch.addEventListener('input', () => {
+          clearTimeout(favSearchTimer);
+          const q = $favSearch.value.trim();
+          if (q.length < 3) { renderTeamResults([]); return; }
+          favSearchTimer = setTimeout(async () => renderTeamResults(await searchTeams(q)), 400);
+        });
+        $('btn-fav-add').addEventListener('click', async () => {
+          const q = $favSearch.value.trim();
+          if (q.length < 3) { alert('Escribe al menos 3 letras del equipo'); return; }
+          const teams = await searchTeams(q);
+          if (!teams.length) { alert('No se encontró ese equipo. Prueba con otro nombre (en inglés suele funcionar mejor).'); return; }
+          renderTeamResults(teams);
+        });
+      }
+
+      // Importar los próximos partidos de TODOS los favoritos, juntos.
+      // Ojo: en el plan gratis eventsnext.php solo trae partidos de LOCAL, así
+      // que además escaneamos los próximos días por liga para captar los de
+      // visitante y filtramos por los nombres de los equipos favoritos.
+      $('btn-fav-import').addEventListener('click', async () => {
+        if (!favTeams.length) { alert('Primero guarda al menos un equipo favorito'); return; }
+        showImportLoading();
+        const favNames = new Set(favTeams.map(t => slugify(t.name)));
+        const all = []; let anyOk = false;
+
+        // 1) Próximos por equipo (local)
+        for (const t of favTeams) {
+          try {
+            const r = await fetch(`${API_BASE}/eventsnext.php?id=${encodeURIComponent(t.id)}`);
+            const data = await r.json();
+            if (data && Array.isArray(data.events)) { anyOk = true; all.push(...data.events); }
+          } catch (_) {}
+          await sleep(220);
+        }
+
+        // 2) Escaneo por día (próximos 10 días) para captar partidos de visitante
+        const today = new Date();
+        for (let d = 0; d < 10; d++) {
+          const day = new Date(today.getTime() + d * 86400000);
+          const ds = day.toISOString().slice(0, 10);   // YYYY-MM-DD
+          try {
+            const r = await fetch(`${API_BASE}/eventsday.php?d=${ds}&s=Soccer`);
+            const data = await r.json();
+            if (data && Array.isArray(data.events)) {
+              anyOk = true;
+              for (const ev of data.events) {
+                if (favNames.has(slugify(ev.strHomeTeam || '')) || favNames.has(slugify(ev.strAwayTeam || ''))) all.push(ev);
+              }
+            }
+          } catch (_) {}
+          await sleep(160);
+        }
+
+        if (!anyOk) { showImportMessage('📡', 'No se pudieron traer los partidos (o la API tardó). Intenta de nuevo.'); return; }
+        // Solo partidos que involucren a un favorito
+        const filtered = dedupeEvents(all).filter(ev =>
+          favNames.has(slugify(ev.strHomeTeam || '')) || favNames.has(slugify(ev.strAwayTeam || '')));
+        if (!filtered.length) { showImportMessage('📭', 'Tus equipos favoritos no tienen próximos partidos calendarizados ahora mismo.'); return; }
+        renderMatchesPreview(prepEvents(filtered, true));
+      });
+
       function hideImportSection() {
         $importSection.classList.add('hidden');
         $('matches-list-section').classList.remove('hidden');
@@ -1258,6 +1429,7 @@
         $seasonInput.value = '';
         $roundSelect.value = '';
         $roundInput.value = '';
+        updateSearchBtnLabel();
         $importLoading.classList.add('hidden');
         $matchesPreview.classList.add('hidden');
         $importMessage.classList.add('hidden');
@@ -1402,6 +1574,10 @@
         $importLoading.classList.add('hidden');
         $importMessage.classList.add('hidden');
         $matchesPreview.classList.remove('hidden');
+        const newCount = matches.filter(m => !findDuplicate(m.strHomeTeam || '', m.strAwayTeam || '', m._ko ? m._ko.getTime() : null)).length;
+        const cnt = $('preview-count');
+        if (cnt) cnt.textContent = `· ${matches.length} en total, ${newCount} nuevos`;
+        updateConfirmBtn();
 
         $previewList.innerHTML = matches.map((m, idx) => {
           const koMs = m._ko ? m._ko.getTime() : null;
@@ -1431,6 +1607,7 @@
           cb.addEventListener('change', (e) => {
             const idx = parseInt(e.target.dataset.idx);
             if (e.target.checked) selectedMatches.add(idx); else selectedMatches.delete(idx);
+            updateConfirmBtn();
           });
         });
       }
@@ -1489,14 +1666,23 @@
         renderMatchesPreview(prepEvents(events, !spec));
       });
 
+      function updateConfirmBtn() {
+        const n = selectedMatches.size;
+        $btnConfirmImport.textContent = n ? `✅ Importar ${n} partido${n === 1 ? '' : 's'}` : '✅ Importar partidos seleccionados';
+        $btnConfirmImport.disabled = n === 0;
+        $btnConfirmImport.classList.toggle('opacity-50', n === 0);
+      }
+
       $btnSelectAll.addEventListener('click', () => {
         document.querySelectorAll('.preview-checkbox:not([disabled])').forEach(cb => {
           cb.checked = true; selectedMatches.add(parseInt(cb.dataset.idx));
         });
+        updateConfirmBtn();
       });
       $btnDeselectAll.addEventListener('click', () => {
         document.querySelectorAll('.preview-checkbox').forEach(cb => cb.checked = false);
         selectedMatches = new Set();
+        updateConfirmBtn();
       });
 
       $btnConfirmImport.addEventListener('click', async () => {

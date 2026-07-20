@@ -39,14 +39,30 @@
 
     .viewer-btn {
       position: absolute; z-index: 50; display: flex; align-items: center; justify-content: center;
-      width: 44px; height: 44px; border: none; cursor: pointer;
-      background: rgba(0,0,0,0.72); color: #fff; border-radius: 12px; opacity: 0.55;
-      transition: opacity .2s; box-shadow: 0 3px 14px rgba(0,0,0,0.5); text-decoration: none;
+      width: 46px; height: 46px; border: none; cursor: pointer;
+      background: rgba(0,0,0,0.62); color: #fff; border-radius: 14px; opacity: 0.5;
+      transition: opacity .2s, background .2s, transform .15s; box-shadow: 0 3px 14px rgba(0,0,0,0.5); text-decoration: none;
+      backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
     }
-    .viewer-btn:hover, .viewer-btn:focus { opacity: 0.95; }
-    .viewer-btn svg { width: 22px; height: 22px; }
+    .viewer-btn:hover, .viewer-btn:focus { opacity: 1; background: rgba(101,163,13,0.85); color: #0c1502; transform: scale(1.05); }
+    .viewer-btn svg { width: 23px; height: 23px; }
     #btn-home { top: 16px; left: 16px; }
     #btn-fullscreen { bottom: 16px; left: 16px; }
+    @media (min-width: 1000px) {
+      .viewer-btn { width: 54px; height: 54px; opacity: 0.42; }
+      .viewer-btn svg { width: 26px; height: 26px; }
+    }
+    /* En pantalla completa: botones camuflados, casi invisibles, para no
+       estorbar la transmisión. Se salir con Atrás/Esc; el botón queda como
+       apoyo apenas perceptible (se realza solo al enfocarlo o pasar el cursor). */
+    :fullscreen #btn-home, :-webkit-full-screen #btn-home { display: none; }
+    :fullscreen #btn-fullscreen, :-webkit-full-screen #btn-fullscreen {
+      opacity: 0.08; background: rgba(0,0,0,0.25); box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none;
+    }
+    :fullscreen #btn-fullscreen:hover, :fullscreen #btn-fullscreen:focus,
+    :-webkit-full-screen #btn-fullscreen:hover, :-webkit-full-screen #btn-fullscreen:focus {
+      opacity: 0.85; background: rgba(101,163,13,0.85); color: #0c1502;
+    }
 
     #match-overlay { position: fixed; inset: 0; z-index: 40; padding: 24px; text-align: center;
       background: linear-gradient(135deg,#020617,#0f172a); display: flex; justify-content: center; overflow-y: auto; }
@@ -54,7 +70,12 @@
     .mo-badge { display:inline-block; padding:6px 16px; border-radius:999px; font-weight:700; font-size:14px; margin-bottom:16px;
       background: rgba(132,204,22,0.16); color:#b6f05c; }
     .mo-time { font-size: 26px; font-weight: 900; margin: 6px 0; }
-    .cd-clock { font-size: 46px; font-weight: 900; letter-spacing: 2px; margin: 12px 0 6px; color: #a3e635; font-variant-numeric: tabular-nums; }
+    /* Cuenta regresiva en cajas (HH MM SS) — solo layout, sin animación pesada */
+    .cd-boxes { display: flex; gap: 10px; justify-content: center; margin: 18px 0 8px; }
+    .cd-box { min-width: 74px; background: rgba(163,230,53,0.10); border: 1px solid rgba(163,230,53,0.35); border-radius: 14px; padding: 12px 6px 8px; }
+    .cd-box .n { font-size: 40px; font-weight: 900; color: #a3e635; line-height: 1; font-variant-numeric: tabular-nums; }
+    .cd-box .l { font-size: 11px; font-weight: 700; color: #6b7db5; text-transform: uppercase; letter-spacing: .8px; margin-top: 6px; }
+    @media (max-width: 480px) { .cd-box { min-width: 60px; } .cd-box .n { font-size: 32px; } }
     .mo-note { color:#94a3b8; font-size:14px; margin-top:12px; }
     .mo-btn { display:inline-block; margin-top:28px; padding:12px 30px; border-radius:16px; font-weight:700;
       color:#0c1502; text-decoration:none; background: linear-gradient(135deg,#a3e635,#65a30d); }
@@ -107,6 +128,8 @@
     .sig-pill:hover { opacity: 0.97; }
     .sig-pill.active { background: linear-gradient(135deg,#a3e635,#65a30d); color: #0c1502; opacity: 1; }
     .sig-pill.report { background: rgba(180,50,30,0.9); opacity: 0.95; font-weight: 800; }
+    .sig-pill.shield { background: rgba(22,101,52,0.85); opacity: 0.9; }
+    .sig-pill.shield.off { background: rgba(120,53,15,0.85); }
     .sig-pill.next { background: rgba(30,46,140,0.82); }
     .sig-pill .num { background: rgba(255,255,255,0.22); border-radius: 6px; padding: 1px 6px; font-size: 12px; font-weight: 900; }
     .sig-pill.active .num { background: rgba(12,21,2,0.25); }
@@ -276,7 +299,9 @@
       function renderSignalBar(signals, activeIdx) {
         const sigs = signals || [];
         const nextSlug = nextMatchSlug();
-        if (sigs.length < 2 && !nextSlug) { sigBar.classList.add('hidden'); sigBar.innerHTML = ''; return; }
+        // La barra aparece si hay 2+ señales, un evento siguiente, o al menos
+        // una señal (para tener siempre el escudo anti-anuncios a mano).
+        if (sigs.length < 1 && !nextSlug) { sigBar.classList.add('hidden'); sigBar.innerHTML = ''; return; }
         let html = '';
         if (sigs.length >= 2) {
           html += sigs.map((s, i) =>
@@ -285,6 +310,11 @@
           // Botón grande para TV: prueba la SIGUIENTE señal de un toque
           html += `<button class="sig-pill report" data-report="1">🔄 Probar otra señal</button>`;
         }
+        // Escudo anti-anuncios (bloquea pop-ups/redirecciones). Se puede
+        // desactivar si algún embed no carga con el bloqueo puesto.
+        if (sigs.length >= 1) {
+          html += `<button class="sig-pill shield${_noSandbox ? ' off' : ''}" data-shield="1" title="Bloquear anuncios pop-up">${_noSandbox ? '🛡️ Anuncios: OFF' : '🛡️ Anuncios: ON'}</button>`;
+        }
         if (nextSlug) html += `<a class="sig-pill next" href="reproductor.html?slug=${encodeURIComponent(nextSlug)}" title="Siguiente evento">⏭</a>`;
         sigBar.innerHTML = html;
         sigBar.classList.remove('hidden');
@@ -292,6 +322,10 @@
           b.addEventListener('click', () => switchSignal(Number(b.dataset.sig), true)));
         const rep = sigBar.querySelector('[data-report]');
         if (rep) rep.addEventListener('click', rotateSignal);
+        const shield = sigBar.querySelector('[data-shield]');
+        if (shield) shield.addEventListener('click', () => {
+          if (_lastUrl) { mountSingle(_lastUrl, !_noSandbox); renderSignalBar(window._sigs || [], currentSigIdx); toast(_noSandbox ? '🛡️ Anuncios bloqueados' : '⚠️ Bloqueo desactivado'); }
+        });
       }
 
       // Pasar a la siguiente señal en orden circular (para el botón y las teclas de TV)
@@ -355,7 +389,9 @@
         return 'iframe';
       }
 
-      function mountSingle(url) {
+      let _lastUrl = null, _noSandbox = false;
+      function mountSingle(url, noSandbox) {
+        _lastUrl = url; _noSandbox = !!noSandbox;
         videoContainer.innerHTML = '';
         const wrap = document.createElement('div');
         wrap.className = 'player-wrap';
@@ -401,7 +437,15 @@
           } else { v.src = url; }
 
         } else {
-          wrap.innerHTML = `<iframe src="${esc(url)}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>`;
+          // Embeds de terceros: sandbox que BLOQUEA pop-ups y redirecciones
+          // (los anuncios más molestos) pero DEJA correr el video.
+          //  · allow-scripts + allow-same-origin: el reproductor funciona
+          //  · sin allow-popups: no abre pestañas de anuncios
+          //  · sin allow-top-navigation: no te saca a otra web
+          //  · allow-presentation: permite pantalla completa del video
+          const sb = 'allow-scripts allow-same-origin allow-presentation allow-forms allow-pointer-lock';
+          const sbAttr = _noSandbox ? '' : `sandbox="${sb}"`;
+          wrap.innerHTML = `<iframe src="${esc(url)}" ${sbAttr} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen" allowfullscreen referrerpolicy="no-referrer"></iframe>`;
         }
         videoContainer.appendChild(wrap);
       }
@@ -465,10 +509,24 @@
         return Date.now() >= ko - AUTO_PLAY_MIN * 60000;
       }
       function updateCountdownText() {
-        const el = document.getElementById('cd-big');
-        if (!el || !window._m) return;
+        if (!window._m) return;
         const ko = koMillis(window._m);
-        el.textContent = ko ? formatCountdown(ko - Date.now()) : '';
+        const dEl = document.getElementById('cd-d');
+        if (!dEl) return;
+        let ms = ko ? (ko - Date.now()) : 0;
+        if (ms < 0) ms = 0;
+        let s = Math.floor(ms / 1000);
+        const d = Math.floor(s / 86400); s -= d * 86400;
+        const h = Math.floor(s / 3600); s -= h * 3600;
+        const mm = Math.floor(s / 60); s -= mm * 60;
+        const p = n => String(n).padStart(2, '0');
+        // Ocultar la caja de días si faltan menos de 24 h (más limpio)
+        const dBox = dEl.closest('.cd-box');
+        if (dBox) dBox.style.display = d > 0 ? '' : 'none';
+        dEl.textContent = p(d);
+        document.getElementById('cd-h').textContent = p(h);
+        document.getElementById('cd-m').textContent = p(mm);
+        document.getElementById('cd-s').textContent = p(s);
       }
 
       // ── Despedida (solo lee de Firebase) ──
@@ -684,7 +742,12 @@
             <div style="margin-bottom:14px;">${teamsBlock(m)}</div>
             <p style="color:#94a3b8;font-size:14px;margin:0;">${esc(m.competition || '')}</p>
             <p style="color:#e2e8f0;font-size:15px;margin:6px 0 0;">🕐 Inicio: ${esc(timeStr)}</p>
-            <div class="cd-clock" id="cd-big">--:--:--</div>
+            <div class="cd-boxes" id="cd-boxes">
+              <div class="cd-box"><div class="n" id="cd-d">00</div><div class="l">Días</div></div>
+              <div class="cd-box"><div class="n" id="cd-h">00</div><div class="l">Horas</div></div>
+              <div class="cd-box"><div class="n" id="cd-m">00</div><div class="l">Min</div></div>
+              <div class="cd-box"><div class="n" id="cd-s">00</div><div class="l">Seg</div></div>
+            </div>
             <p class="mo-note">▶️ La transmisión se activa sola ${AUTO_PLAY_MIN} min antes del inicio.</p>
             <a href="./" class="mo-btn">🏠 Ver otros eventos</a>
           </div>`);
@@ -790,17 +853,40 @@
           ? '<path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/>'
           : '<path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/>';
       };
-      btnFullscreen.addEventListener('click', () => {
+      const isFs = () => document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
+      const enterFs = () => {
         const elem = viewerView;
-        if (document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement) {
-          (document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen).call(document);
-        } else {
-          (elem.requestFullscreen || elem.webkitRequestFullscreen || elem.msRequestFullscreen).call(elem);
+        (elem.requestFullscreen || elem.webkitRequestFullscreen || elem.msRequestFullscreen).call(elem);
+      };
+      const exitFs = () => {
+        if (isFs()) (document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen).call(document);
+      };
+      btnFullscreen.addEventListener('click', () => {
+        if (isFs()) { exitFs(); }
+        else {
+          enterFs();
+          // Empujar un estado al historial: así el botón "Atrás" (TV/celular)
+          // sale de pantalla completa en vez de abandonar la página.
+          try { history.pushState({ fs: 1 }, ''); } catch (_) {}
         }
       });
-      document.addEventListener('fullscreenchange', updateFullscreenUI);
-      document.addEventListener('webkitfullscreenchange', updateFullscreenUI);
-      document.addEventListener('msfullscreenchange', updateFullscreenUI);
+      // Botón "Atrás" del control de TV / gesto atrás del celular
+      window.addEventListener('popstate', () => { if (isFs()) exitFs(); });
+      // Teclas de retroceso de TVs y navegadores (además del gesto/botón atrás)
+      document.addEventListener('keydown', (e) => {
+        if (!isFs()) return;
+        if (['Escape', 'Backspace', 'BrowserBack', 'GoBack', 'XF86Back'].includes(e.key)) {
+          e.preventDefault(); exitFs();
+        }
+      });
+      // Si se sale de pantalla completa por cualquier vía, limpiar el estado extra
+      const syncFsHistory = () => {
+        updateFullscreenUI();
+        if (!isFs() && history.state && history.state.fs) { try { history.back(); } catch (_) {} }
+      };
+      document.addEventListener('fullscreenchange', syncFsHistory);
+      document.addEventListener('webkitfullscreenchange', syncFsHistory);
+      document.addEventListener('msfullscreenchange', syncFsHistory);
     });
   </script>
 </body>
